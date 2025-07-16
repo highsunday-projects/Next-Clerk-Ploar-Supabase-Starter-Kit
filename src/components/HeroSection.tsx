@@ -44,16 +44,6 @@ export default function HeroSection() {
               </button>
             </div>
 
-            {/* Social Proof */}
-            <div className="mt-12 text-center lg:text-left">
-              <p className="text-sm text-gray-500 mb-4">已被超過 1,000+ 開發者信賴</p>
-              <div className="flex justify-center lg:justify-start items-center space-x-6 opacity-60">
-                <div className="text-2xl font-bold text-gray-400">Next.js</div>
-                <div className="text-2xl font-bold text-gray-400">Clerk</div>
-                <div className="text-2xl font-bold text-gray-400">Polar</div>
-                <div className="text-2xl font-bold text-gray-400">Supabase</div>
-              </div>
-            </div>
           </div>
 
           {/* Right Content - Visual */}

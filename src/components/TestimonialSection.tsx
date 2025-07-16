@@ -115,23 +115,6 @@ export default function TestimonialSection() {
           </div>
         </div>
 
-        {/* CTA Section */}
-        <div className="text-center mt-16">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            加入滿意客戶的行列
-          </h3>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            立即開始使用我們的 Starter Kit，體驗快速開發的樂趣
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
-              開始免費試用
-            </button>
-            <button className="border border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors duration-200">
-              聯絡銷售團隊
-            </button>
-          </div>
-        </div>
       </div>
     </section>
   );

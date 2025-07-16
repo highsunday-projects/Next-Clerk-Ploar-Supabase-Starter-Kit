@@ -1,4 +1,5 @@
 import { Check, Star } from 'lucide-react';
+import Link from 'next/link';
 
 export default function PricingSection() {
   const plans = [
@@ -42,7 +43,7 @@ export default function PricingSection() {
         '自訂整合',
         '進階安全功能'
       ],
-      buttonText: '聯絡銷售',
+      buttonText: '全面啟用',
       buttonStyle: 'border border-gray-300 text-gray-700 hover:bg-gray-50'
     }
   ];
@@ -111,11 +112,12 @@ export default function PricingSection() {
                 </div>
 
                 {/* CTA Button */}
-                <button
-                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${plan.buttonStyle}`}
+                <Link
+                  href="/dashboard/subscription"
+                  className={`block w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 text-center ${plan.buttonStyle}`}
                 >
                   {plan.buttonText}
-                </button>
+                </Link>
               </div>
             </div>
           ))}

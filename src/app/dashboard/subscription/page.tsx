@@ -1,82 +1,121 @@
-import { 
-  Crown, 
-  Check, 
-  CreditCard, 
+'use client';
+
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import {
+  Crown,
+  Check,
+  CreditCard,
   Calendar,
   AlertCircle,
-  Star
+  Star,
+  Loader2
 } from 'lucide-react';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { SUBSCRIPTION_PLANS } from '@/types/supabase';
+import {
+  getSubscriptionStatusText,
+  getSubscriptionStatusClass,
+  formatPrice,
+  formatBillingInfo,
+  canManagePayment,
+  canCancelSubscription,
+  getPlanChangeType
+} from '@/lib/subscriptionUtils';
 
 export default function SubscriptionPage() {
-  // 模擬當前訂閱數據
+  const { user, isLoaded } = useUser();
+  const { profile, loading, error } = useUserProfile();
+  const router = useRouter();
+
+  // 重定向未登入用戶
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push('/sign-in');
+    }
+  }, [isLoaded, user, router]);
+
+  // 載入中狀態
+  if (!isLoaded || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">載入訂閱資料中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 用戶未登入
+  if (!user) {
+    return null;
+  }
+
+  // 錯誤狀態
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <AlertCircle className="w-5 h-5 text-red-400" />
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800">載入訂閱資料時發生錯誤</h3>
+            <p className="text-sm text-red-700 mt-1">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果沒有訂閱資料，顯示預設免費方案
+  if (!profile) {
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <div className="flex items-center">
+          <AlertCircle className="w-5 h-5 text-yellow-400 mr-3" />
+          <div>
+            <h3 className="text-sm font-medium text-yellow-800">找不到訂閱資料</h3>
+            <p className="text-sm text-yellow-700 mt-1">請重新整理頁面或聯繫客服支援</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 獲取當前訂閱方案資訊
+  const currentPlan = SUBSCRIPTION_PLANS[profile.subscription_plan];
+
+  // 當前訂閱資料
   const currentSubscription = {
-    plan: '專業版',
-    price: 29,
+    plan: currentPlan.displayName,
+    price: currentPlan.price,
     period: 'month',
-    status: 'active',
-    nextBilling: '2025-08-16',
-    paymentMethod: '**** **** **** 4242',
-    features: [
-      '無限專案',
-      '進階分析',
-      '優先客服支援',
-      '50GB 儲存空間',
-      '自訂品牌',
-      'API 存取權限'
-    ]
+    status: profile.subscription_status,
+    nextBilling: profile.trial_ends_at ?
+      new Date(profile.trial_ends_at).toLocaleDateString('zh-TW') :
+      '無限期（免費方案）',
+    paymentMethod: profile.subscription_plan === 'free' ? '無需付款' : '**** **** **** 4242',
+    features: currentPlan.features,
+    monthlyLimit: currentPlan.monthlyUsageLimit
   };
 
-  // 可用的訂閱方案
-  const plans = [
-    {
-      name: '入門版',
-      price: 0,
-      period: 'month',
-      description: '適合個人使用和小型專案',
-      features: [
-        '最多 3 個專案',
-        '基本分析',
-        '社群支援',
-        '1GB 儲存空間',
-        '基本 API 存取'
-      ],
-      current: false,
-      popular: false
-    },
-    {
-      name: '專業版',
-      price: 29,
-      period: 'month',
-      description: '適合成長中的團隊和企業',
-      features: [
-        '無限專案',
-        '進階分析',
-        '優先客服支援',
-        '50GB 儲存空間',
-        '自訂品牌',
-        'API 存取權限'
-      ],
-      current: true,
-      popular: true
-    },
-    {
-      name: '企業版',
-      price: 99,
-      period: 'month',
-      description: '適合大型企業和高流量應用',
-      features: [
-        '無限專案',
-        '企業級分析',
-        '24/7 專屬支援',
-        '無限儲存空間',
-        '白標解決方案',
-        '專屬客戶經理',
-        'SLA 保證'
-      ],
-      current: false,
-      popular: false
-    }
-  ];
+  // 可用的訂閱方案（基於 Supabase 配置）
+  const plans = Object.entries(SUBSCRIPTION_PLANS).map(([key, plan]) => ({
+    id: key,
+    name: plan.displayName,
+    price: plan.price,
+    period: 'month',
+    description: key === 'free' ? '適合個人使用和小型專案' :
+                 key === 'pro' ? '適合成長中的團隊和企業' :
+                 '適合大型企業和高流量應用',
+    features: plan.features,
+    current: profile.subscription_plan === key,
+    popular: plan.popular || false,
+    monthlyLimit: plan.monthlyUsageLimit
+  }));
 
   return (
     <div className="space-y-6">
@@ -95,12 +134,8 @@ export default function SubscriptionPage() {
             <Crown className="w-5 h-5 mr-2 text-yellow-500" />
             目前訂閱
           </h2>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-            currentSubscription.status === 'active' 
-              ? 'bg-green-100 text-green-800' 
-              : 'bg-gray-100 text-gray-800'
-          }`}>
-            {currentSubscription.status === 'active' ? '使用中' : '未啟用'}
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSubscriptionStatusClass(profile.subscription_status)}`}>
+            {getSubscriptionStatusText(profile.subscription_status)}
           </span>
         </div>
 
@@ -109,18 +144,22 @@ export default function SubscriptionPage() {
             <div className="flex items-baseline mb-2">
               <span className="text-3xl font-bold text-gray-900">{currentSubscription.plan}</span>
               <span className="ml-2 text-lg text-gray-600">
-                ${currentSubscription.price}/{currentSubscription.period === 'month' ? '月' : '年'}
+                {formatPrice(currentSubscription.price)}{currentSubscription.price > 0 ? '/月' : ''}
               </span>
             </div>
-            
+
             <div className="space-y-3 text-sm">
               <div className="flex items-center text-gray-600">
                 <Calendar className="w-4 h-4 mr-2" />
-                下次計費：{currentSubscription.nextBilling}
+                {formatBillingInfo(profile)}
               </div>
               <div className="flex items-center text-gray-600">
                 <CreditCard className="w-4 h-4 mr-2" />
                 付款方式：{currentSubscription.paymentMethod}
+              </div>
+              <div className="flex items-center text-gray-600">
+                <Star className="w-4 h-4 mr-2" />
+                每月額度：{currentSubscription.monthlyLimit?.toLocaleString()} 次 API 呼叫
               </div>
             </div>
 
@@ -138,15 +177,55 @@ export default function SubscriptionPage() {
           </div>
 
           <div className="flex flex-col justify-center space-y-3">
-            <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200">
-              更新付款方式
-            </button>
-            <button className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-              下載發票
-            </button>
-            <button className="w-full border border-red-300 text-red-700 py-2 px-4 rounded-lg hover:bg-red-50 transition-colors duration-200">
-              取消訂閱
-            </button>
+            {canManagePayment(profile) && (
+              <button
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                onClick={() => alert('付款方式管理功能將在未來版本中提供')}
+              >
+                更新付款方式
+              </button>
+            )}
+
+            {profile.subscription_plan !== 'free' && (
+              <button
+                className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                onClick={() => alert('發票下載功能將在未來版本中提供')}
+              >
+                下載發票
+              </button>
+            )}
+
+            {canCancelSubscription(profile) && (
+              <button
+                className="w-full border border-red-300 text-red-700 py-2 px-4 rounded-lg hover:bg-red-50 transition-colors duration-200"
+                onClick={() => {
+                  if (confirm('確定要取消訂閱嗎？此操作將在當前計費週期結束時生效。')) {
+                    alert('取消訂閱功能將在未來版本中提供');
+                  }
+                }}
+              >
+                取消訂閱
+              </button>
+            )}
+
+            {profile.subscription_plan === 'free' && (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-600">
+                  您目前使用免費方案，無需付款管理
+                </p>
+              </div>
+            )}
+
+            {profile.subscription_status === 'cancelled' && (
+              <div className="text-center py-4">
+                <p className="text-sm text-red-600 font-medium">
+                  訂閱已取消
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  您可以重新訂閱任何方案
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -188,12 +267,19 @@ export default function SubscriptionPage() {
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                 <div className="flex items-baseline justify-center">
                   <span className="text-3xl font-bold text-gray-900">
-                    ${plan.price}
+                    {plan.price === 0 ? '免費' : `$${plan.price}`}
                   </span>
-                  <span className="text-gray-600 ml-1">
-                    /{plan.period === 'month' ? '月' : '年'}
-                  </span>
+                  {plan.price > 0 && (
+                    <span className="text-gray-600 ml-1">
+                      /{plan.period === 'month' ? '月' : '年'}
+                    </span>
+                  )}
                 </div>
+                {plan.monthlyLimit && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    每月 {plan.monthlyLimit.toLocaleString()} 次 API 呼叫
+                  </p>
+                )}
                 <p className="text-sm text-gray-600 mt-2">{plan.description}</p>
               </div>
 
@@ -207,9 +293,11 @@ export default function SubscriptionPage() {
               </ul>
 
               <button
-                disabled={plan.current}
+                disabled={plan.current || profile.subscription_status === 'cancelled'}
                 className={`w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200 ${
                   plan.current
+                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                    : profile.subscription_status === 'cancelled'
                     ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                     : plan.price > currentSubscription.price
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
@@ -217,14 +305,25 @@ export default function SubscriptionPage() {
                     ? 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                     : 'border border-orange-300 text-orange-700 hover:bg-orange-50'
                 }`}
+                onClick={() => {
+                  if (!plan.current && profile.subscription_status !== 'cancelled') {
+                    const changeType = getPlanChangeType(profile.subscription_plan, plan.id as any);
+                    const actionText = changeType === 'upgrade' ? '升級' :
+                                     changeType === 'downgrade' ? '降級' : '變更';
+                    alert(`即將${actionText}至 ${plan.name}`);
+                  }
+                }}
               >
-                {plan.current 
-                  ? '目前方案' 
-                  : plan.price > currentSubscription.price 
-                  ? '升級' 
-                  : plan.price === 0
-                  ? '降級至免費'
-                  : '降級'
+                {plan.current
+                  ? '目前方案'
+                  : profile.subscription_status === 'cancelled'
+                  ? '訂閱已取消'
+                  : (() => {
+                      const changeType = getPlanChangeType(profile.subscription_plan, plan.id as any);
+                      return changeType === 'upgrade' ? '升級' :
+                             changeType === 'downgrade' ? (plan.price === 0 ? '降級至免費' : '降級') :
+                             '變更';
+                    })()
                 }
               </button>
             </div>

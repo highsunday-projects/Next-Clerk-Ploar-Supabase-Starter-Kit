@@ -3,52 +3,44 @@ import { Check, Star } from 'lucide-react';
 export default function PricingSection() {
   const plans = [
     {
-      name: '入門版',
-      price: '$29',
-      period: '/月',
-      description: '適合個人開發者和小型專案',
+      name: '免費方案',
+      price: '免費',
+      period: '',
+      description: '適合個人使用和小型專案',
       features: [
-        '最多 1,000 位用戶',
-        '基本認證功能',
-        '標準客服支援',
-        '5GB 儲存空間',
-        '基本分析報告'
+        '每月 1,000 次 API 呼叫',
+        '基本功能存取',
+        '社群支援'
       ],
-      buttonText: '開始免費試用',
+      buttonText: '開始使用',
       buttonStyle: 'border border-gray-300 text-gray-700 hover:bg-gray-50'
     },
     {
-      name: '專業版',
-      price: '$99',
+      name: '專業方案',
+      price: '$29',
       period: '/月',
       description: '適合成長中的團隊和企業',
       features: [
-        '最多 10,000 位用戶',
-        '完整認證功能',
-        '優先客服支援',
-        '50GB 儲存空間',
-        '進階分析報告',
-        '自訂品牌',
-        'API 存取權限'
+        '每月 10,000 次 API 呼叫',
+        '進階功能存取',
+        '優先支援',
+        '詳細分析報告'
       ],
-      buttonText: '立即開始',
+      buttonText: '立即升級',
       buttonStyle: 'bg-blue-600 text-white hover:bg-blue-700',
       popular: true
     },
     {
-      name: '企業版',
-      price: '$299',
+      name: '企業方案',
+      price: '$99',
       period: '/月',
       description: '適合大型企業和高流量應用',
       features: [
-        '無限用戶數',
-        '企業級認證',
+        '每月 100,000 次 API 呼叫',
+        '所有功能存取',
         '24/7 專屬支援',
-        '無限儲存空間',
-        '客製化分析',
-        '白標解決方案',
-        '專屬客戶經理',
-        'SLA 保證'
+        '自訂整合',
+        '進階安全功能'
       ],
       buttonText: '聯絡銷售',
       buttonStyle: 'border border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -132,7 +124,7 @@ export default function PricingSection() {
         {/* Bottom Info */}
         <div className="text-center mt-16">
           <p className="text-gray-600 mb-4">
-            所有方案都包含 14 天免費試用，無需信用卡
+            免費方案無需信用卡，付費方案可隨時升級或降級
           </p>
           <div className="flex justify-center items-center space-x-8 text-sm text-gray-500">
             <div className="flex items-center">
@@ -145,7 +137,7 @@ export default function PricingSection() {
             </div>
             <div className="flex items-center">
               <Check className="w-4 h-4 text-green-500 mr-2" />
-              24/7 支援
+              即時生效
             </div>
           </div>
         </div>

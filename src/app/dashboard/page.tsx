@@ -1,79 +1,71 @@
-import { currentUser } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import {
   CreditCard,
-  Activity,
   TrendingUp,
   Calendar,
   Crown,
-  BarChart3
+  Loader2
 } from 'lucide-react';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { SUBSCRIPTION_PLANS } from '@/types/supabase';
 
-export default async function DashboardPage() {
-  const user = await currentUser();
+export default function DashboardPage() {
+  const { user, isLoaded } = useUser();
+  const { profile, loading, error } = useUserProfile();
+  const router = useRouter();
 
-  if (!user) {
-    redirect('/sign-in');
+  // 重定向未登入用戶
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push('/sign-in');
+    }
+  }, [isLoaded, user, router]);
+
+  // 載入中狀態
+  if (!isLoaded || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">載入中...</p>
+        </div>
+      </div>
+    );
   }
 
-  // 模擬訂閱和使用數據
-  const currentPlan = {
-    name: '專業版',
-    price: '$29',
-    period: '/月',
-    status: 'active',
-    nextBilling: '2025-08-16',
-    features: ['無限專案', '進階分析', '優先支援']
-  };
+  // 用戶未登入
+  if (!user) {
+    return null;
+  }
 
-  const usageStats = [
-    {
-      name: 'API 呼叫',
-      value: '8,432',
-      limit: '10,000',
-      percentage: 84,
-      icon: Activity,
-    },
-    {
-      name: '儲存空間',
-      value: '2.3 GB',
-      limit: '5 GB',
-      percentage: 46,
-      icon: BarChart3,
-    },
-    {
-      name: '團隊成員',
-      value: '3',
-      limit: '5',
-      percentage: 60,
-      icon: Crown,
-    },
-  ];
+  // 錯誤狀態
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-5 h-5 text-red-400">⚠️</div>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800">載入訂閱資料時發生錯誤</h3>
+            <p className="text-sm text-red-700 mt-1">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const recentActivities = [
-    {
-      id: 1,
-      action: 'API 呼叫',
-      description: '成功處理 127 個請求',
-      time: '5 分鐘前',
-      type: 'success'
-    },
-    {
-      id: 2,
-      action: '檔案上傳',
-      description: '上傳 3 個檔案 (2.1 MB)',
-      time: '1 小時前',
-      type: 'info'
-    },
-    {
-      id: 3,
-      action: '訂閱續費',
-      description: '專業版方案自動續費成功',
-      time: '2 天前',
-      type: 'success'
-    },
-  ];
+  // 獲取當前訂閱方案資訊
+  const currentPlan = profile ? SUBSCRIPTION_PLANS[profile.subscription_plan] : SUBSCRIPTION_PLANS.free;
+
+
+
+
 
   return (
     <div className="space-y-6">
@@ -99,11 +91,17 @@ export default async function DashboardPage() {
           </div>
           <div className="flex items-center space-x-2">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-              currentPlan.status === 'active'
+              profile?.subscription_status === 'active'
                 ? 'bg-green-100 text-green-800'
+                : profile?.subscription_status === 'trial'
+                ? 'bg-blue-100 text-blue-800'
+                : profile?.subscription_status === 'cancelled'
+                ? 'bg-red-100 text-red-800'
                 : 'bg-gray-100 text-gray-800'
             }`}>
-              {currentPlan.status === 'active' ? '訂閱中' : '未訂閱'}
+              {profile?.subscription_status === 'active' ? '訂閱中' :
+               profile?.subscription_status === 'trial' ? '試用中' :
+               profile?.subscription_status === 'cancelled' ? '已取消' : '已過期'}
             </span>
           </div>
         </div>
@@ -126,10 +124,17 @@ export default async function DashboardPage() {
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <div className="flex items-baseline">
-              <span className="text-3xl font-bold text-gray-900">{currentPlan.name}</span>
-              <span className="ml-2 text-lg text-gray-600">{currentPlan.price}{currentPlan.period}</span>
+              <span className="text-3xl font-bold text-gray-900">{currentPlan.displayName}</span>
+              <span className="ml-2 text-lg text-gray-600">
+                {currentPlan.price === 0 ? '免費' : `$${currentPlan.price}/月`}
+              </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">下次計費：{currentPlan.nextBilling}</p>
+            <p className="text-sm text-gray-500 mt-1">
+              {profile?.trial_ends_at ?
+                `試用期至：${new Date(profile.trial_ends_at).toLocaleDateString('zh-TW')}` :
+                profile?.subscription_status === 'active' ? '訂閱中' : '免費方案'
+              }
+            </p>
             <div className="mt-4">
               <h4 className="text-sm font-medium text-gray-900 mb-2">包含功能：</h4>
               <ul className="space-y-1">
@@ -141,123 +146,75 @@ export default async function DashboardPage() {
                 ))}
               </ul>
             </div>
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">
+                每月使用額度：{currentPlan.monthlyUsageLimit.toLocaleString()} 次 API 呼叫
+              </p>
+            </div>
           </div>
           <div className="flex items-center justify-center">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-3">
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 ${
+                profile?.subscription_plan === 'enterprise'
+                  ? 'bg-gradient-to-br from-purple-500 to-pink-600'
+                  : profile?.subscription_plan === 'pro'
+                  ? 'bg-gradient-to-br from-blue-500 to-purple-600'
+                  : 'bg-gradient-to-br from-gray-400 to-gray-600'
+              }`}>
                 <Crown className="w-10 h-10 text-white" />
               </div>
-              <p className="text-sm text-gray-600">享受專業版的所有功能</p>
+              <p className="text-sm text-gray-600">
+                {profile?.subscription_plan === 'enterprise'
+                  ? '享受企業版的所有功能'
+                  : profile?.subscription_plan === 'pro'
+                  ? '享受專業版的所有功能'
+                  : '免費方案基本功能'
+                }
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Usage Stats */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-          <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
-          使用統計
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {usageStats.map((stat) => (
-            <div key={stat.name} className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <stat.icon className="w-5 h-5 text-gray-600 mr-2" />
-                  <span className="text-sm font-medium text-gray-900">{stat.name}</span>
-                </div>
-                <span className="text-sm text-gray-500">{stat.value} / {stat.limit}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    stat.percentage > 80 ? 'bg-red-500' :
-                    stat.percentage > 60 ? 'bg-yellow-500' : 'bg-green-500'
-                  }`}
-                  style={{ width: `${stat.percentage}%` }}
-                ></div>
-              </div>
-              <p className="text-xs text-gray-500">{stat.percentage}% 已使用</p>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Recent Activities and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 flex items-center">
-              <Activity className="w-5 h-5 mr-2 text-blue-600" />
-              最近活動
-            </h3>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 mt-1">
-                    <div className={`w-2 h-2 rounded-full ${
-                      activity.type === 'success' ? 'bg-green-500' :
-                      activity.type === 'info' ? 'bg-blue-500' : 'bg-gray-500'
-                    }`}></div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                    <p className="text-sm text-gray-500">{activity.description}</p>
-                    <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-blue-600" />
-              快速操作
-            </h3>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              <Link
-                href="/dashboard/subscription"
-                className="block w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-              >
-                <div className="flex items-center">
-                  <CreditCard className="w-5 h-5 text-blue-600 mr-3" />
-                  <div>
-                    <p className="font-medium text-gray-900">管理訂閱</p>
-                    <p className="text-sm text-gray-500">升級、降級或取消訂閱</p>
-                  </div>
-                </div>
-              </Link>
-              <Link
-                href="/dashboard/profile"
-                className="block w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-              >
-                <div className="flex items-center">
-                  <Crown className="w-5 h-5 text-blue-600 mr-3" />
-                  <div>
-                    <p className="font-medium text-gray-900">個人資料</p>
-                    <p className="text-sm text-gray-500">管理帳戶設定和偏好</p>
-                  </div>
-                </div>
-              </Link>
-              <button className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex items-center">
-                  <TrendingUp className="w-5 h-5 text-blue-600 mr-3" />
-                  <div>
-                    <p className="font-medium text-gray-900">使用報告</p>
-                    <p className="text-sm text-gray-500">查看詳細的使用統計</p>
-                  </div>
-                </div>
-              </button>
-            </div>
+      {/* Quick Actions */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 flex items-center">
+            <Calendar className="w-5 h-5 mr-2 text-blue-600" />
+            快速操作
+          </h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link
+              href="/dashboard/subscription"
+              className="block w-full text-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+            >
+              <div className="flex flex-col items-center">
+                <CreditCard className="w-8 h-8 text-blue-600 mb-2" />
+                <p className="font-medium text-gray-900">管理訂閱</p>
+                <p className="text-sm text-gray-500 mt-1">升級或管理方案</p>
+              </div>
+            </Link>
+            <Link
+              href="/dashboard/profile"
+              className="block w-full text-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+            >
+              <div className="flex flex-col items-center">
+                <Crown className="w-8 h-8 text-blue-600 mb-2" />
+                <p className="font-medium text-gray-900">個人資料</p>
+                <p className="text-sm text-gray-500 mt-1">管理帳戶設定</p>
+              </div>
+            </Link>
+            <button className="w-full text-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+              <div className="flex flex-col items-center">
+                <TrendingUp className="w-8 h-8 text-blue-600 mb-2" />
+                <p className="font-medium text-gray-900">API 文檔</p>
+                <p className="text-sm text-gray-500 mt-1">查看使用指南</p>
+              </div>
+            </button>
           </div>
         </div>
       </div>

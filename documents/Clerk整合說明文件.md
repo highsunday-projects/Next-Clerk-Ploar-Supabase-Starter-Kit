@@ -54,7 +54,29 @@ src/
 2. 建立新專案或選擇現有專案
 3. 在專案設定中取得 API 金鑰
 
-### 2. 環境變數設定
+### 2. 配置認證策略
+
+**重要**：為了確保密碼登入功能正常運作，請在 Clerk Dashboard 中進行以下設定：
+
+#### 啟用密碼認證
+1. 進入 Clerk Dashboard
+2. 選擇您的專案
+3. 前往 **User & Authentication** → **Email, Phone, Username**
+4. 確保 **Password** 選項已啟用
+5. 在 **Sign-in** 和 **Sign-up** 頁面都勾選 **Password** 選項
+
+#### 認證策略建議配置
+- **Email address**: ✅ 啟用（必需）
+- **Password**: ✅ 啟用（用於密碼登入）
+- **Google**: ✅ 啟用（社交登入選項）
+- **GitHub**: 可選（額外的社交登入）
+
+這樣配置後，用戶可以選擇：
+- 使用電子郵件 + 密碼登入
+- 使用 Google 帳戶登入
+- 使用 GitHub 帳戶登入（如果啟用）
+
+### 3. 環境變數設定
 
 在 `.env.local` 檔案中設定以下變數：
 
@@ -70,13 +92,13 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
 NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
 ```
 
-### 3. 安裝依賴
+### 4. 安裝依賴
 
 ```bash
 npm install @clerk/nextjs
 ```
 
-### 4. 啟動開發伺服器
+### 5. 啟動開發伺服器
 
 ```bash
 npm run dev
@@ -217,6 +239,20 @@ Clerk 組件支援豐富的外觀自訂：
 
 ### 常見問題
 
+**Q: 目前使用信箱驗證碼登入，如何改為密碼登入？**
+A: 您目前使用的是 Email Code 認證方式，要改為密碼登入：
+- 前往 Clerk Dashboard → User & Authentication → Email, Phone, Username
+- 在 Email address 區域取消勾選 "Email code"
+- 在 Password 區域勾選 "Required for sign-up" 和 "Used for sign-in"
+- 儲存設定並重啟開發伺服器
+
+**Q: 註冊時要求密碼，但登入時沒有密碼欄位**
+A: 這是認證策略配置問題：
+- 前往 Clerk Dashboard → User & Authentication → Email, Phone, Username
+- 確保 Password 在 Sign-in 和 Sign-up 都已啟用
+- 檢查 Authentication strategies 設定
+- 重新載入登入頁面
+
 **Q: 環境變數設定後仍然無法登入**
 A: 檢查以下項目：
 - 確認金鑰格式正確
@@ -234,6 +270,13 @@ A: 確保：
 - 個人資料頁面使用 catch-all 路由：`/dashboard/profile/[[...rest]]/page.tsx`
 - 中間件正確保護路由：`/dashboard(.*)`
 - 或者使用 hash 路由：`<UserProfile routing="hash" />`
+
+**Q: 密碼更新失敗**
+A: 檢查：
+- 用戶是否已有密碼（passwordEnabled 狀態）
+- 有密碼用戶需提供目前密碼
+- 新密碼是否符合安全要求（8字元、包含字母和數字）
+- 網路連線是否正常
 
 **Q: 樣式顯示異常**
 A: 檢查：
@@ -270,6 +313,7 @@ A: 檢查：
 ## 🔮 未來擴展
 
 ### 進階功能
+- ✅ 密碼管理（已實作）
 - 社交登入（Google、GitHub 等）
 - 多因素認證（MFA）
 - 組織管理

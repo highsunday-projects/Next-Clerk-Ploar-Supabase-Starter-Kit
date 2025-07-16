@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
+import { useUser, UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
+import Link from 'next/link';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isSignedIn } = useUser();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -24,9 +27,9 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <h1 className="text-xl font-bold text-gray-900">
+            <Link href="/" className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors duration-200">
               SaaS Starter Kit
-            </h1>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
@@ -53,12 +56,37 @@ export default function Header() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
-              登入
-            </button>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
-              註冊
-            </button>
+            {isSignedIn ? (
+              <div className="flex items-center space-x-4">
+                <Link
+                  href="/dashboard"
+                  className="text-gray-700 hover:text-blue-600 transition-colors duration-200 flex items-center"
+                >
+                  <User className="w-4 h-4 mr-1" />
+                  儀表板
+                </Link>
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-8 h-8"
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <>
+                <SignInButton mode="modal">
+                  <button className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
+                    登入
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                    註冊
+                  </button>
+                </SignUpButton>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -95,12 +123,40 @@ export default function Header() {
                 關於
               </button>
               <div className="pt-4 border-t border-gray-200">
-                <button className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200">
-                  登入
-                </button>
-                <button className="block w-full text-left px-3 py-2 mt-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
-                  註冊
-                </button>
+                {isSignedIn ? (
+                  <div className="space-y-2">
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200 flex items-center"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      儀表板
+                    </Link>
+                    <div className="px-3 py-2">
+                      <UserButton
+                        appearance={{
+                          elements: {
+                            avatarBox: "w-8 h-8"
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <SignInButton mode="modal">
+                      <button className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200">
+                        登入
+                      </button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <button className="block w-full text-left px-3 py-2 mt-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
+                        註冊
+                      </button>
+                    </SignUpButton>
+                  </>
+                )}
               </div>
             </div>
           </div>

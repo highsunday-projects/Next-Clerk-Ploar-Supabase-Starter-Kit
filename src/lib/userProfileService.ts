@@ -12,13 +12,13 @@ import {
   QUERY_OPTIONS,
   DEFAULT_USER_PROFILE 
 } from '@/lib/supabase';
-import type { 
-  UserProfile, 
-  CreateUserProfileRequest, 
+import type {
+  UserProfile,
+  CreateUserProfileRequest,
   UpdateUserProfileRequest,
-  UserProfileService,
-  SupabaseError
+  UserProfileService
 } from '@/types/supabase';
+import { SupabaseError } from '@/types/supabase';
 
 /**
  * 用戶訂閱資料服務實作
@@ -46,7 +46,7 @@ class UserProfileServiceImpl implements UserProfileService {
         handleSupabaseError(error);
       }
 
-      return data;
+      return data as unknown as UserProfile;
     } catch (error) {
       console.error('Error fetching user profile:', error);
       throw error;
@@ -74,7 +74,13 @@ class UserProfileServiceImpl implements UserProfileService {
         monthly_usage_limit: data.monthlyUsageLimit || DEFAULT_USER_PROFILE.monthly_usage_limit,
         trial_ends_at: data.trialEndsAt || null,
         last_active_date: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // Polar 相關欄位
+        polar_customer_id: data.polarCustomerId || null,
+        polar_subscription_id: data.polarSubscriptionId || null,
+        polar_product_id: data.polarProductId || null,
+        last_payment_date: data.lastPaymentDate || null,
+        next_billing_date: data.nextBillingDate || null
       };
 
       const { data: newProfile, error } = await supabase
@@ -87,7 +93,7 @@ class UserProfileServiceImpl implements UserProfileService {
         handleSupabaseError(error);
       }
 
-      return newProfile;
+      return newProfile as unknown as UserProfile;
     } catch (error) {
       console.error('Error creating user profile:', error);
       throw error;
@@ -105,7 +111,7 @@ class UserProfileServiceImpl implements UserProfileService {
       const supabase = getSupabaseClient(true); // 使用 admin 客戶端
       
       // 準備更新資料
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         updated_at: new Date().toISOString()
       };
 
@@ -124,6 +130,22 @@ class UserProfileServiceImpl implements UserProfileService {
       if (data.lastActiveDate !== undefined) {
         updateData.last_active_date = data.lastActiveDate;
       }
+      // Polar 相關欄位更新
+      if (data.polarCustomerId !== undefined) {
+        updateData.polar_customer_id = data.polarCustomerId;
+      }
+      if (data.polarSubscriptionId !== undefined) {
+        updateData.polar_subscription_id = data.polarSubscriptionId;
+      }
+      if (data.polarProductId !== undefined) {
+        updateData.polar_product_id = data.polarProductId;
+      }
+      if (data.lastPaymentDate !== undefined) {
+        updateData.last_payment_date = data.lastPaymentDate;
+      }
+      if (data.nextBillingDate !== undefined) {
+        updateData.next_billing_date = data.nextBillingDate;
+      }
 
       const { data: updatedProfile, error } = await supabase
         .from(TABLES.USER_PROFILES)
@@ -136,7 +158,7 @@ class UserProfileServiceImpl implements UserProfileService {
         handleSupabaseError(error);
       }
 
-      return updatedProfile;
+      return updatedProfile as unknown as UserProfile;
     } catch (error) {
       console.error('Error updating user profile:', error);
       throw error;
@@ -168,6 +190,34 @@ class UserProfileServiceImpl implements UserProfileService {
   }
 
   /**
+   * 根據 Polar Customer ID 獲取用戶訂閱資料
+   */
+  async getUserProfileByPolarCustomerId(polarCustomerId: string): Promise<UserProfile | null> {
+    try {
+      const supabase = getSupabaseClient(true); // 使用 admin 客戶端
+
+      const { data, error } = await supabase
+        .from(TABLES.USER_PROFILES)
+        .select(QUERY_OPTIONS.USER_PROFILE_FIELDS)
+        .eq('polar_customer_id', polarCustomerId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // 找不到記錄，返回 null
+          return null;
+        }
+        handleSupabaseError(error);
+      }
+
+      return data as unknown as UserProfile;
+    } catch (error) {
+      console.error('Error fetching user profile by Polar customer ID:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 獲取或建立用戶訂閱記錄
    * 如果用戶不存在，自動建立預設的免費方案記錄
    */
@@ -175,7 +225,7 @@ class UserProfileServiceImpl implements UserProfileService {
     try {
       // 先嘗試獲取現有記錄
       let profile = await this.getUserProfile(clerkUserId);
-      
+
       if (!profile) {
         // 如果不存在，建立新的免費方案記錄
         profile = await this.createUserProfile({

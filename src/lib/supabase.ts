@@ -55,11 +55,12 @@ export const supabaseAdmin = (() => {
 /**
  * 資料庫操作錯誤處理
  */
-export function handleSupabaseError(error: any): never {
+export function handleSupabaseError(error: unknown): never {
   console.error('Supabase error:', error);
-  
-  if (error?.code) {
-    switch (error.code) {
+
+  if (error && typeof error === 'object' && 'code' in error) {
+    const supabaseError = error as { code: string; message?: string };
+    switch (supabaseError.code) {
       case 'PGRST116':
         throw new Error('找不到指定的資料記錄');
       case '23505':
@@ -69,11 +70,15 @@ export function handleSupabaseError(error: any): never {
       case '42501':
         throw new Error('權限不足，無法執行此操作');
       default:
-        throw new Error(`資料庫操作失敗: ${error.message || '未知錯誤'}`);
+        throw new Error(`資料庫操作失敗: ${supabaseError.message || '未知錯誤'}`);
     }
   }
-  
-  throw new Error(error?.message || '資料庫連接失敗');
+
+  if (error instanceof Error) {
+    throw new Error(error.message);
+  }
+
+  throw new Error('資料庫連接失敗');
 }
 
 /**
@@ -123,7 +128,12 @@ export const QUERY_OPTIONS = {
     trial_ends_at,
     last_active_date,
     created_at,
-    updated_at
+    updated_at,
+    polar_customer_id,
+    polar_subscription_id,
+    polar_product_id,
+    last_payment_date,
+    next_billing_date
   `.replace(/\s+/g, ' ').trim()
 } as const;
 
@@ -151,7 +161,7 @@ export const REALTIME_CONFIG = {
 export function createRealtimeSubscription(
   table: string,
   filter?: string,
-  callback?: (payload: any) => void
+  callback?: (payload: unknown) => void
 ) {
   return supabase
     .channel(`realtime:${table}`)
@@ -170,8 +180,8 @@ export function createRealtimeSubscription(
 /**
  * 清理實時訂閱
  */
-export function cleanupRealtimeSubscription(subscription: any) {
+export function cleanupRealtimeSubscription(subscription: unknown) {
   if (subscription) {
-    supabase.removeChannel(subscription);
+    supabase.removeChannel(subscription as Parameters<typeof supabase.removeChannel>[0]);
   }
 }

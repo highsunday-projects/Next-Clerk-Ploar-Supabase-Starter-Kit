@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.25.3",
+    "@polar-sh/nextjs": "^0.4.3",
+    "@polar-sh/sdk": "^0.34.5",
     "@supabase/supabase-js": "^2.51.0",
     "lucide-react": "^0.525.0",
     "next": "15.4.1",

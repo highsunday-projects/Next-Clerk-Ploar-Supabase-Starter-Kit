@@ -22,6 +22,12 @@ export interface UserProfile {
   last_active_date: string;
   created_at: string;
   updated_at: string;
+  // Polar 付費系統相關欄位
+  polar_customer_id?: string;
+  polar_subscription_id?: string;
+  polar_product_id?: string;
+  last_payment_date?: string;
+  next_billing_date?: string;
 }
 
 // 建立用戶訂閱記錄的請求參數
@@ -31,6 +37,12 @@ export interface CreateUserProfileRequest {
   subscriptionStatus?: SubscriptionStatus;
   monthlyUsageLimit?: number;
   trialEndsAt?: string;
+  // Polar 付費系統相關欄位
+  polarCustomerId?: string;
+  polarSubscriptionId?: string;
+  polarProductId?: string;
+  lastPaymentDate?: string;
+  nextBillingDate?: string;
 }
 
 // 更新用戶訂閱記錄的請求參數
@@ -40,6 +52,12 @@ export interface UpdateUserProfileRequest {
   monthlyUsageLimit?: number;
   trialEndsAt?: string;
   lastActiveDate?: string;
+  // Polar 付費系統相關欄位
+  polarCustomerId?: string;
+  polarSubscriptionId?: string;
+  polarProductId?: string;
+  lastPaymentDate?: string;
+  nextBillingDate?: string;
 }
 
 // API 回應格式
@@ -51,7 +69,7 @@ export interface ApiResponse<T> {
 }
 
 // 用戶訂閱資料 API 回應
-export interface UserProfileResponse extends ApiResponse<UserProfile> {}
+export type UserProfileResponse = ApiResponse<UserProfile>;
 
 // 訂閱方案配置
 export interface SubscriptionPlanConfig {
@@ -122,7 +140,7 @@ export class SupabaseError extends Error {
   constructor(
     message: string,
     public code?: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'SupabaseError';
@@ -132,7 +150,77 @@ export class SupabaseError extends Error {
 // 用戶訂閱服務介面
 export interface UserProfileService {
   getUserProfile(clerkUserId: string): Promise<UserProfile | null>;
+  getUserProfileByPolarCustomerId(polarCustomerId: string): Promise<UserProfile | null>;
   createUserProfile(data: CreateUserProfileRequest): Promise<UserProfile>;
   updateUserProfile(clerkUserId: string, data: UpdateUserProfileRequest): Promise<UserProfile>;
   updateLastActiveDate(clerkUserId: string): Promise<void>;
+  getOrCreateUserProfile(clerkUserId: string): Promise<UserProfile>;
+}
+
+// Polar 相關類型定義
+export interface PolarCustomer {
+  id: string;
+  email: string;
+  name?: string;
+  avatar_url?: string;
+  created_at: string;
+  modified_at: string;
+}
+
+export interface PolarProduct {
+  id: string;
+  name: string;
+  description?: string;
+  is_recurring: boolean;
+  is_archived: boolean;
+  organization_id: string;
+  prices: PolarPrice[];
+  created_at: string;
+  modified_at: string;
+}
+
+export interface PolarPrice {
+  id: string;
+  amount_type: 'fixed' | 'custom';
+  is_archived: boolean;
+  price_amount?: number;
+  price_currency?: string;
+  recurring_interval?: 'month' | 'year';
+  created_at: string;
+  modified_at: string;
+}
+
+export interface PolarSubscription {
+  id: string;
+  status: 'incomplete' | 'incomplete_expired' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid';
+  current_period_start: string;
+  current_period_end: string;
+  cancel_at_period_end: boolean;
+  started_at?: string;
+  ended_at?: string;
+  customer_id: string;
+  product_id: string;
+  price_id: string;
+  created_at: string;
+  modified_at: string;
+}
+
+export interface PolarCheckoutSession {
+  id: string;
+  url: string;
+  customer_id?: string;
+  product_id: string;
+  price_id: string;
+  success_url: string;
+  created_at: string;
+  expires_at: string;
+}
+
+// Polar Webhook 事件類型
+export interface PolarWebhookEvent {
+  type: string;
+  data: {
+    id: string;
+    [key: string]: unknown;
+  };
 }

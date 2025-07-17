@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Crown,
   Check,
@@ -28,6 +28,88 @@ export default function SubscriptionPage() {
   const { user, isLoaded } = useUser();
   const { profile, loading, error } = useUserProfile();
   const router = useRouter();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // 處理客戶門戶訪問
+  const handleCustomerPortal = async () => {
+    try {
+      setIsProcessing(true);
+      const response = await fetch('/api/customer-portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('無法存取客戶門戶');
+      }
+
+      const data = await response.json();
+      if (data.success && data.data.portalUrl) {
+        window.open(data.data.portalUrl, '_blank');
+      } else {
+        throw new Error(data.error || '無法生成客戶門戶連結');
+      }
+    } catch (error) {
+      console.error('Error accessing customer portal:', error);
+      alert(error instanceof Error ? error.message : '無法存取客戶門戶，請稍後再試');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // 處理訂閱取消
+  const handleCancelSubscription = async () => {
+    if (!confirm('確定要取消訂閱嗎？此操作將在當前計費週期結束時生效。')) {
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      // 重定向到客戶門戶進行取消操作
+      await handleCustomerPortal();
+    } catch (error) {
+      console.error('Error canceling subscription:', error);
+      alert('無法取消訂閱，請稍後再試或聯繫客服支援');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // 處理方案升級
+  const handlePlanUpgrade = async (planId: string) => {
+    if (planId === 'free') {
+      alert('免費方案無需付費，如需降級請聯繫客服支援');
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      const response = await fetch(`/api/checkout/${planId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('無法建立付費流程');
+      }
+
+      const data = await response.json();
+      if (data.success && data.data.checkoutUrl) {
+        window.location.href = data.data.checkoutUrl;
+      } else {
+        throw new Error(data.error || '無法建立付費流程');
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      alert(error instanceof Error ? error.message : '無法建立付費流程，請稍後再試');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // 重定向未登入用戶
   useEffect(() => {
@@ -179,32 +261,64 @@ export default function SubscriptionPage() {
           <div className="flex flex-col justify-center space-y-3">
             {canManagePayment(profile) && (
               <button
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                onClick={() => alert('付款方式管理功能將在未來版本中提供')}
+                disabled={isProcessing}
+                className={`w-full py-2 px-4 rounded-lg transition-colors duration-200 ${
+                  isProcessing
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+                onClick={handleCustomerPortal}
               >
-                更新付款方式
+                {isProcessing ? (
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    載入中...
+                  </div>
+                ) : (
+                  '管理訂閱'
+                )}
               </button>
             )}
 
             {profile.subscription_plan !== 'free' && (
               <button
-                className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                onClick={() => alert('發票下載功能將在未來版本中提供')}
+                disabled={isProcessing}
+                className={`w-full border py-2 px-4 rounded-lg transition-colors duration-200 ${
+                  isProcessing
+                    ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+                onClick={handleCustomerPortal}
               >
-                下載發票
+                {isProcessing ? (
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    載入中...
+                  </div>
+                ) : (
+                  '查看發票'
+                )}
               </button>
             )}
 
             {canCancelSubscription(profile) && (
               <button
-                className="w-full border border-red-300 text-red-700 py-2 px-4 rounded-lg hover:bg-red-50 transition-colors duration-200"
-                onClick={() => {
-                  if (confirm('確定要取消訂閱嗎？此操作將在當前計費週期結束時生效。')) {
-                    alert('取消訂閱功能將在未來版本中提供');
-                  }
-                }}
+                disabled={isProcessing}
+                className={`w-full border py-2 px-4 rounded-lg transition-colors duration-200 ${
+                  isProcessing
+                    ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                    : 'border-red-300 text-red-700 hover:bg-red-50'
+                }`}
+                onClick={handleCancelSubscription}
               >
-                取消訂閱
+                {isProcessing ? (
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    處理中...
+                  </div>
+                ) : (
+                  '取消訂閱'
+                )}
               </button>
             )}
 
@@ -293,11 +407,11 @@ export default function SubscriptionPage() {
               </ul>
 
               <button
-                disabled={plan.current || profile.subscription_status === 'cancelled'}
+                disabled={plan.current || profile.subscription_status === 'cancelled' || isProcessing}
                 className={`w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200 ${
                   plan.current
                     ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : profile.subscription_status === 'cancelled'
+                    : profile.subscription_status === 'cancelled' || isProcessing
                     ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                     : plan.price > currentSubscription.price
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
@@ -306,23 +420,38 @@ export default function SubscriptionPage() {
                     : 'border border-orange-300 text-orange-700 hover:bg-orange-50'
                 }`}
                 onClick={() => {
-                  if (!plan.current && profile.subscription_status !== 'cancelled') {
-                    const changeType = getPlanChangeType(profile.subscription_plan, plan.id as any);
-                    const actionText = changeType === 'upgrade' ? '升級' :
-                                     changeType === 'downgrade' ? '降級' : '變更';
-                    alert(`即將${actionText}至 ${plan.name}`);
+                  if (!plan.current && profile.subscription_status !== 'cancelled' && !isProcessing) {
+                    const changeType = getPlanChangeType(profile.subscription_plan, plan.id as 'free' | 'pro' | 'enterprise');
+                    if (changeType === 'upgrade') {
+                      handlePlanUpgrade(plan.id);
+                    } else if (changeType === 'downgrade' && plan.price === 0) {
+                      // 降級到免費方案需要通過客戶門戶取消訂閱
+                      if (confirm('降級到免費方案需要取消當前訂閱，確定要繼續嗎？')) {
+                        handleCustomerPortal();
+                      }
+                    } else {
+                      // 其他變更（如方案間切換）
+                      handlePlanUpgrade(plan.id);
+                    }
                   }
                 }}
               >
-                {plan.current
+                {isProcessing
+                  ? (
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      處理中...
+                    </div>
+                  )
+                  : plan.current
                   ? '目前方案'
                   : profile.subscription_status === 'cancelled'
                   ? '訂閱已取消'
                   : (() => {
-                      const changeType = getPlanChangeType(profile.subscription_plan, plan.id as any);
-                      return changeType === 'upgrade' ? '升級' :
-                             changeType === 'downgrade' ? (plan.price === 0 ? '降級至免費' : '降級') :
-                             '變更';
+                      const changeType = getPlanChangeType(profile.subscription_plan, plan.id as 'free' | 'pro' | 'enterprise');
+                      return changeType === 'upgrade' ? '立即升級' :
+                             changeType === 'downgrade' ? (plan.price === 0 ? '降級至免費' : '變更方案') :
+                             '變更方案';
                     })()
                 }
               </button>

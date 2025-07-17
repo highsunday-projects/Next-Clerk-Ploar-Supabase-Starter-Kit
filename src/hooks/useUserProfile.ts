@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import type { UserProfile, UserProfileResponse } from '@/types/supabase';
 
@@ -30,7 +30,7 @@ export function useUserProfile(): UseUserProfileReturn {
   /**
    * 獲取用戶訂閱資料
    */
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!user?.id) {
       setLoading(false);
       return;
@@ -64,7 +64,7 @@ export function useUserProfile(): UseUserProfileReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   /**
    * 更新用戶訂閱資料
@@ -119,7 +119,7 @@ export function useUserProfile(): UseUserProfileReturn {
       setLoading(false);
       setProfile(null);
     }
-  }, [isLoaded, user?.id]);
+  }, [isLoaded, user, fetchProfile]);
 
   return {
     profile,

@@ -3,7 +3,7 @@ title: Supabase 用戶訂閱資料整合 - 僅訂閱功能
 author: 開發團隊
 date: 2025-07-17
 version: 1.1
-uuid: 93450ca6afdc445db021df46a5bd7391
+uuid: 3db09f60c3f045669254bc609756d56f
 ---
 
 # SF04 - Supabase 用戶訂閱資料整合 (簡化需求)

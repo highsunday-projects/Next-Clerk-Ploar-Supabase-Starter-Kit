@@ -6,7 +6,7 @@
  */
 
 // 訂閱方案類型
-export type SubscriptionPlan = 'free' | 'pro' | 'enterprise';
+export type SubscriptionPlan = 'free' | 'pro';
 
 // 訂閱狀態類型
 export type SubscriptionStatus = 'active' | 'trial' | 'cancelled' | 'expired' | 'past_due';
@@ -64,7 +64,7 @@ export interface ApiResponse<T> {
 }
 
 // 用戶訂閱資料 API 回應
-export interface UserProfileResponse extends ApiResponse<UserProfile> {}
+export type UserProfileResponse = ApiResponse<UserProfile>;
 
 // 訂閱方案配置
 export interface SubscriptionPlanConfig {
@@ -101,19 +101,6 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionPlanConfig
       '詳細分析報告'
     ],
     popular: true
-  },
-  enterprise: {
-    name: 'enterprise',
-    displayName: '企業方案',
-    monthlyUsageLimit: 100000,
-    price: 10,
-    features: [
-      '每月 100,000 次 API 呼叫',
-      '所有功能存取',
-      '24/7 專屬支援',
-      '自訂整合',
-      '進階安全功能'
-    ]
   }
 };
 
@@ -135,7 +122,7 @@ export class SupabaseError extends Error {
   constructor(
     message: string,
     public code?: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'SupabaseError';
@@ -174,7 +161,7 @@ export interface PolarWebhookEvent {
   data: {
     id: string;
     object: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -196,5 +183,5 @@ export interface PolarCustomer {
   id: string;
   email: string;
   name?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

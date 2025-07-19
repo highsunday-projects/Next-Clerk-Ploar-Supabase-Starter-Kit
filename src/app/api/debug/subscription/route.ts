@@ -24,15 +24,13 @@ export async function GET(request: Request) {
       POLAR_ACCESS_TOKEN: process.env.POLAR_ACCESS_TOKEN ? '已設定' : '未設定',
       POLAR_WEBHOOK_SECRET: process.env.POLAR_WEBHOOK_SECRET ? '已設定' : '未設定',
       POLAR_PRO_PRODUCT_ID: process.env.POLAR_PRO_PRODUCT_ID || '未設定',
-      POLAR_ENTERPRISE_PRODUCT_ID: process.env.POLAR_ENTERPRISE_PRODUCT_ID || '未設定',
       POLAR_ENVIRONMENT: process.env.NEXT_PUBLIC_POLAR_ENVIRONMENT || 'sandbox',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || '未設定'
     };
 
     // 檢查產品 ID 映射
     const productMapping = {
-      pro: getPolarProductId('pro'),
-      enterprise: getPolarProductId('enterprise')
+      pro: getPolarProductId('pro')
     };
 
     // 獲取用戶當前訂閱資料

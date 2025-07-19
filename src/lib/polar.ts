@@ -47,8 +47,7 @@ export const POLAR_CONFIG = {
 // Polar 產品 ID 對應表（需要在 Polar Dashboard 建立產品後更新）
 export const POLAR_PRODUCT_IDS = {
   free: '', // 免費方案不需要 Polar 產品
-  pro: process.env.POLAR_PRO_PRODUCT_ID || '',
-  enterprise: process.env.POLAR_ENTERPRISE_PRODUCT_ID || ''
+  pro: process.env.POLAR_PRO_PRODUCT_ID || ''
 } as const;
 
 // 訂閱方案對應的 Polar 產品配置
@@ -78,21 +77,6 @@ export const POLAR_SUBSCRIPTION_PLANS = {
       '優先支援',
       '詳細分析報告',
       'API 存取'
-    ]
-  },
-  enterprise: {
-    name: 'Enterprise Plan',
-    price: 10,
-    currency: 'USD',
-    interval: 'month',
-    productId: POLAR_PRODUCT_IDS.enterprise,
-    features: [
-      '100,000 次 API 呼叫/月',
-      '所有功能存取',
-      '24/7 專屬支援',
-      '自訂整合',
-      '進階分析',
-      '白標解決方案'
     ]
   }
 } as const;
@@ -130,14 +114,14 @@ export function verifyPolarWebhook(
 /**
  * 根據訂閱方案獲取 Polar 產品 ID
  */
-export function getPolarProductId(plan: 'free' | 'pro' | 'enterprise'): string | null {
+export function getPolarProductId(plan: 'free' | 'pro'): string | null {
   return POLAR_PRODUCT_IDS[plan] || null;
 }
 
 /**
  * 根據訂閱方案獲取方案配置
  */
-export function getPolarPlanConfig(plan: 'free' | 'pro' | 'enterprise') {
+export function getPolarPlanConfig(plan: 'free' | 'pro') {
   return POLAR_SUBSCRIPTION_PLANS[plan];
 }
 

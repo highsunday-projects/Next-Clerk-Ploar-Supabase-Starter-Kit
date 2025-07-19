@@ -61,7 +61,7 @@ export default function DashboardPage() {
   }
 
   // 獲取當前訂閱方案資訊
-  const currentPlan = profile ? SUBSCRIPTION_PLANS[profile.subscription_plan] : SUBSCRIPTION_PLANS.free;
+  const currentPlan = profile ? (SUBSCRIPTION_PLANS[profile.subscription_plan] || SUBSCRIPTION_PLANS.free) : SUBSCRIPTION_PLANS.free;
 
 
 
@@ -155,18 +155,14 @@ export default function DashboardPage() {
           <div className="flex items-center justify-center">
             <div className="text-center">
               <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 ${
-                profile?.subscription_plan === 'enterprise'
-                  ? 'bg-gradient-to-br from-purple-500 to-pink-600'
-                  : profile?.subscription_plan === 'pro'
+                profile?.subscription_plan === 'pro'
                   ? 'bg-gradient-to-br from-blue-500 to-purple-600'
                   : 'bg-gradient-to-br from-gray-400 to-gray-600'
               }`}>
                 <Crown className="w-10 h-10 text-white" />
               </div>
               <p className="text-sm text-gray-600">
-                {profile?.subscription_plan === 'enterprise'
-                  ? '享受企業版的所有功能'
-                  : profile?.subscription_plan === 'pro'
+                {profile?.subscription_plan === 'pro'
                   ? '享受專業版的所有功能'
                   : '免費方案基本功能'
                 }

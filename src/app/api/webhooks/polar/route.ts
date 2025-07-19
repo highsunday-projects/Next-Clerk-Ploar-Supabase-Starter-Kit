@@ -144,8 +144,7 @@ async function handleSubscriptionUpdated(event: any): Promise<void> {
   console.log('Product ID mapping result:', {
     productId: subscription.product_id,
     mappedPlan: subscriptionPlan,
-    proProductId: process.env.POLAR_PRO_PRODUCT_ID,
-    enterpriseProductId: process.env.POLAR_ENTERPRISE_PRODUCT_ID
+    proProductId: process.env.POLAR_PRO_PRODUCT_ID
   });
 
   const updateData: any = {
@@ -304,12 +303,9 @@ async function handlePaymentFailed(event: any): Promise<void> {
  */
 function getSubscriptionPlanFromProductId(productId: string): SubscriptionPlan | null {
   const proProductId = process.env.POLAR_PRO_PRODUCT_ID;
-  const enterpriseProductId = process.env.POLAR_ENTERPRISE_PRODUCT_ID;
   
   if (productId === proProductId) {
     return 'pro';
-  } else if (productId === enterpriseProductId) {
-    return 'enterprise';
   }
   
   return null;

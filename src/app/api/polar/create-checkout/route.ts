@@ -37,9 +37,9 @@ export async function POST(request: Request) {
     }
 
     // 驗證必要欄位
-    if (!requestData.plan || !['pro', 'enterprise'].includes(requestData.plan)) {
+    if (!requestData.plan || !['pro'].includes(requestData.plan)) {
       return Response.json({
-        error: '無效的訂閱方案，僅支援 pro 或 enterprise'
+        error: '無效的訂閱方案，僅支援 pro'
       }, { status: 400 });
     }
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     // 檢查是否已經是目標方案
     if (userProfile.subscription_plan === requestData.plan) {
       return Response.json({
-        error: `您已經是 ${requestData.plan === 'pro' ? '專業版' : '企業版'} 用戶`
+        error: `您已經是專業版用戶`
       }, { status: 400 });
     }
 

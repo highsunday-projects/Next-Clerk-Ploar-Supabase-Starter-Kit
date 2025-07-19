@@ -143,10 +143,9 @@ export function useSubscriptionStatus() {
   const isExpired = profile?.subscription_status === 'expired';
 
   const isPro = profile?.subscription_plan === 'pro';
-  const isEnterprise = profile?.subscription_plan === 'enterprise';
   const isFree = profile?.subscription_plan === 'free';
 
-  const hasActiveSubscription = isActive && (isPro || isEnterprise);
+  const hasActiveSubscription = isActive && isPro;
 
   return {
     profile,
@@ -158,7 +157,6 @@ export function useSubscriptionStatus() {
       isCancelled,
       isExpired,
       isPro,
-      isEnterprise,
       isFree,
       hasActiveSubscription,
     },

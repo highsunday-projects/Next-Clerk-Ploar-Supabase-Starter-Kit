@@ -137,8 +137,7 @@ export function formatBillingInfo(profile: UserProfile): string {
 export function getSubscriptionPlanName(plan: SubscriptionPlan): string {
   const planNames: Record<SubscriptionPlan, string> = {
     'free': '免費版',
-    'pro': '專業版',
-    'enterprise': '企業版'
+    'pro': '專業版'
   };
 
   return planNames[plan] || plan;
@@ -196,9 +195,7 @@ export function getRecommendedUpgrade(currentPlan: SubscriptionPlan): Subscripti
     case 'free':
       return 'pro';
     case 'pro':
-      return 'enterprise';
-    case 'enterprise':
-      return null;
+      return null; // 專業版已是最高方案
     default:
       return null;
   }

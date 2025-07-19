@@ -13,7 +13,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { SUBSCRIPTION_PLANS } from '@/types/supabase';
+import { SUBSCRIPTION_PLANS, SubscriptionPlan } from '@/types/supabase';
 import {
   getSubscriptionStatusText,
   getSubscriptionStatusClass,
@@ -147,7 +147,7 @@ export default function SubscriptionPage() {
     }
 
     // 檢查是否為降級操作
-    const targetPlan = planId as 'pro' | 'enterprise';
+    const targetPlan = planId as 'pro';
     const isDowngrade = isDowngradeOperation(profile.subscription_plan, targetPlan);
 
     // 如果是降級，顯示確認對話框
@@ -322,7 +322,7 @@ export default function SubscriptionPage() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">變更訂閱方案</h2>
         
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {plans.map((plan, index) => (
             <div
               key={index}
@@ -397,7 +397,7 @@ export default function SubscriptionPage() {
                 }`}
                 onClick={() => {
                   if (!plan.current && profile.subscription_status !== 'cancelled' && upgrading !== plan.id) {
-                    const changeType = getPlanChangeType(profile.subscription_plan, plan.id as any);
+                    const changeType = getPlanChangeType(profile.subscription_plan, plan.id as SubscriptionPlan);
 
                     if (changeType === 'upgrade' && plan.id !== 'free') {
                       // 使用 Polar Checkout 進行升級
@@ -424,7 +424,7 @@ export default function SubscriptionPage() {
                 ) : profile.subscription_status === 'cancelled' ? (
                   '訂閱已取消'
                 ) : (() => {
-                    const changeType = getPlanChangeType(profile.subscription_plan, plan.id as any);
+                    const changeType = getPlanChangeType(profile.subscription_plan, plan.id as SubscriptionPlan);
                     return changeType === 'upgrade' ? '升級' :
                            changeType === 'downgrade' ? (plan.price === 0 ? '降級至免費' : '降級') :
                            '變更';

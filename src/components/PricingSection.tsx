@@ -30,21 +30,6 @@ export default function PricingSection() {
       buttonText: '立即升級',
       buttonStyle: 'bg-blue-600 text-white hover:bg-blue-700',
       popular: true
-    },
-    {
-      name: '企業方案',
-      price: '$10',
-      period: '/月',
-      description: '適合大型企業和高流量應用',
-      features: [
-        '每月 100,000 次 API 呼叫',
-        '所有功能存取',
-        '24/7 專屬支援',
-        '自訂整合',
-        '進階安全功能'
-      ],
-      buttonText: '全面啟用',
-      buttonStyle: 'border border-gray-300 text-gray-700 hover:bg-gray-50'
     }
   ];
 
@@ -62,7 +47,7 @@ export default function PricingSection() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <div
               key={index}

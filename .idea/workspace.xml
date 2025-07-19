@@ -5,13 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="03e93c0d-3325-4b1e-b22c-75672eb5a3a6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/documents/功能/SF08 - Starter Kit 簡化與雙方案架構優化 .md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/documents/訂閱方案更新說明.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/documents/訂閱管理頁面更新說明.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/SaaS訂閱方案(Demo用).md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/SaaS訂閱方案(Demo用).md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/當前專案架構.md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/當前專案架構.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/debug/subscription/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/debug/subscription/route.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/api/polar/create-checkout/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/polar/create-checkout/route.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/api/webhooks/polar/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/webhooks/polar/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/debug/subscription/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/debug/subscription/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/PricingSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/PricingSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useUserProfile.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useUserProfile.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/polar.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/polar.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/subscriptionUtils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/subscriptionUtils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/supabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/supabase.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,21 +53,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/highsunday/Program/Next-Clerk-Ploar-Supabase Starter Kit&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;/Applications/WebStorm.app/Contents/plugins/javascript-impl/jsLanguageServicesImpl/external&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "/Users/highsunday/Program/Next-Clerk-Ploar-Supabase Starter Kit/documents/功能",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "ts.external.directory.path": "/Applications/WebStorm.app/Contents/plugins/javascript-impl/jsLanguageServicesImpl/external",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/documents/功能" />
+    </key>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">

@@ -155,13 +155,6 @@ export default function SubscriptionDebugPage() {
               >
                 測試切換到 Pro
               </button>
-              <button
-                onClick={() => testSubscriptionUpdate('enterprise')}
-                disabled={loading}
-                className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 disabled:opacity-50"
-              >
-                測試切換到 Enterprise
-              </button>
             </div>
           </div>
         )}

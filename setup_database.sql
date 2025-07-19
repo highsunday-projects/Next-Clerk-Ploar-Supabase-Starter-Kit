@@ -1,14 +1,31 @@
 -- =====================================================
--- Next-Clerk-Polar-Supabase Starter Kit 資料庫架構
+-- Next-Clerk-Polar-Supabase Starter Kit 資料庫建立腳本
 -- =====================================================
--- 此腳本建立完整的用戶訂閱資料表，支援 Polar 付費系統整合
+-- 此腳本可以直接在 Supabase SQL Editor 中執行
 -- 建立日期: 2025-07-19
--- 版本: 2.0 (包含 Polar 整合)
+-- 版本: 3.0 (雙方案架構 - 免費 + 專業版)
+
+-- =====================================================
+-- 1. 清理舊資料（謹慎使用）
+-- =====================================================
 
 -- 刪除現有表格（如果存在）
 DROP TABLE IF EXISTS user_profiles CASCADE;
 
--- 建立用戶訂閱資料表（包含 Polar 整合欄位）
+-- 刪除現有視圖
+DROP VIEW IF EXISTS active_users CASCADE;
+DROP VIEW IF EXISTS paid_users CASCADE;
+DROP VIEW IF EXISTS expiring_subscriptions CASCADE;
+
+-- 刪除現有函數
+DROP FUNCTION IF EXISTS get_subscription_stats() CASCADE;
+DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
+
+-- =====================================================
+-- 2. 建立主要資料表
+-- =====================================================
+
+-- 建立用戶訂閱資料表
 CREATE TABLE user_profiles (
   -- 基本識別欄位
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -33,15 +50,15 @@ CREATE TABLE user_profiles (
 );
 
 -- =====================================================
--- 建立約束條件
+-- 3. 建立約束條件
 -- =====================================================
 
--- 訂閱方案檢查約束
+-- 訂閱方案檢查約束（雙方案架構）
 ALTER TABLE user_profiles 
 ADD CONSTRAINT valid_subscription_plan 
-CHECK (subscription_plan IN ('free', 'pro', 'enterprise'));
+CHECK (subscription_plan IN ('free', 'pro'));
 
--- 訂閱狀態檢查約束（新增 past_due 狀態）
+-- 訂閱狀態檢查約束
 ALTER TABLE user_profiles 
 ADD CONSTRAINT valid_subscription_status 
 CHECK (subscription_status IN ('active', 'trial', 'cancelled', 'expired', 'past_due'));
@@ -51,79 +68,66 @@ ALTER TABLE user_profiles
 ADD CONSTRAINT positive_monthly_usage_limit 
 CHECK (monthly_usage_limit > 0);
 
--- Polar 客戶 ID 唯一性約束（允許 NULL）
+-- =====================================================
+-- 4. 建立索引
+-- =====================================================
+
+-- 主要查詢索引
+CREATE INDEX idx_user_profiles_clerk_user_id ON user_profiles (clerk_user_id);
+CREATE INDEX idx_user_profiles_subscription_plan ON user_profiles (subscription_plan);
+CREATE INDEX idx_user_profiles_subscription_status ON user_profiles (subscription_status);
+CREATE INDEX idx_user_profiles_created_at ON user_profiles (created_at);
+CREATE INDEX idx_user_profiles_last_active_date ON user_profiles (last_active_date);
+
+-- Polar 相關索引（允許 NULL 值）
 CREATE UNIQUE INDEX idx_polar_customer_id 
 ON user_profiles (polar_customer_id) 
 WHERE polar_customer_id IS NOT NULL;
 
--- Polar 訂閱 ID 唯一性約束（允許 NULL）
 CREATE UNIQUE INDEX idx_polar_subscription_id 
 ON user_profiles (polar_subscription_id) 
 WHERE polar_subscription_id IS NOT NULL;
 
--- =====================================================
--- 建立索引以提升查詢效能
--- =====================================================
-
--- Clerk 用戶 ID 索引（主要查詢欄位）
-CREATE INDEX idx_user_profiles_clerk_user_id ON user_profiles (clerk_user_id);
-
--- 訂閱方案索引（用於統計和查詢）
-CREATE INDEX idx_user_profiles_subscription_plan ON user_profiles (subscription_plan);
-
--- 訂閱狀態索引（用於狀態篩選）
-CREATE INDEX idx_user_profiles_subscription_status ON user_profiles (subscription_status);
-
--- 建立時間索引（用於時間範圍查詢）
-CREATE INDEX idx_user_profiles_created_at ON user_profiles (created_at);
-
--- 最後活躍時間索引（用於用戶活躍度分析）
-CREATE INDEX idx_user_profiles_last_active_date ON user_profiles (last_active_date);
-
--- 計費週期結束時間索引（用於續費提醒）
-CREATE INDEX idx_user_profiles_current_period_end ON user_profiles (current_period_end)
+-- 計費週期索引
+CREATE INDEX idx_user_profiles_current_period_end 
+ON user_profiles (current_period_end)
 WHERE current_period_end IS NOT NULL;
 
 -- =====================================================
--- 啟用 Row Level Security (RLS)
+-- 5. 啟用 Row Level Security (RLS)
 -- =====================================================
 
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
--- 建立 RLS 安全政策
+-- 6. 建立 RLS 安全政策
 -- =====================================================
 
--- 查看政策：用戶只能查看自己的資料
+-- 用戶查看自己的資料
 CREATE POLICY "Users can view own profile" ON user_profiles
   FOR SELECT 
   USING (auth.uid()::text = clerk_user_id);
 
--- 更新政策：用戶只能更新自己的資料
+-- 用戶更新自己的資料
 CREATE POLICY "Users can update own profile" ON user_profiles
   FOR UPDATE 
   USING (auth.uid()::text = clerk_user_id);
 
--- 插入政策：用戶只能插入自己的資料
+-- 用戶插入自己的資料
 CREATE POLICY "Users can insert own profile" ON user_profiles
   FOR INSERT 
   WITH CHECK (auth.uid()::text = clerk_user_id);
 
--- 刪除政策：用戶只能刪除自己的資料（通常不建議允許）
-CREATE POLICY "Users can delete own profile" ON user_profiles
-  FOR DELETE 
-  USING (auth.uid()::text = clerk_user_id);
-
--- 服務角色政策：允許服務端完整存取（用於 Webhook 和管理操作）
+-- 服務角色完整存取（用於 API 和 Webhook）
 CREATE POLICY "Service role full access" ON user_profiles
   FOR ALL 
   USING (current_setting('role') = 'service_role');
 
 -- =====================================================
--- 建立觸發器函數
+-- 7. 建立觸發器函數
 -- =====================================================
 
--- 自動更新 updated_at 欄位的函數
+-- 自動更新 updated_at 欄位
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -139,10 +143,10 @@ CREATE TRIGGER update_user_profiles_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- =====================================================
--- 建立有用的視圖
+-- 8. 建立實用視圖
 -- =====================================================
 
--- 活躍用戶視圖（最近 30 天有活動）
+-- 活躍用戶視圖（最近 30 天）
 CREATE VIEW active_users AS
 SELECT 
     id,
@@ -156,7 +160,7 @@ FROM user_profiles
 WHERE last_active_date >= NOW() - INTERVAL '30 days'
   AND subscription_status IN ('active', 'trial');
 
--- 付費用戶視圖
+-- 付費用戶視圖（僅專業版）
 CREATE VIEW paid_users AS
 SELECT 
     id,
@@ -170,10 +174,10 @@ SELECT
     cancel_at_period_end,
     created_at
 FROM user_profiles
-WHERE subscription_plan IN ('pro', 'enterprise')
+WHERE subscription_plan = 'pro'
   AND polar_subscription_id IS NOT NULL;
 
--- 即將到期的訂閱視圖（7 天內到期）
+-- 即將到期的訂閱視圖（7 天內）
 CREATE VIEW expiring_subscriptions AS
 SELECT 
     id,
@@ -190,48 +194,10 @@ WHERE current_period_end IS NOT NULL
   AND subscription_status = 'active';
 
 -- =====================================================
--- 插入範例資料（可選，用於測試）
+-- 9. 建立統計函數
 -- =====================================================
 
--- 範例免費用戶
-INSERT INTO user_profiles (
-    clerk_user_id,
-    subscription_plan,
-    subscription_status,
-    monthly_usage_limit
-) VALUES (
-    'user_example_free_123',
-    'free',
-    'active',
-    1000
-) ON CONFLICT (clerk_user_id) DO NOTHING;
-
--- 範例專業版用戶
-INSERT INTO user_profiles (
-    clerk_user_id,
-    subscription_plan,
-    subscription_status,
-    monthly_usage_limit,
-    polar_customer_id,
-    polar_subscription_id,
-    current_period_end,
-    cancel_at_period_end
-) VALUES (
-    'user_example_pro_456',
-    'pro',
-    'active',
-    10000,
-    'cus_example_polar_customer',
-    'sub_example_polar_subscription',
-    NOW() + INTERVAL '30 days',
-    false
-) ON CONFLICT (clerk_user_id) DO NOTHING;
-
--- =====================================================
--- 建立統計查詢函數
--- =====================================================
-
--- 獲取訂閱統計的函數
+-- 訂閱統計函數
 CREATE OR REPLACE FUNCTION get_subscription_stats()
 RETURNS TABLE (
     plan VARCHAR(20),
@@ -252,20 +218,19 @@ BEGIN
         CASE up.subscription_plan 
             WHEN 'free' THEN 1 
             WHEN 'pro' THEN 2 
-            WHEN 'enterprise' THEN 3 
         END;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- =====================================================
--- 權限設定
+-- 10. 設定權限
 -- =====================================================
 
 -- 授予 authenticated 角色基本權限
 GRANT SELECT, INSERT, UPDATE ON user_profiles TO authenticated;
 GRANT USAGE ON SCHEMA public TO authenticated;
 
--- 授予 service_role 完整權限（用於 API 和 Webhook）
+-- 授予 service_role 完整權限
 GRANT ALL ON user_profiles TO service_role;
 GRANT ALL ON SCHEMA public TO service_role;
 
@@ -274,28 +239,69 @@ GRANT SELECT ON active_users TO authenticated;
 GRANT SELECT ON paid_users TO authenticated;
 GRANT SELECT ON expiring_subscriptions TO service_role;
 
--- 授予統計函數執行權限
+-- 授予函數執行權限
 GRANT EXECUTE ON FUNCTION get_subscription_stats() TO service_role;
+
+-- =====================================================
+-- 11. 資料庫架構建立完成（空資料庫）
+-- =====================================================
+
+-- 資料庫架構已建立完成，表格為空狀態
+-- 用戶資料將透過應用程式 API 自動建立
+
+-- =====================================================
+-- 12. 驗證建立結果
+-- =====================================================
+
+-- 檢查表格是否建立成功
+SELECT 
+    'user_profiles' as table_name,
+    0 as record_count,
+    (SELECT COUNT(*) FROM information_schema.table_constraints 
+     WHERE table_name = 'user_profiles' AND constraint_type = 'CHECK') as check_constraints,
+    (SELECT COUNT(*) FROM information_schema.table_constraints 
+     WHERE table_name = 'user_profiles' AND constraint_type = 'UNIQUE') as unique_constraints;
+
+-- 檢查索引
+SELECT 
+    indexname,
+    tablename
+FROM pg_indexes 
+WHERE tablename = 'user_profiles'
+ORDER BY indexname;
+
+-- 檢查視圖
+SELECT 
+    viewname,
+    definition
+FROM pg_views 
+WHERE viewname IN ('active_users', 'paid_users', 'expiring_subscriptions');
+
+-- 檢查 RLS 是否啟用
+SELECT 
+    tablename,
+    rowsecurity
+FROM pg_tables 
+WHERE tablename = 'user_profiles';
 
 -- =====================================================
 -- 完成訊息
 -- =====================================================
 
--- 顯示建立完成訊息
 DO $$
 BEGIN
-    RAISE NOTICE '=================================================';
-    RAISE NOTICE 'Next-Clerk-Polar-Supabase 資料庫架構建立完成！';
-    RAISE NOTICE '=================================================';
-    RAISE NOTICE '✅ user_profiles 表格已建立（包含 Polar 整合欄位）';
-    RAISE NOTICE '✅ 約束條件和索引已建立';
-    RAISE NOTICE '✅ Row Level Security 已啟用';
-    RAISE NOTICE '✅ 觸發器和視圖已建立';
-    RAISE NOTICE '✅ 範例資料已插入';
-    RAISE NOTICE '=================================================';
-    RAISE NOTICE '下一步：';
-    RAISE NOTICE '1. 在 Supabase Dashboard 中執行此 SQL';
-    RAISE NOTICE '2. 確認 RLS 政策符合您的安全需求';
-    RAISE NOTICE '3. 測試 API 連接和資料操作';
-    RAISE NOTICE '=================================================';
+    RAISE NOTICE '================================================';
+    RAISE NOTICE 'Next-Clerk-Polar-Supabase 資料庫建立完成！';
+    RAISE NOTICE '================================================';
+    RAISE NOTICE '✅ user_profiles 表格已建立';
+    RAISE NOTICE '✅ 雙方案架構約束條件已設定 (free, pro)';
+    RAISE NOTICE '✅ 索引和 RLS 安全政策已建立';
+    RAISE NOTICE '✅ 實用視圖和統計函數已建立';
+    RAISE NOTICE '✅ 空資料庫架構已建立完成';
+    RAISE NOTICE '================================================';
+    RAISE NOTICE '接下來可以：';
+    RAISE NOTICE '1. 測試 API 連接';
+    RAISE NOTICE '2. 驗證 Clerk 整合';
+    RAISE NOTICE '3. 設定 Polar Webhook';
+    RAISE NOTICE '================================================';
 END $$;

@@ -5,14 +5,20 @@ const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
 ]);
 
-// 定義公開的認證路由（保留供未來使用）
-// const isPublicRoute = createRouteMatcher([
-//   '/',
-//   '/sign-in(.*)',
-//   '/sign-up(.*)',
-// ]);
+// 定義公開路由（不需要認證）
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/webhooks/(.*)', // Webhook 端點需要跳過認證
+]);
 
 export default clerkMiddleware(async (auth, req) => {
+  // 如果是公開路由，跳過認證
+  if (isPublicRoute(req)) {
+    return;
+  }
+  
   // 如果是受保護的路由，要求用戶登入
   if (isProtectedRoute(req)) {
     await auth.protect();

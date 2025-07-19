@@ -42,7 +42,7 @@ CREATE TABLE user_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
   subscription_plan VARCHAR(20) DEFAULT 'free',
-  subscription_status VARCHAR(20) DEFAULT 'active',
+  subscription_status VARCHAR(20) DEFAULT 'cancelled',
 
   -- Polar 付費系統整合欄位
   polar_customer_id VARCHAR(255),           -- Polar 客戶 ID

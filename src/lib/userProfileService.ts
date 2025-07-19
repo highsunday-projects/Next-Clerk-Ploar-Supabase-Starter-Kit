@@ -143,6 +143,11 @@ class UserProfileServiceImpl implements UserProfileService {
         updateData.cancel_at_period_end = data.cancelAtPeriodEnd;
       }
 
+      console.log('Updating user profile with data:', {
+        clerkUserId,
+        updateData
+      });
+
       const { data: updatedProfile, error } = await supabase
         .from(TABLES.USER_PROFILES)
         .update(updateData)
@@ -151,8 +156,19 @@ class UserProfileServiceImpl implements UserProfileService {
         .single();
 
       if (error) {
+        console.error('Supabase update error:', error);
         handleSupabaseError(error);
       }
+
+      console.log('User profile updated successfully:', {
+        clerkUserId,
+        updatedProfile: {
+          subscription_plan: updatedProfile?.subscription_plan,
+          subscription_status: updatedProfile?.subscription_status,
+          monthly_usage_limit: updatedProfile?.monthly_usage_limit,
+          polar_subscription_id: updatedProfile?.polar_subscription_id
+        }
+      });
 
       return updatedProfile;
     } catch (error) {

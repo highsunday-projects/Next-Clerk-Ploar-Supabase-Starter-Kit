@@ -14,7 +14,7 @@ CREATE TABLE user_profiles (
   
   -- 訂閱方案資訊
   subscription_plan VARCHAR(20) DEFAULT 'free',
-  subscription_status VARCHAR(20) DEFAULT 'active',
+  subscription_status VARCHAR(20) DEFAULT 'cancelled',
   monthly_usage_limit INTEGER DEFAULT 1000,
   
   -- 試用期和時間戳記

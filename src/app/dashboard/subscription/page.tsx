@@ -21,7 +21,9 @@ import {
   formatBillingInfo,
   canManagePayment,
   canCancelSubscription,
-  getPlanChangeType
+  getPlanChangeType,
+  getSubscriptionPlanName,
+  isDowngradeOperation
 } from '@/lib/subscriptionUtils';
 
 export default function SubscriptionPage() {
@@ -138,16 +140,32 @@ export default function SubscriptionPage() {
     monthlyLimit: plan.monthlyUsageLimit
   }));
 
-  // 處理方案升級
+  // 處理方案升級/切換
   const handlePlanUpgrade = async (planId: string) => {
     if (planId === 'free' || planId === profile.subscription_plan) {
       return; // 不處理免費方案或相同方案
     }
 
+    // 檢查是否為降級操作
+    const targetPlan = planId as 'pro' | 'enterprise';
+    const isDowngrade = isDowngradeOperation(profile.subscription_plan, targetPlan);
+
+    // 如果是降級，顯示確認對話框
+    if (isDowngrade) {
+      const confirmed = confirm(
+        `您確定要從 ${getSubscriptionPlanName(profile.subscription_plan)} 降級到 ${getSubscriptionPlanName(targetPlan)} 嗎？\n\n` +
+        '降級後您將失去部分功能和額度，但會在下個計費週期生效。'
+      );
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
     try {
       setUpgrading(planId);
 
-      // 呼叫 Polar Checkout API
+      // 呼叫 Polar Checkout/Update API
       const response = await fetch('/api/polar/create-checkout', {
         method: 'POST',
         headers: {
@@ -164,15 +182,25 @@ export default function SubscriptionPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '建立付費流程失敗');
+        throw new Error(data.error || '處理訂閱請求失敗');
       }
 
-      // 重定向到 Polar Checkout 頁面
-      window.location.href = data.checkoutUrl;
+      // 檢查響應類型
+      if (data.success && data.message) {
+        // 訂閱更新成功（現有用戶）
+        alert(data.message);
+        // 重新載入頁面以更新訂閱資訊
+        window.location.reload();
+      } else if (data.checkoutUrl) {
+        // 需要重定向到 Checkout 頁面（新用戶）
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error('未知的響應格式');
+      }
 
     } catch (error) {
-      console.error('Error creating checkout:', error);
-      alert(error instanceof Error ? error.message : '升級失敗，請稍後再試');
+      console.error('Error processing subscription:', error);
+      alert(error instanceof Error ? error.message : '處理訂閱請求失敗，請稍後再試');
       setUpgrading(null);
     }
   };

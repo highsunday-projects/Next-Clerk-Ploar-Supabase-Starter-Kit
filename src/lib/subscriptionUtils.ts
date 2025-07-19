@@ -112,23 +112,73 @@ export function formatBillingInfo(profile: UserProfile): string {
   if (profile.subscription_plan === 'free') {
     return '免費方案（無限期）';
   }
-  
+
   if (profile.subscription_status === 'trial' && profile.trial_ends_at) {
     return `試用期至：${new Date(profile.trial_ends_at).toLocaleDateString('zh-TW')}`;
   }
-  
+
   if (profile.subscription_status === 'cancelled') {
     return '訂閱已取消';
   }
-  
+
   if (profile.subscription_status === 'expired') {
     return '訂閱已過期';
   }
-  
+
   // 對於付費方案，顯示下次計費日期（這裡使用模擬資料）
   const nextBilling = new Date();
   nextBilling.setMonth(nextBilling.getMonth() + 1);
   return `下次計費：${nextBilling.toLocaleDateString('zh-TW')}`;
+}
+
+/**
+ * 獲取訂閱方案的顯示名稱
+ */
+export function getSubscriptionPlanName(plan: SubscriptionPlan): string {
+  const planNames: Record<SubscriptionPlan, string> = {
+    'free': '免費版',
+    'pro': '專業版',
+    'enterprise': '企業版'
+  };
+
+  return planNames[plan] || plan;
+}
+
+/**
+ * 檢查是否為降級操作
+ */
+export function isDowngradeOperation(currentPlan: SubscriptionPlan, targetPlan: SubscriptionPlan): boolean {
+  return canDowngradeTo(currentPlan, targetPlan);
+}
+
+/**
+ * 檢查是否為升級操作
+ */
+export function isUpgradeOperation(currentPlan: SubscriptionPlan, targetPlan: SubscriptionPlan): boolean {
+  return canUpgradeTo(currentPlan, targetPlan);
+}
+
+/**
+ * 獲取方案變更的描述文字
+ */
+export function getPlanChangeDescription(
+  currentPlan: SubscriptionPlan,
+  targetPlan: SubscriptionPlan
+): string {
+  const changeType = getPlanChangeType(currentPlan, targetPlan);
+  const currentName = getSubscriptionPlanName(currentPlan);
+  const targetName = getSubscriptionPlanName(targetPlan);
+
+  switch (changeType) {
+    case 'upgrade':
+      return `從 ${currentName} 升級到 ${targetName}`;
+    case 'downgrade':
+      return `從 ${currentName} 降級到 ${targetName}`;
+    case 'same':
+      return `保持 ${currentName}`;
+    default:
+      return `變更方案：${currentName} → ${targetName}`;
+  }
 }
 
 /**

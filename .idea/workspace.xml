@@ -6,7 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="03e93c0d-3325-4b1e-b22c-75672eb5a3a6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/documents/Polar配置與準備教學.md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/Polar配置與準備教學.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/訂閱方案更新說明.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/訂閱管理頁面更新說明.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/polar/create-checkout/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/polar/create-checkout/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/webhooks/polar/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/webhooks/polar/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/subscriptionUtils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/subscriptionUtils.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,12 +30,12 @@
   <component name="GitRewordedCommitMessages">
     <option name="commitMessagesMapping">
       <RewordedCommitMessageMapping>
-        <option name="originalMessage" value="SF04 - Supabase 用戶訂閱資料整合" />
-        <option name="rewordedMessage" value="SF04 - Supabase 用戶訂閱資料整合" />
+        <option name="originalMessage" value="adjust" />
+        <option name="rewordedMessage" value="SF05 - Polar 付費系統整合" />
       </RewordedCommitMessageMapping>
     </option>
     <option name="currentCommit" value="1" />
-    <option name="onto" value="8beacb26a0379f3e7edd6ed4e8e3a7e120cf0179" />
+    <option name="onto" value="c1576c5e6af3b2f3f1bac76df6fd8c83cf100646" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -64,7 +69,7 @@
       <option name="presentableId" value="Default" />
       <updated>1752716954330</updated>
       <workItem from="1752716957568" duration="4429000" />
-      <workItem from="1752921879652" duration="3256000" />
+      <workItem from="1752921879652" duration="10490000" />
     </task>
     <servers />
   </component>

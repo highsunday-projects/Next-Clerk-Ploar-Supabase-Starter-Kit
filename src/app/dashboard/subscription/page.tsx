@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Crown,
   Check,
@@ -28,6 +28,7 @@ export default function SubscriptionPage() {
   const { user, isLoaded } = useUser();
   const { profile, loading, error } = useUserProfile();
   const router = useRouter();
+  const [upgrading, setUpgrading] = useState<string | null>(null); // 追蹤正在升級的方案
 
   // 重定向未登入用戶
   useEffect(() => {
@@ -35,6 +36,26 @@ export default function SubscriptionPage() {
       router.push('/sign-in');
     }
   }, [isLoaded, user, router]);
+
+  // 處理 Polar Checkout 回調
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const canceled = urlParams.get('canceled');
+
+    if (success === 'true') {
+      // 付款成功，顯示成功訊息並清理 URL
+      alert('付款成功！您的訂閱已升級，請稍等片刻讓系統同步資料。');
+      window.history.replaceState({}, '', '/dashboard/subscription');
+    } else if (canceled === 'true') {
+      // 付款取消，顯示取消訊息並清理 URL
+      alert('付款已取消，您可以隨時重新嘗試升級。');
+      window.history.replaceState({}, '', '/dashboard/subscription');
+    }
+
+    // 重置升級狀態
+    setUpgrading(null);
+  }, []);
 
   // 載入中狀態
   if (!isLoaded || loading) {
@@ -116,6 +137,45 @@ export default function SubscriptionPage() {
     popular: plan.popular || false,
     monthlyLimit: plan.monthlyUsageLimit
   }));
+
+  // 處理方案升級
+  const handlePlanUpgrade = async (planId: string) => {
+    if (planId === 'free' || planId === profile.subscription_plan) {
+      return; // 不處理免費方案或相同方案
+    }
+
+    try {
+      setUpgrading(planId);
+
+      // 呼叫 Polar Checkout API
+      const response = await fetch('/api/polar/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan: planId,
+          userId: user?.id,
+          successUrl: `${window.location.origin}/dashboard/subscription?success=true`,
+          cancelUrl: `${window.location.origin}/dashboard/subscription?canceled=true`
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '建立付費流程失敗');
+      }
+
+      // 重定向到 Polar Checkout 頁面
+      window.location.href = data.checkoutUrl;
+
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      alert(error instanceof Error ? error.message : '升級失敗，請稍後再試');
+      setUpgrading(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -293,11 +353,13 @@ export default function SubscriptionPage() {
               </ul>
 
               <button
-                disabled={plan.current || profile.subscription_status === 'cancelled'}
+                disabled={plan.current || profile.subscription_status === 'cancelled' || upgrading === plan.id}
                 className={`w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200 ${
                   plan.current
                     ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                     : profile.subscription_status === 'cancelled'
+                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                    : upgrading === plan.id
                     ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                     : plan.price > currentSubscription.price
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
@@ -306,24 +368,39 @@ export default function SubscriptionPage() {
                     : 'border border-orange-300 text-orange-700 hover:bg-orange-50'
                 }`}
                 onClick={() => {
-                  if (!plan.current && profile.subscription_status !== 'cancelled') {
+                  if (!plan.current && profile.subscription_status !== 'cancelled' && upgrading !== plan.id) {
                     const changeType = getPlanChangeType(profile.subscription_plan, plan.id as any);
-                    const actionText = changeType === 'upgrade' ? '升級' :
-                                     changeType === 'downgrade' ? '降級' : '變更';
-                    alert(`即將${actionText}至 ${plan.name}`);
+
+                    if (changeType === 'upgrade' && plan.id !== 'free') {
+                      // 使用 Polar Checkout 進行升級
+                      handlePlanUpgrade(plan.id);
+                    } else if (changeType === 'downgrade' && plan.id === 'free') {
+                      // 降級到免費方案的處理（未來實作）
+                      alert('降級到免費方案功能即將推出');
+                    } else {
+                      // 其他變更類型
+                      const actionText = changeType === 'upgrade' ? '升級' :
+                                       changeType === 'downgrade' ? '降級' : '變更';
+                      alert(`${actionText}功能即將推出`);
+                    }
                   }
                 }}
               >
-                {plan.current
-                  ? '目前方案'
-                  : profile.subscription_status === 'cancelled'
-                  ? '訂閱已取消'
-                  : (() => {
-                      const changeType = getPlanChangeType(profile.subscription_plan, plan.id as any);
-                      return changeType === 'upgrade' ? '升級' :
-                             changeType === 'downgrade' ? (plan.price === 0 ? '降級至免費' : '降級') :
-                             '變更';
-                    })()
+                {upgrading === plan.id ? (
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    處理中...
+                  </div>
+                ) : plan.current ? (
+                  '目前方案'
+                ) : profile.subscription_status === 'cancelled' ? (
+                  '訂閱已取消'
+                ) : (() => {
+                    const changeType = getPlanChangeType(profile.subscription_plan, plan.id as any);
+                    return changeType === 'upgrade' ? '升級' :
+                           changeType === 'downgrade' ? (plan.price === 0 ? '降級至免費' : '降級') :
+                           '變更';
+                  })()
                 }
               </button>
             </div>

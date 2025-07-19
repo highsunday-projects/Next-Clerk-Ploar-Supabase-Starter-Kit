@@ -84,6 +84,13 @@ CREATE TABLE user_profiles (
   clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
   subscription_plan VARCHAR(20) DEFAULT 'free',
   subscription_status VARCHAR(20) DEFAULT 'active',
+
+  -- Polar 付費系統整合欄位
+  polar_customer_id VARCHAR(255),           -- Polar 客戶 ID
+  polar_subscription_id VARCHAR(255),       -- Polar 訂閱 ID
+  current_period_end TIMESTAMP WITH TIME ZONE, -- 當前計費週期結束時間
+  cancel_at_period_end BOOLEAN DEFAULT FALSE,   -- 是否在週期結束時取消訂閱
+
   monthly_usage_limit INTEGER DEFAULT 1000,
   trial_ends_at TIMESTAMP WITH TIME ZONE,
   last_active_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -92,13 +99,23 @@ CREATE TABLE user_profiles (
 );
 
 -- 建立訂閱方案檢查約束
-ALTER TABLE user_profiles 
-ADD CONSTRAINT valid_subscription_plan 
+ALTER TABLE user_profiles
+ADD CONSTRAINT valid_subscription_plan
 CHECK (subscription_plan IN ('free', 'pro', 'enterprise'));
 
-ALTER TABLE user_profiles 
-ADD CONSTRAINT valid_subscription_status 
+ALTER TABLE user_profiles
+ADD CONSTRAINT valid_subscription_status
 CHECK (subscription_status IN ('active', 'trial', 'cancelled', 'expired'));
+
+-- 檢查約束條件
+SELECT conname, pg_get_constraintdef(oid)
+FROM pg_constraint
+WHERE conrelid = 'user_profiles'::regclass;
+
+-- 檢查索引
+SELECT indexname, indexdef
+FROM pg_indexes
+WHERE tablename = 'user_profiles';
 
 -- 啟用 Row Level Security
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
@@ -265,9 +282,15 @@ A: 檢查：
 - 自動備份和恢復
 
 ### 整合準備
-- **Polar**: 付費訂閱狀態同步
+- **Polar**: ✅ 付費訂閱狀態同步（已整合）
 - **分析**: 使用統計追蹤
 - **通知**: 訂閱狀態變更通知
+
+### Polar 付費系統整合
+- **polar_customer_id**: 儲存 Polar 客戶識別碼
+- **polar_subscription_id**: 儲存 Polar 訂閱識別碼
+- **current_period_end**: 追蹤計費週期結束時間
+- **cancel_at_period_end**: 管理訂閱取消狀態
 
 ## 📚 參考資源
 
@@ -278,6 +301,7 @@ A: 檢查：
 
 ---
 
-**文檔版本**: 1.0  
-**最後更新**: 2025-07-17  
+**文檔版本**: 1.1
+**最後更新**: 2025-07-19
 **維護者**: 開發團隊
+**更新內容**: 整合 Polar 付費系統欄位

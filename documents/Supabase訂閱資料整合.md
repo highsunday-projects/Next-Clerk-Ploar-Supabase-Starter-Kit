@@ -6,21 +6,23 @@
 
 ### 文件資訊
 - **建立日期**: 2025-07-17
-- **版本**: 1.0
+- **版本**: 1.1
 - **對應需求**: SF04 - Supabase 用戶訂閱資料整合
 - **維護者**: 開發團隊
+- **最新更新**: 2025-07-19 - 整合 Polar 付費系統
 
 ## 🎯 功能概述
 
 ### 已完成功能
 
-✅ **資料庫連線**: 成功建立 Supabase 專案連接  
-✅ **user_profiles 資料表**: 建立完整的用戶訂閱資料結構  
-✅ **Clerk 整合**: 用戶註冊時自動建立免費方案記錄  
-✅ **Dashboard 整合**: 替換模擬資料，顯示真實訂閱狀態  
-✅ **API 介面**: 提供完整的訂閱資料 CRUD 操作  
-✅ **TypeScript 支援**: 完整的類型定義和類型安全  
-✅ **錯誤處理**: 友善的錯誤訊息和異常處理  
+✅ **資料庫連線**: 成功建立 Supabase 專案連接
+✅ **user_profiles 資料表**: 建立完整的用戶訂閱資料結構
+✅ **Clerk 整合**: 用戶註冊時自動建立免費方案記錄
+✅ **Dashboard 整合**: 替換模擬資料，顯示真實訂閱狀態
+✅ **API 介面**: 提供完整的訂閱資料 CRUD 操作
+✅ **TypeScript 支援**: 完整的類型定義和類型安全
+✅ **錯誤處理**: 友善的錯誤訊息和異常處理
+✅ **Polar 整合**: 新增 Polar 付費系統相關欄位
 
 ### 核心特色
 
@@ -41,6 +43,13 @@ CREATE TABLE user_profiles (
   clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
   subscription_plan VARCHAR(20) DEFAULT 'free',
   subscription_status VARCHAR(20) DEFAULT 'active',
+
+  -- Polar 付費系統整合欄位
+  polar_customer_id VARCHAR(255),           -- Polar 客戶 ID
+  polar_subscription_id VARCHAR(255),       -- Polar 訂閱 ID
+  current_period_end TIMESTAMP WITH TIME ZONE, -- 當前計費週期結束時間
+  cancel_at_period_end BOOLEAN DEFAULT FALSE,   -- 是否在週期結束時取消訂閱
+
   monthly_usage_limit INTEGER DEFAULT 1000,
   trial_ends_at TIMESTAMP WITH TIME ZONE,
   last_active_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -55,6 +64,12 @@ CREATE TABLE user_profiles (
 - **monthly_usage_limit**: 整數，預設 1000
 - **Row Level Security**: 啟用資料安全控制
 
+#### Polar 整合欄位說明
+- **polar_customer_id**: 儲存 Polar 系統中的客戶唯一識別碼
+- **polar_subscription_id**: 儲存 Polar 系統中的訂閱唯一識別碼
+- **current_period_end**: 記錄當前計費週期的結束時間
+- **cancel_at_period_end**: 標記是否在當前週期結束時取消訂閱
+
 ### 程式碼架構
 
 #### 1. 類型定義 (`src/types/supabase.ts`)
@@ -64,6 +79,13 @@ export interface UserProfile {
   clerk_user_id: string;
   subscription_plan: SubscriptionPlan;
   subscription_status: SubscriptionStatus;
+
+  // Polar 付費系統整合欄位
+  polar_customer_id?: string;
+  polar_subscription_id?: string;
+  current_period_end?: string;
+  cancel_at_period_end?: boolean;
+
   monthly_usage_limit: number;
   trial_ends_at?: string;
   last_active_date: string;
@@ -230,9 +252,10 @@ curl -X PATCH http://localhost:3000/api/user/subscription \
 - 實時資料同步
 
 ### 中期計劃
-- Polar 付費系統整合
+- ✅ Polar 付費系統整合（資料庫欄位已完成）
 - 訂閱升級/降級流程
 - 發票和計費管理
+- Polar Webhook 事件處理
 
 ### 長期計劃
 - 多租戶支援
@@ -272,12 +295,14 @@ SF04 功能已成功實作，提供了完整的 Supabase 用戶訂閱資料整�
 4. **類型安全**: 完整的 TypeScript 支援確保開發品質
 5. **安全性**: 實作了適當的權限控制和資料保護
 6. **可維護性**: 清晰的程式碼結構便於未來擴展
+7. **Polar 整合準備**: 新增了 Polar 付費系統所需的資料庫欄位
 
-這個基礎為後續的 Polar 付費系統整合和進階功能開發奠定了堅實的基礎。
+這個基礎為後續的 Polar 付費系統整合和進階功能開發奠定了堅實的基礎。資料庫結構已經準備好支援完整的付費訂閱流程。
 
 ---
 
-**文檔版本**: 1.0  
-**最後更新**: 2025-07-17  
-**維護者**: 開發團隊  
-**狀態**: ✅ 已完成
+**文檔版本**: 1.1
+**最後更新**: 2025-07-19
+**維護者**: 開發團隊
+**狀態**: ✅ 已完成（含 Polar 整合準備）
+**更新內容**: 新增 Polar 付費系統整合欄位

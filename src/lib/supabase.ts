@@ -123,7 +123,11 @@ export const QUERY_OPTIONS = {
     trial_ends_at,
     last_active_date,
     created_at,
-    updated_at
+    updated_at,
+    polar_customer_id,
+    polar_subscription_id,
+    current_period_end,
+    cancel_at_period_end
   `.replace(/\s+/g, ' ').trim()
 } as const;
 

@@ -9,7 +9,7 @@
 export type SubscriptionPlan = 'free' | 'pro' | 'enterprise';
 
 // 訂閱狀態類型
-export type SubscriptionStatus = 'active' | 'trial' | 'cancelled' | 'expired';
+export type SubscriptionStatus = 'active' | 'trial' | 'cancelled' | 'expired' | 'past_due';
 
 // 用戶訂閱資料介面
 export interface UserProfile {
@@ -22,6 +22,11 @@ export interface UserProfile {
   last_active_date: string;
   created_at: string;
   updated_at: string;
+  // Polar 整合相關欄位
+  polar_customer_id?: string;
+  polar_subscription_id?: string;
+  current_period_end?: string;
+  cancel_at_period_end?: boolean;
 }
 
 // 建立用戶訂閱記錄的請求參數
@@ -31,6 +36,10 @@ export interface CreateUserProfileRequest {
   subscriptionStatus?: SubscriptionStatus;
   monthlyUsageLimit?: number;
   trialEndsAt?: string;
+  polarCustomerId?: string;
+  polarSubscriptionId?: string;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
 }
 
 // 更新用戶訂閱記錄的請求參數
@@ -40,6 +49,10 @@ export interface UpdateUserProfileRequest {
   monthlyUsageLimit?: number;
   trialEndsAt?: string;
   lastActiveDate?: string;
+  polarCustomerId?: string;
+  polarSubscriptionId?: string;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
 }
 
 // API 回應格式
@@ -135,4 +148,53 @@ export interface UserProfileService {
   createUserProfile(data: CreateUserProfileRequest): Promise<UserProfile>;
   updateUserProfile(clerkUserId: string, data: UpdateUserProfileRequest): Promise<UserProfile>;
   updateLastActiveDate(clerkUserId: string): Promise<void>;
+}
+
+// =============================================================================
+// Polar 付費系統相關類型定義
+// =============================================================================
+
+// Polar Checkout 請求參數
+export interface PolarCheckoutRequest {
+  plan: SubscriptionPlan;
+  userId: string;
+  successUrl?: string;
+  cancelUrl?: string;
+}
+
+// Polar Checkout 回應
+export interface PolarCheckoutResponse {
+  checkoutUrl: string;
+  sessionId: string;
+}
+
+// Polar Webhook 事件
+export interface PolarWebhookEvent {
+  type: string;
+  data: {
+    id: string;
+    object: string;
+    [key: string]: any;
+  };
+}
+
+// Polar 訂閱資料
+export interface PolarSubscription {
+  id: string;
+  status: string;
+  customer_id: string;
+  product_id: string;
+  current_period_start: string;
+  current_period_end: string;
+  cancel_at_period_end: boolean;
+  canceled_at?: string;
+  ended_at?: string;
+}
+
+// Polar 客戶資料
+export interface PolarCustomer {
+  id: string;
+  email: string;
+  name?: string;
+  metadata?: Record<string, any>;
 }

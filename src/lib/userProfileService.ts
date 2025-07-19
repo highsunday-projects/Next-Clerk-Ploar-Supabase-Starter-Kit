@@ -74,7 +74,12 @@ class UserProfileServiceImpl implements UserProfileService {
         monthly_usage_limit: data.monthlyUsageLimit || DEFAULT_USER_PROFILE.monthly_usage_limit,
         trial_ends_at: data.trialEndsAt || null,
         last_active_date: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // Polar 相關欄位
+        polar_customer_id: data.polarCustomerId || null,
+        polar_subscription_id: data.polarSubscriptionId || null,
+        current_period_end: data.currentPeriodEnd || null,
+        cancel_at_period_end: data.cancelAtPeriodEnd || false
       };
 
       const { data: newProfile, error } = await supabase
@@ -123,6 +128,19 @@ class UserProfileServiceImpl implements UserProfileService {
       }
       if (data.lastActiveDate !== undefined) {
         updateData.last_active_date = data.lastActiveDate;
+      }
+      // Polar 相關欄位
+      if (data.polarCustomerId !== undefined) {
+        updateData.polar_customer_id = data.polarCustomerId;
+      }
+      if (data.polarSubscriptionId !== undefined) {
+        updateData.polar_subscription_id = data.polarSubscriptionId;
+      }
+      if (data.currentPeriodEnd !== undefined) {
+        updateData.current_period_end = data.currentPeriodEnd;
+      }
+      if (data.cancelAtPeriodEnd !== undefined) {
+        updateData.cancel_at_period_end = data.cancelAtPeriodEnd;
       }
 
       const { data: updatedProfile, error } = await supabase

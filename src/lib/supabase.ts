@@ -132,11 +132,11 @@ export const QUERY_OPTIONS = {
 } as const;
 
 /**
- * 預設的用戶訂閱設定
+ * 預設的用戶訂閱設定（SF09 簡化邏輯）
  */
 export const DEFAULT_USER_PROFILE = {
-  subscription_plan: 'free' as const,
-  subscription_status: 'active' as const,
+  subscription_plan: null as const,
+  subscription_status: 'inactive' as const,
   monthly_usage_limit: 1000,
   trial_ends_at: null
 } as const;

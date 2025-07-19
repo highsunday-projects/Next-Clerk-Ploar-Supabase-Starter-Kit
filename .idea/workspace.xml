@@ -5,20 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="03e93c0d-3325-4b1e-b22c-75672eb5a3a6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/documents/功能/SF08 - Starter Kit 簡化與雙方案架構優化 .md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/documents/SaaS訂閱方案(Demo用).md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/SaaS訂閱方案(Demo用).md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/documents/當前專案架構.md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/當前專案架構.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/debug/subscription/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/debug/subscription/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/polar/create-checkout/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/polar/create-checkout/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup_database.sql" beforeDir="false" afterPath="$PROJECT_DIR$/setup_database.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/api/webhooks/polar/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/webhooks/polar/route.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/debug/subscription/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/debug/subscription/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/PricingSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/PricingSection.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/useUserProfile.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useUserProfile.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/polar.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/polar.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/subscriptionUtils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/subscriptionUtils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/userProfileService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/userProfileService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/types/supabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/supabase.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

@@ -211,11 +211,11 @@ class UserProfileServiceImpl implements UserProfileService {
       let profile = await this.getUserProfile(clerkUserId);
       
       if (!profile) {
-        // 如果不存在，建立新的免費方案記錄
+        // 如果不存在，建立新的未訂閱用戶記錄
         profile = await this.createUserProfile({
           clerkUserId,
-          subscriptionPlan: 'free',
-          subscriptionStatus: 'active',
+          subscriptionPlan: null,
+          subscriptionStatus: 'inactive',
           monthlyUsageLimit: 1000
         });
       } else {

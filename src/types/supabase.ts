@@ -5,11 +5,11 @@
  * 包含用戶訂閱資料的介面和相關類型。
  */
 
-// 訂閱方案類型
-export type SubscriptionPlan = 'free' | 'pro';
+// 訂閱方案類型 - 簡化為單一產品邏輯
+export type SubscriptionPlan = 'pro' | null;
 
 // 訂閱狀態類型
-export type SubscriptionStatus = 'active' | 'trial' | 'cancelled' | 'expired' | 'past_due';
+export type SubscriptionStatus = 'active' | 'trial' | 'cancelled' | 'expired' | 'past_due' | 'inactive';
 
 // 用戶訂閱資料介面
 export interface UserProfile {
@@ -76,11 +76,11 @@ export interface SubscriptionPlanConfig {
   popular?: boolean;
 }
 
-// 預設的訂閱方案配置（基於 Demo 文件）
-export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionPlanConfig> = {
-  free: {
-    name: 'free',
-    displayName: '免費方案',
+// 訂閱方案配置 - 簡化為單一產品邏輯
+export const SUBSCRIPTION_CONFIG = {
+  // 未訂閱用戶的預設配置
+  unsubscribed: {
+    displayName: '基礎用戶',
     monthlyUsageLimit: 1000,
     price: 0,
     features: [
@@ -89,9 +89,10 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionPlanConfig
       '社群支援'
     ]
   },
+  // 專業版訂閱配置
   pro: {
     name: 'pro',
-    displayName: '專業方案',
+    displayName: '專業版用戶',
     monthlyUsageLimit: 10000,
     price: 5,
     features: [
@@ -102,7 +103,30 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionPlanConfig
     ],
     popular: true
   }
-};
+} as const;
+
+// 權限檢查輔助函數
+export function hasProAccess(user: UserProfile): boolean {
+  return !!(
+    user.polar_subscription_id &&
+    user.subscription_status === 'active'
+  );
+}
+
+// 獲取用戶配置
+export function getUserConfig(user: UserProfile) {
+  return hasProAccess(user)
+    ? SUBSCRIPTION_CONFIG.pro
+    : SUBSCRIPTION_CONFIG.unsubscribed;
+}
+
+// 用戶訂閱狀態類型
+export type UserSubscriptionStatus = 'subscribed' | 'unsubscribed';
+
+// 獲取用戶訂閱狀態
+export function getUserSubscriptionStatus(user: UserProfile): UserSubscriptionStatus {
+  return hasProAccess(user) ? 'subscribed' : 'unsubscribed';
+}
 
 // Supabase 資料庫表格定義
 export interface Database {

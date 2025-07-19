@@ -7,7 +7,7 @@
 
 import { Webhooks } from '@polar-sh/nextjs';
 import { userProfileService } from '@/lib/userProfileService';
-import { SUBSCRIPTION_PLANS } from '@/types/supabase';
+// SF09: 移除未使用的導入
 import type { SubscriptionPlan, SubscriptionStatus } from '@/types/supabase';
 
 /**
@@ -71,45 +71,39 @@ const webhookHandler = Webhooks({
 });
 
 /**
- * 處理訂閱建立事件
+ * 處理訂閱建立事件 - SF09 簡化版
  */
 async function handleSubscriptionCreated(event: any): Promise<void> {
   const subscription = event.data;
   console.log('Raw subscription data:', JSON.stringify(subscription, null, 2));
-  
+
   const clerkUserId = subscription.metadata?.clerk_user_id;
-  
+
   if (!clerkUserId) {
     console.error('Missing clerk_user_id in subscription metadata');
     console.error('Available metadata:', subscription.metadata);
     return;
   }
 
-  // 根據產品 ID 判斷訂閱方案
-  const subscriptionPlan = getSubscriptionPlanFromProductId(subscription.product_id);
-  if (!subscriptionPlan) {
-    console.error('Unknown product ID:', subscription.product_id);
-    return;
-  }
+  // SF09: 簡化邏輯 - 所有 Polar 訂閱都是專業版
+  // 獲取或建立用戶記錄，然後更新為專業版訂閱
+  await userProfileService.getOrCreateUserProfile(clerkUserId);
 
-  // 獲取或建立用戶記錄，然後更新訂閱資料
-  const profile = await userProfileService.getOrCreateUserProfile(clerkUserId);
-  
   await userProfileService.updateUserProfile(clerkUserId, {
-    subscriptionPlan,
+    subscriptionPlan: 'pro',
     subscriptionStatus: mapPolarStatusToLocal(subscription.status),
-    monthlyUsageLimit: SUBSCRIPTION_PLANS[subscriptionPlan].monthlyUsageLimit,
+    monthlyUsageLimit: 10000, // 專業版固定額度
     polarCustomerId: subscription.customer_id,
     polarSubscriptionId: subscription.id,
     currentPeriodEnd: subscription.current_period_end,
     cancelAtPeriodEnd: subscription.cancel_at_period_end || false
   });
 
-  console.log(`Subscription created for user ${clerkUserId}: ${subscriptionPlan}`);
+  console.log(`Subscription created for user ${clerkUserId}: pro`);
 }
 
 /**
- * 處理訂閱更新事件
+ * 處理訂閱更新事件 - SF09 簡化版
  */
 async function handleSubscriptionUpdated(event: any): Promise<void> {
   const subscription = event.data;
@@ -124,82 +118,60 @@ async function handleSubscriptionUpdated(event: any): Promise<void> {
     subscriptionId: subscription.id,
     userId: clerkUserId,
     status: subscription.status,
-    productId: subscription.product_id,
-    amount: subscription.amount,
-    currency: subscription.currency,
     currentPeriodStart: subscription.current_period_start,
     currentPeriodEnd: subscription.current_period_end
   });
 
-  // 獲取當前用戶資料以比較變更
-  const currentProfile = await userProfileService.getOrCreateUserProfile(clerkUserId);
-  console.log('Current user profile:', {
-    currentPlan: currentProfile.subscription_plan,
-    currentStatus: currentProfile.subscription_status,
-    currentLimit: currentProfile.monthly_usage_limit
-  });
-
-  // 檢查是否有產品變更（方案切換）
-  const subscriptionPlan = getSubscriptionPlanFromProductId(subscription.product_id);
-  console.log('Product ID mapping result:', {
-    productId: subscription.product_id,
-    mappedPlan: subscriptionPlan,
-    proProductId: process.env.POLAR_PRO_PRODUCT_ID
-  });
-
-  const updateData: any = {
+  // SF09: 簡化邏輯 - 所有 Polar 訂閱都是專業版
+  const updateData = {
+    subscriptionPlan: 'pro' as SubscriptionPlan,
     subscriptionStatus: mapPolarStatusToLocal(subscription.status),
+    monthlyUsageLimit: 10000, // 專業版固定額度
     currentPeriodEnd: subscription.current_period_end,
     cancelAtPeriodEnd: subscription.cancel_at_period_end || false
   };
 
-  // 如果檢測到方案變更，更新訂閱方案和額度
-  if (subscriptionPlan) {
-    updateData.subscriptionPlan = subscriptionPlan;
-    updateData.monthlyUsageLimit = SUBSCRIPTION_PLANS[subscriptionPlan].monthlyUsageLimit;
-
-    console.log(`Plan changed from ${currentProfile.subscription_plan} to ${subscriptionPlan} for user ${clerkUserId}`);
-    console.log('Update data:', updateData);
-  } else {
-    console.warn('No subscription plan found for product ID:', subscription.product_id);
-  }
-
   const result = await userProfileService.updateUserProfile(clerkUserId, updateData);
   console.log('Database update result:', result);
 
-  console.log(`Subscription updated for user ${clerkUserId}: ${subscription.status}${subscriptionPlan ? ` (plan: ${subscriptionPlan})` : ''}`);
+  console.log(`Subscription updated for user ${clerkUserId}: ${subscription.status} (pro plan)`);
 }
 
 /**
- * 處理訂閱取消事件
+ * 處理訂閱取消事件 - SF09 簡化版
  */
 async function handleSubscriptionCanceled(event: any): Promise<void> {
   const subscription = event.data;
   const clerkUserId = subscription.metadata?.clerk_user_id;
-  
+
   if (!clerkUserId) {
     console.error('Missing clerk_user_id in subscription metadata');
     return;
   }
 
-  // 確保用戶記錄存在，然後更新為取消狀態
+  // SF09: 簡化邏輯 - 取消訂閱時回到未訂閱狀態
   await userProfileService.getOrCreateUserProfile(clerkUserId);
-  
+
   await userProfileService.updateUserProfile(clerkUserId, {
-    subscriptionStatus: 'cancelled',
-    cancelAtPeriodEnd: true
+    subscriptionPlan: null,
+    subscriptionStatus: 'inactive',
+    monthlyUsageLimit: 1000, // 回到基礎額度
+    polarSubscriptionId: undefined,
+    polarCustomerId: undefined,
+    currentPeriodEnd: undefined,
+    cancelAtPeriodEnd: false
   });
 
-  console.log(`Subscription canceled for user ${clerkUserId}`);
+  console.log(`Subscription canceled for user ${clerkUserId} - reverted to unsubscribed state`);
 }
 
 /**
- * 處理 Checkout 完成事件
+ * 處理 Checkout 完成事件 - SF09 簡化版
  */
 async function handleCheckoutCompleted(event: any): Promise<void> {
   const checkout = event.data;
   const clerkUserId = checkout.metadata?.clerk_user_id;
-  
+
   if (!clerkUserId) {
     console.error('Missing clerk_user_id in checkout metadata');
     console.error('Available checkout metadata:', checkout.metadata);
@@ -207,76 +179,66 @@ async function handleCheckoutCompleted(event: any): Promise<void> {
   }
 
   console.log(`Checkout completed for user ${clerkUserId}`);
-  
-  // 檢查 checkout 是否包含產品資訊，如果有則創建訂閱
+
+  // SF09: 簡化邏輯 - 所有 checkout 都是專業版訂閱
   if (checkout.product_id) {
-    console.log('Creating subscription from checkout for product:', checkout.product_id);
-    
-    const subscriptionPlan = getSubscriptionPlanFromProductId(checkout.product_id);
-    if (subscriptionPlan) {
-      try {
-        // 獲取或建立用戶記錄，然後更新訂閱資料
-        const profile = await userProfileService.getOrCreateUserProfile(clerkUserId);
-        
-        await userProfileService.updateUserProfile(clerkUserId, {
-          subscriptionPlan,
-          subscriptionStatus: 'active',
-          monthlyUsageLimit: SUBSCRIPTION_PLANS[subscriptionPlan].monthlyUsageLimit,
-          polarCustomerId: checkout.customer_id || '',
-          // checkout 通常沒有 subscription_id，先留空
-          polarSubscriptionId: '',
-          cancelAtPeriodEnd: false
-        });
-        
-        console.log(`Subscription updated from checkout for user ${clerkUserId}: ${subscriptionPlan}`);
-      } catch (error) {
-        console.error('Error updating subscription from checkout:', error);
-      }
+    console.log('Creating pro subscription from checkout');
+
+    try {
+      await userProfileService.getOrCreateUserProfile(clerkUserId);
+
+      await userProfileService.updateUserProfile(clerkUserId, {
+        subscriptionPlan: 'pro',
+        subscriptionStatus: 'active',
+        monthlyUsageLimit: 10000, // 專業版固定額度
+        polarCustomerId: checkout.customer_id || '',
+        // checkout 通常沒有 subscription_id，先留空
+        polarSubscriptionId: '',
+        cancelAtPeriodEnd: false
+      });
+
+      console.log(`Pro subscription updated from checkout for user ${clerkUserId}`);
+    } catch (error) {
+      console.error('Error updating subscription from checkout:', error);
     }
   }
 }
 
 /**
- * 處理付款成功事件
+ * 處理付款成功事件 - SF09 簡化版
  */
 async function handlePaymentSucceeded(event: any): Promise<void> {
   const order = event.data;
   const clerkUserId = order.metadata?.clerk_user_id;
-  
+
   console.log(`Payment succeeded: ${order.id}`);
-  
+
   if (!clerkUserId) {
     console.error('Missing clerk_user_id in order metadata');
     console.error('Available order metadata:', order.metadata);
     return;
   }
-  
-  // 如果訂單包含訂閱資訊，更新用戶訂閱資料
+
+  // SF09: 簡化邏輯 - 所有付款成功都是專業版訂閱
   if (order.subscription && order.productId) {
-    console.log('Updating subscription from order.paid event');
-    
-    const subscriptionPlan = getSubscriptionPlanFromProductId(order.productId);
-    if (subscriptionPlan) {
-      try {
-        // 獲取或建立用戶記錄，然後更新訂閱資料
-        const profile = await userProfileService.getOrCreateUserProfile(clerkUserId);
-        
-        await userProfileService.updateUserProfile(clerkUserId, {
-          subscriptionPlan,
-          subscriptionStatus: order.subscription.status === 'active' ? 'active' : mapPolarStatusToLocal(order.subscription.status),
-          monthlyUsageLimit: SUBSCRIPTION_PLANS[subscriptionPlan].monthlyUsageLimit,
-          polarCustomerId: order.customerId || '',
-          polarSubscriptionId: order.subscription.id, // 重要：設置 polar_subscription_id
-          currentPeriodEnd: order.subscription.currentPeriodEnd,
-          cancelAtPeriodEnd: order.subscription.cancelAtPeriodEnd || false
-        });
-        
-        console.log(`Subscription updated from order.paid for user ${clerkUserId}: ${subscriptionPlan}, subscription_id: ${order.subscription.id}`);
-      } catch (error) {
-        console.error('Error updating subscription from order.paid:', error);
-      }
-    } else {
-      console.error('Unknown product ID in order.paid:', order.productId);
+    console.log('Updating pro subscription from order.paid event');
+
+    try {
+      await userProfileService.getOrCreateUserProfile(clerkUserId);
+
+      await userProfileService.updateUserProfile(clerkUserId, {
+        subscriptionPlan: 'pro',
+        subscriptionStatus: order.subscription.status === 'active' ? 'active' : mapPolarStatusToLocal(order.subscription.status),
+        monthlyUsageLimit: 10000, // 專業版固定額度
+        polarCustomerId: order.customerId || '',
+        polarSubscriptionId: order.subscription.id, // 重要：設置 polar_subscription_id
+        currentPeriodEnd: order.subscription.currentPeriodEnd,
+        cancelAtPeriodEnd: order.subscription.cancelAtPeriodEnd || false
+      });
+
+      console.log(`Pro subscription updated from order.paid for user ${clerkUserId}, subscription_id: ${order.subscription.id}`);
+    } catch (error) {
+      console.error('Error updating subscription from order.paid:', error);
     }
   }
 }
@@ -298,18 +260,7 @@ async function handlePaymentFailed(event: any): Promise<void> {
   console.log(`Payment failed: ${payment.id}`);
 }
 
-/**
- * 根據 Polar 產品 ID 獲取訂閱方案
- */
-function getSubscriptionPlanFromProductId(productId: string): SubscriptionPlan | null {
-  const proProductId = process.env.POLAR_PRO_PRODUCT_ID;
-  
-  if (productId === proProductId) {
-    return 'pro';
-  }
-  
-  return null;
-}
+// SF09: 移除產品 ID 映射函數，因為所有 Polar 訂閱都是專業版
 
 /**
  * 將 Polar 訂閱狀態對應到本地狀態

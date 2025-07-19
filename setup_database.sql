@@ -3,7 +3,7 @@
 -- =====================================================
 -- 此腳本可以直接在 Supabase SQL Editor 中執行
 -- 建立日期: 2025-07-19
--- 版本: 3.0 (雙方案架構 - 免費 + 專業版)
+-- 版本: 4.0 (簡化訂閱邏輯 - 基於 SF09 優化)
 
 -- =====================================================
 -- 1. 清理舊資料（謹慎使用）
@@ -15,10 +15,12 @@ DROP TABLE IF EXISTS user_profiles CASCADE;
 -- 刪除現有視圖
 DROP VIEW IF EXISTS active_users CASCADE;
 DROP VIEW IF EXISTS paid_users CASCADE;
+DROP VIEW IF EXISTS active_subscribers CASCADE;
 DROP VIEW IF EXISTS expiring_subscriptions CASCADE;
 
 -- 刪除現有函數
 DROP FUNCTION IF EXISTS get_subscription_stats() CASCADE;
+DROP FUNCTION IF EXISTS get_user_stats() CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 
 -- =====================================================
@@ -31,9 +33,9 @@ CREATE TABLE user_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
   
-  -- 訂閱方案相關欄位
-  subscription_plan VARCHAR(20) DEFAULT 'free',
-  subscription_status VARCHAR(20) DEFAULT 'active',
+  -- 訂閱方案相關欄位 (簡化邏輯 - 僅 pro 或 null)
+  subscription_plan VARCHAR(20) DEFAULT NULL,
+  subscription_status VARCHAR(20) DEFAULT 'inactive',
   monthly_usage_limit INTEGER DEFAULT 1000,
   trial_ends_at TIMESTAMP WITH TIME ZONE,
   
@@ -53,15 +55,15 @@ CREATE TABLE user_profiles (
 -- 3. 建立約束條件
 -- =====================================================
 
--- 訂閱方案檢查約束（雙方案架構）
+-- 訂閱方案檢查約束（簡化邏輯 - 僅 pro 或 null）
 ALTER TABLE user_profiles 
 ADD CONSTRAINT valid_subscription_plan 
-CHECK (subscription_plan IN ('free', 'pro'));
+CHECK (subscription_plan IS NULL OR subscription_plan = 'pro');
 
--- 訂閱狀態檢查約束
+-- 訂閱狀態檢查約束（新增 inactive 狀態）
 ALTER TABLE user_profiles 
 ADD CONSTRAINT valid_subscription_status 
-CHECK (subscription_status IN ('active', 'trial', 'cancelled', 'expired', 'past_due'));
+CHECK (subscription_status IN ('active', 'trial', 'cancelled', 'expired', 'past_due', 'inactive'));
 
 -- 月使用額度必須為正數
 ALTER TABLE user_profiles 
@@ -158,9 +160,9 @@ SELECT
     created_at
 FROM user_profiles
 WHERE last_active_date >= NOW() - INTERVAL '30 days'
-  AND subscription_status IN ('active', 'trial');
+  AND subscription_status IN ('active', 'trial', 'inactive');
 
--- 付費用戶視圖（僅專業版）
+-- 付費用戶視圖（有效訂閱者）
 CREATE VIEW paid_users AS
 SELECT 
     id,
@@ -174,8 +176,15 @@ SELECT
     cancel_at_period_end,
     created_at
 FROM user_profiles
-WHERE subscription_plan = 'pro'
-  AND polar_subscription_id IS NOT NULL;
+WHERE polar_subscription_id IS NOT NULL
+  AND subscription_status = 'active';
+
+-- 活躍訂閱者視圖
+CREATE VIEW active_subscribers AS
+SELECT *
+FROM user_profiles
+WHERE polar_subscription_id IS NOT NULL
+  AND subscription_status = 'active';
 
 -- 即將到期的訂閱視圖（7 天內）
 CREATE VIEW expiring_subscriptions AS
@@ -197,28 +206,26 @@ WHERE current_period_end IS NOT NULL
 -- 9. 建立統計函數
 -- =====================================================
 
--- 訂閱統計函數
-CREATE OR REPLACE FUNCTION get_subscription_stats()
+-- 用戶統計函數（簡化邏輯）
+CREATE OR REPLACE FUNCTION get_user_stats()
 RETURNS TABLE (
-    plan VARCHAR(20),
-    user_count BIGINT,
-    active_count BIGINT,
-    trial_count BIGINT
+    total_users BIGINT,
+    subscribed_users BIGINT,
+    unsubscribed_users BIGINT,
+    subscription_rate NUMERIC
 ) AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        up.subscription_plan as plan,
-        COUNT(*) as user_count,
-        COUNT(*) FILTER (WHERE up.subscription_status = 'active') as active_count,
-        COUNT(*) FILTER (WHERE up.subscription_status = 'trial') as trial_count
-    FROM user_profiles up
-    GROUP BY up.subscription_plan
-    ORDER BY 
-        CASE up.subscription_plan 
-            WHEN 'free' THEN 1 
-            WHEN 'pro' THEN 2 
-        END;
+        COUNT(*) as total_users,
+        COUNT(*) FILTER (WHERE polar_subscription_id IS NOT NULL AND subscription_status = 'active') as subscribed_users,
+        COUNT(*) FILTER (WHERE polar_subscription_id IS NULL OR subscription_status != 'active') as unsubscribed_users,
+        ROUND(
+            (COUNT(*) FILTER (WHERE polar_subscription_id IS NOT NULL AND subscription_status = 'active')::NUMERIC / 
+             NULLIF(COUNT(*), 0)) * 100, 
+            2
+        ) as subscription_rate
+    FROM user_profiles;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -237,10 +244,11 @@ GRANT ALL ON SCHEMA public TO service_role;
 -- 授予視圖查詢權限
 GRANT SELECT ON active_users TO authenticated;
 GRANT SELECT ON paid_users TO authenticated;
+GRANT SELECT ON active_subscribers TO authenticated;
 GRANT SELECT ON expiring_subscriptions TO service_role;
 
 -- 授予函數執行權限
-GRANT EXECUTE ON FUNCTION get_subscription_stats() TO service_role;
+GRANT EXECUTE ON FUNCTION get_user_stats() TO service_role;
 
 -- =====================================================
 -- 11. 資料庫架構建立完成（空資料庫）
@@ -275,7 +283,7 @@ SELECT
     viewname,
     definition
 FROM pg_views 
-WHERE viewname IN ('active_users', 'paid_users', 'expiring_subscriptions');
+WHERE viewname IN ('active_users', 'paid_users', 'active_subscribers', 'expiring_subscriptions');
 
 -- 檢查 RLS 是否啟用
 SELECT 
@@ -294,7 +302,7 @@ BEGIN
     RAISE NOTICE 'Next-Clerk-Polar-Supabase 資料庫建立完成！';
     RAISE NOTICE '================================================';
     RAISE NOTICE '✅ user_profiles 表格已建立';
-    RAISE NOTICE '✅ 雙方案架構約束條件已設定 (free, pro)';
+    RAISE NOTICE '✅ 簡化訂閱邏輯約束條件已設定 (pro/null)';
     RAISE NOTICE '✅ 索引和 RLS 安全政策已建立';
     RAISE NOTICE '✅ 實用視圖和統計函數已建立';
     RAISE NOTICE '✅ 空資料庫架構已建立完成';

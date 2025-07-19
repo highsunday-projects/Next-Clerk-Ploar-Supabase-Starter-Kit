@@ -13,17 +13,14 @@ import {
   Loader2
 } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { SUBSCRIPTION_PLANS, SubscriptionPlan } from '@/types/supabase';
+import { SUBSCRIPTION_CONFIG, hasProAccess, getUserConfig } from '@/types/supabase';
 import {
   getSubscriptionStatusText,
   getSubscriptionStatusClass,
-  formatPrice,
   formatBillingInfo,
   canManagePayment,
   canCancelSubscription,
-  getPlanChangeType,
-  getSubscriptionPlanName,
-  isDowngradeOperation
+  formatPrice
 } from '@/lib/subscriptionUtils';
 
 export default function SubscriptionPage() {
@@ -108,58 +105,51 @@ export default function SubscriptionPage() {
     );
   }
 
-  // 獲取當前訂閱方案資訊
-  const currentPlan = SUBSCRIPTION_PLANS[profile.subscription_plan];
+  // SF09: 獲取當前用戶配置
+  const currentConfig = getUserConfig(profile);
+  const isProUser = hasProAccess(profile);
 
   // 當前訂閱資料
   const currentSubscription = {
-    plan: currentPlan.displayName,
-    price: currentPlan.price,
+    plan: currentConfig.displayName,
+    price: currentConfig.price,
     period: 'month',
     status: profile.subscription_status,
     nextBilling: profile.trial_ends_at ?
       new Date(profile.trial_ends_at).toLocaleDateString('zh-TW') :
-      '無限期（免費方案）',
-    paymentMethod: profile.subscription_plan === 'free' ? '無需付款' : '**** **** **** 4242',
-    features: currentPlan.features,
-    monthlyLimit: currentPlan.monthlyUsageLimit
+      isProUser ? formatBillingInfo(profile) : '無限期（基礎用戶）',
+    paymentMethod: isProUser ? '**** **** **** 4242' : '無需付款',
+    features: currentConfig.features,
+    monthlyLimit: currentConfig.monthlyUsageLimit
   };
 
-  // 可用的訂閱方案（基於 Supabase 配置）
-  const plans = Object.entries(SUBSCRIPTION_PLANS).map(([key, plan]) => ({
-    id: key,
-    name: plan.displayName,
-    price: plan.price,
+  // SF09: 簡化方案邏輯 - 只顯示升級選項
+  const plans = isProUser ? [] : [{
+    id: 'pro',
+    name: SUBSCRIPTION_CONFIG.pro.displayName,
+    price: SUBSCRIPTION_CONFIG.pro.price,
     period: 'month',
-    description: key === 'free' ? '適合個人使用和小型專案' :
-                 key === 'pro' ? '適合成長中的團隊和企業' :
-                 '適合大型企業和高流量應用',
-    features: plan.features,
-    current: profile.subscription_plan === key,
-    popular: plan.popular || false,
-    monthlyLimit: plan.monthlyUsageLimit
-  }));
+    description: '適合成長中的團隊和企業',
+    features: SUBSCRIPTION_CONFIG.pro.features,
+    current: false,
+    popular: true,
+    monthlyLimit: SUBSCRIPTION_CONFIG.pro.monthlyUsageLimit
+  }];
 
-  // 處理方案升級/切換
+  // SF09: 處理專業版升級
   const handlePlanUpgrade = async (planId: string) => {
-    if (planId === 'free' || planId === profile.subscription_plan) {
+    if (planId !== 'pro' || isProUser) {
       return; // 不處理免費方案或相同方案
     }
 
-    // 檢查是否為降級操作
-    const targetPlan = planId as 'pro';
-    const isDowngrade = isDowngradeOperation(profile.subscription_plan, targetPlan);
+    // 確認升級
+    const confirmed = confirm(
+      '您確定要升級到專業版嗎？\n\n' +
+      '升級後您將享受更多功能和更高的使用額度。'
+    );
 
-    // 如果是降級，顯示確認對話框
-    if (isDowngrade) {
-      const confirmed = confirm(
-        `您確定要從 ${getSubscriptionPlanName(profile.subscription_plan)} 降級到 ${getSubscriptionPlanName(targetPlan)} 嗎？\n\n` +
-        '降級後您將失去部分功能和額度，但會在下個計費週期生效。'
-      );
-
-      if (!confirmed) {
-        return;
-      }
+    if (!confirmed) {
+      return;
     }
 
     try {
@@ -274,7 +264,7 @@ export default function SubscriptionPage() {
               </button>
             )}
 
-            {profile.subscription_plan !== 'free' && (
+            {isProUser && (
               <button
                 className="w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                 onClick={() => alert('發票下載功能將在未來版本中提供')}
@@ -296,10 +286,10 @@ export default function SubscriptionPage() {
               </button>
             )}
 
-            {profile.subscription_plan === 'free' && (
+            {!isProUser && (
               <div className="text-center py-4">
                 <p className="text-sm text-gray-600">
-                  您目前使用免費方案，無需付款管理
+                  您目前是基礎用戶，無需付款管理
                 </p>
               </div>
             )}
@@ -318,123 +308,153 @@ export default function SubscriptionPage() {
         </div>
       </div>
 
-      {/* Available Plans */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">變更訂閱方案</h2>
-        
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {plans.map((plan, index) => (
-            <div
-              key={index}
-              className={`relative border-2 rounded-lg p-6 transition-all duration-200 ${
-                plan.current 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : plan.popular
-                  ? 'border-purple-500 hover:border-purple-600'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              {plan.popular && !plan.current && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center">
-                    <Star className="w-3 h-3 mr-1" />
-                    推薦
-                  </span>
-                </div>
-              )}
-
-              {plan.current && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium">
-                    目前方案
-                  </span>
-                </div>
-              )}
-
-              <div className="text-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                <div className="flex items-baseline justify-center">
-                  <span className="text-3xl font-bold text-gray-900">
-                    {plan.price === 0 ? '免費' : `$${plan.price}`}
-                  </span>
-                  {plan.price > 0 && (
-                    <span className="text-gray-600 ml-1">
-                      /{plan.period === 'month' ? '月' : '年'}
-                    </span>
-                  )}
-                </div>
-                {plan.monthlyLimit && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    每月 {plan.monthlyLimit.toLocaleString()} 次 API 呼叫
-                  </p>
-                )}
-                <p className="text-sm text-gray-600 mt-2">{plan.description}</p>
-              </div>
-
-              <ul className="space-y-2 mb-6">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="text-sm text-gray-600 flex items-center">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                disabled={plan.current || profile.subscription_status === 'cancelled' || upgrading === plan.id}
-                className={`w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200 ${
-                  plan.current
-                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : profile.subscription_status === 'cancelled'
-                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : upgrading === plan.id
-                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : plan.price > currentSubscription.price
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : plan.price === 0
-                    ? 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    : 'border border-orange-300 text-orange-700 hover:bg-orange-50'
-                }`}
-                onClick={() => {
-                  if (!plan.current && profile.subscription_status !== 'cancelled' && upgrading !== plan.id) {
-                    const changeType = getPlanChangeType(profile.subscription_plan, plan.id as SubscriptionPlan);
-
-                    if (changeType === 'upgrade' && plan.id !== 'free') {
-                      // 使用 Polar Checkout 進行升級
-                      handlePlanUpgrade(plan.id);
-                    } else if (changeType === 'downgrade' && plan.id === 'free') {
-                      // 降級到免費方案的處理（未來實作）
-                      alert('降級到免費方案功能即將推出');
-                    } else {
-                      // 其他變更類型
-                      const actionText = changeType === 'upgrade' ? '升級' :
-                                       changeType === 'downgrade' ? '降級' : '變更';
-                      alert(`${actionText}功能即將推出`);
-                    }
-                  }
-                }}
-              >
-                {upgrading === plan.id ? (
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    處理中...
-                  </div>
-                ) : plan.current ? (
-                  '目前方案'
-                ) : profile.subscription_status === 'cancelled' ? (
-                  '訂閱已取消'
-                ) : (() => {
-                    const changeType = getPlanChangeType(profile.subscription_plan, plan.id as SubscriptionPlan);
-                    return changeType === 'upgrade' ? '升級' :
-                           changeType === 'downgrade' ? (plan.price === 0 ? '降級至免費' : '降級') :
-                           '變更';
-                  })()
-                }
-              </button>
+      {/* Upgrade to Pro Section - Only for non-pro users */}
+      {!isProUser && (
+        <div className="relative bg-white rounded-lg shadow-lg border-2 border-blue-200 p-6 overflow-hidden">
+          {/* Eye-catching badge */}
+          <div className="absolute -top-1 -right-1">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-bl-lg rounded-tr-lg text-xs font-medium animate-pulse">
+              ⚡ 推薦升級
             </div>
-          ))}
+          </div>
+
+          {/* Header with enhanced visual appeal */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 flex items-center mb-2">
+                <Crown className="w-6 h-6 mr-2 text-yellow-500" />
+                升級到專業版
+              </h2>
+              <p className="text-blue-600 font-medium">🚀 10倍功能提升，讓效率翻倍！</p>
+            </div>
+            <div className="text-right">
+              <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-blue-600">$5</span>
+                  <span className="text-gray-600 ml-1">/月</span>
+                </div>
+                <p className="text-xs text-blue-500 font-medium">💰 限時優惠 50% OFF</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced value proposition */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 mb-6 border border-blue-100">
+            <p className="text-gray-700 text-center font-medium">
+              ✨ 專業版用戶平均提升 <span className="text-blue-600 font-bold">300%</span> 工作效率
+            </p>
+          </div>
+
+          {/* Enhanced Benefits Comparison */}
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>
+                目前 - 基礎用戶
+              </h4>
+              <ul className="space-y-2">
+                <li className="text-sm text-gray-600 flex items-center">
+                  <div className="w-4 h-4 rounded-full bg-gray-300 mr-2 flex-shrink-0"></div>
+                  每月 1,000 次 API 呼叫
+                </li>
+                <li className="text-sm text-gray-600 flex items-center">
+                  <div className="w-4 h-4 rounded-full bg-gray-300 mr-2 flex-shrink-0"></div>
+                  基本功能存取
+                </li>
+                <li className="text-sm text-gray-600 flex items-center">
+                  <div className="w-4 h-4 rounded-full bg-gray-300 mr-2 flex-shrink-0"></div>
+                  社群支援
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border-2 border-blue-200">
+              <h4 className="text-sm font-medium text-blue-800 mb-3 flex items-center">
+                <Crown className="w-4 h-4 mr-2 text-yellow-500" />
+                升級後 - 專業版 ⭐
+              </h4>
+              <ul className="space-y-2">
+                <li className="text-sm text-gray-700 flex items-center">
+                  <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                  <span><strong>10,000 次</strong> API 呼叫 <span className="text-green-600">(+900%)</span></span>
+                </li>
+                <li className="text-sm text-gray-700 flex items-center">
+                  <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                  <strong>所有進階功能</strong>
+                </li>
+                <li className="text-sm text-gray-700 flex items-center">
+                  <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                  <strong>24小時優先支援</strong>
+                </li>
+                <li className="text-sm text-gray-700 flex items-center">
+                  <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                  <strong>詳細數據分析</strong>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Enhanced Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              disabled={upgrading === 'pro'}
+              className={`flex-1 py-3 px-6 rounded-lg font-bold text-lg transition-all duration-300 transform ${
+                upgrading === 'pro'
+                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 hover:scale-105 shadow-lg hover:shadow-xl'
+              }`}
+              onClick={() => {
+                if (upgrading !== 'pro') {
+                  handlePlanUpgrade('pro');
+                }
+              }}
+            >
+              {upgrading === 'pro' ? (
+                <div className="flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  處理中...
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <Crown className="w-5 h-5 mr-2" />
+                  🚀 立即升級 - 只要 $5/月
+                </div>
+              )}
+            </button>
+            
+            <button
+              className="sm:w-auto px-4 py-3 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors duration-200 font-medium"
+              onClick={() => alert('功能比較詳情將在未來版本中提供')}
+            >
+              💡 了解更多功能
+            </button>
+          </div>
+
+          {/* Enhanced Trust Indicators */}
+          <div className="mt-6 pt-4 border-t border-blue-200">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mb-1">
+                  <Check className="w-4 h-4 text-green-600" />
+                </div>
+                <span className="text-xs text-gray-600">30天保證</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mb-1">
+                  <CreditCard className="w-4 h-4 text-blue-600" />
+                </div>
+                <span className="text-xs text-gray-600">隨時取消</span>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mb-1">
+                  <Star className="w-4 h-4 text-purple-600" />
+                </div>
+                <span className="text-xs text-gray-600">即時生效</span>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Billing Notice */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">

@@ -2,9 +2,10 @@ import { Check, Star } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PricingSection() {
+  // SF09: 簡化為單一產品邏輯 - 只展示專業版升級
   const plans = [
     {
-      name: '免費方案',
+      name: '基礎用戶',
       price: '免費',
       period: '',
       description: '適合個人使用和小型專案',
@@ -17,7 +18,7 @@ export default function PricingSection() {
       buttonStyle: 'border border-gray-300 text-gray-700 hover:bg-gray-50'
     },
     {
-      name: '專業方案',
+      name: '專業版用戶',
       price: '$5',
       period: '/月',
       description: '適合成長中的團隊和企業',

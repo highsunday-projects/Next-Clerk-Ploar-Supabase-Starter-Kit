@@ -18,7 +18,7 @@ export default function PricingSection() {
     },
     {
       name: '專業方案',
-      price: '$29',
+      price: '$5',
       period: '/月',
       description: '適合成長中的團隊和企業',
       features: [
@@ -33,7 +33,7 @@ export default function PricingSection() {
     },
     {
       name: '企業方案',
-      price: '$99',
+      price: '$10',
       period: '/月',
       description: '適合大型企業和高流量應用',
       features: [

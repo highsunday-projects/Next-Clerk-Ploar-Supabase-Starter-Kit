@@ -80,7 +80,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionPlanConfig
     name: 'pro',
     displayName: '專業方案',
     monthlyUsageLimit: 10000,
-    price: 29,
+    price: 5,
     features: [
       '每月 10,000 次 API 呼叫',
       '進階功能存取',
@@ -93,7 +93,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlan, SubscriptionPlanConfig
     name: 'enterprise',
     displayName: '企業方案',
     monthlyUsageLimit: 100000,
-    price: 99,
+    price: 10,
     features: [
       '每月 100,000 次 API 呼叫',
       '所有功能存取',

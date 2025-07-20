@@ -3,7 +3,7 @@ title: 簡化 Starter Kit，移除企業版，優化雙方案架構
 author: 開發團隊
 date: 2025-07-20
 version: 1.0
-uuid: 93450ca6afdc445db021df46a5bd7391
+uuid: af247b54d38245a8ba96771d31d57490
 ---
 
 # SF08 - Starter Kit 簡化與雙方案架構優化 (簡化需求)

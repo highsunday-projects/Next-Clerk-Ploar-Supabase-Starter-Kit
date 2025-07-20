@@ -3,7 +3,7 @@ title: Polar 付費系統整合
 author: 開發團隊
 date: 2025-07-19
 version: 1.0
-uuid: 93450ca6afdc445db021df46a5bd7391
+uuid: 095c90bd21754f66806aa592a5e16e08
 ---
 
 # SF05 - Polar 付費系統整合 (簡化需求)

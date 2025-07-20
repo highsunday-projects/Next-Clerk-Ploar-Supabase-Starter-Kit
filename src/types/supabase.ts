@@ -105,12 +105,34 @@ export const SUBSCRIPTION_CONFIG = {
   }
 } as const;
 
-// 權限檢查輔助函數
+// 權限檢查輔助函數 - 根據文件規範完整檢查三種狀態
 export function hasProAccess(user: UserProfile): boolean {
-  return !!(
-    user.polar_subscription_id &&
-    user.subscription_status === 'active'
-  );
+  // 檢查基本條件：必須是專業版且狀態為 active
+  if (user.subscription_plan !== 'pro' || user.subscription_status !== 'active') {
+    return false;
+  }
+
+  // 檢查是否有 Polar 訂閱 ID
+  if (!user.polar_subscription_id) {
+    return false;
+  }
+
+  // 檢查訂閱是否還在有效期內
+  if (user.current_period_end) {
+    const currentTime = new Date();
+    const periodEnd = new Date(user.current_period_end);
+
+    // 如果已過期，則無權限
+    if (periodEnd <= currentTime) {
+      return false;
+    }
+  }
+
+  // 所有檢查都通過，用戶有專業版權限
+  // 這包含兩種情況：
+  // 1. 會續訂 (cancel_at_period_end = false)
+  // 2. 會到期 (cancel_at_period_end = true) 但還沒到期
+  return true;
 }
 
 // 獲取用戶配置
@@ -126,6 +148,50 @@ export type UserSubscriptionStatus = 'subscribed' | 'unsubscribed';
 // 獲取用戶訂閱狀態
 export function getUserSubscriptionStatus(user: UserProfile): UserSubscriptionStatus {
   return hasProAccess(user) ? 'subscribed' : 'unsubscribed';
+}
+
+// 檢查用戶是否為「會續訂」狀態
+export function isAutoRenewing(user: UserProfile): boolean {
+  return hasProAccess(user) && !user.cancel_at_period_end;
+}
+
+// 檢查用戶是否為「會到期」狀態
+export function isWillExpire(user: UserProfile): boolean {
+  return hasProAccess(user) && !!user.cancel_at_period_end;
+}
+
+// 檢查用戶是否為「免費版」狀態
+export function isFreeUser(user: UserProfile): boolean {
+  return !hasProAccess(user);
+}
+
+// 獲取詳細的用戶狀態描述
+export type DetailedUserStatus = 'auto_renewing' | 'will_expire' | 'free';
+
+export function getDetailedUserStatus(user: UserProfile): DetailedUserStatus {
+  if (isAutoRenewing(user)) {
+    return 'auto_renewing';
+  } else if (isWillExpire(user)) {
+    return 'will_expire';
+  } else {
+    return 'free';
+  }
+}
+
+// 獲取用戶狀態的中文描述
+export function getUserStatusDescription(user: UserProfile): string {
+  const status = getDetailedUserStatus(user);
+
+  switch (status) {
+    case 'auto_renewing':
+      return '訂閱中、會續訂';
+    case 'will_expire':
+      return '訂閱中、時間到會到期';
+    case 'free':
+      return '免費版';
+    default:
+      return '未知狀態';
+  }
 }
 
 // Supabase 資料庫表格定義

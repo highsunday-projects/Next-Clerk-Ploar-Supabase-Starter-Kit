@@ -118,23 +118,44 @@ async function handleSubscriptionUpdated(event: any): Promise<void> {
     subscriptionId: subscription.id,
     userId: clerkUserId,
     status: subscription.status,
+    cancelAtPeriodEnd: subscription.cancel_at_period_end,
     currentPeriodStart: subscription.current_period_start,
     currentPeriodEnd: subscription.current_period_end
   });
 
-  // SF09: 簡化邏輯 - 所有 Polar 訂閱都是專業版
-  const updateData = {
-    subscriptionPlan: 'pro' as SubscriptionPlan,
-    subscriptionStatus: mapPolarStatusToLocal(subscription.status),
-    monthlyUsageLimit: 10000, // 專業版固定額度
-    currentPeriodEnd: subscription.current_period_end,
-    cancelAtPeriodEnd: subscription.cancel_at_period_end || false
-  };
+  // 檢查是否為因 cancel_at_period_end 而過期的情況
+  const isExpiredCancellation = (subscription.status === 'canceled' || subscription.status === 'cancelled') && 
+                                subscription.cancel_at_period_end;
+
+  let updateData;
+
+  if (isExpiredCancellation) {
+    // 訂閱因 cancel_at_period_end 而真正過期，降級為免費版
+    updateData = {
+      subscriptionPlan: null,
+      subscriptionStatus: 'inactive' as SubscriptionStatus,
+      monthlyUsageLimit: 1000, // 回到基礎額度
+      polarSubscriptionId: undefined,
+      polarCustomerId: undefined,
+      currentPeriodEnd: undefined,
+      cancelAtPeriodEnd: false
+    };
+    console.log(`Subscription expired for user ${clerkUserId} - downgrading to free plan`);
+  } else {
+    // 一般的訂閱更新，保持專業版
+    updateData = {
+      subscriptionPlan: 'pro' as SubscriptionPlan,
+      subscriptionStatus: mapPolarStatusToLocal(subscription.status),
+      monthlyUsageLimit: 10000, // 專業版固定額度
+      currentPeriodEnd: subscription.current_period_end,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end || false
+    };
+  }
 
   const result = await userProfileService.updateUserProfile(clerkUserId, updateData);
   console.log('Database update result:', result);
 
-  console.log(`Subscription updated for user ${clerkUserId}: ${subscription.status} (pro plan)`);
+  console.log(`Subscription updated for user ${clerkUserId}: ${subscription.status} (${isExpiredCancellation ? 'downgraded to free' : 'pro plan'})`);
 }
 
 /**
@@ -149,20 +170,27 @@ async function handleSubscriptionCanceled(event: any): Promise<void> {
     return;
   }
 
-  // SF09: 簡化邏輯 - 取消訂閱時回到未訂閱狀態
-  await userProfileService.getOrCreateUserProfile(clerkUserId);
-
-  await userProfileService.updateUserProfile(clerkUserId, {
-    subscriptionPlan: null,
-    subscriptionStatus: 'inactive',
-    monthlyUsageLimit: 1000, // 回到基礎額度
-    polarSubscriptionId: undefined,
-    polarCustomerId: undefined,
-    currentPeriodEnd: undefined,
-    cancelAtPeriodEnd: false
+  console.log('Processing subscription cancellation:', {
+    subscriptionId: subscription.id,
+    userId: clerkUserId,
+    status: subscription.status,
+    cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    currentPeriodEnd: subscription.current_period_end
   });
 
-  console.log(`Subscription canceled for user ${clerkUserId} - reverted to unsubscribed state`);
+  await userProfileService.getOrCreateUserProfile(clerkUserId);
+
+  // 正確處理：取消訂閱時保持訂閱有效但設定 cancel_at_period_end = true
+  // 讓用戶享受到期前的完整服務，Polar 會在期間結束時自動觸發真正的過期事件
+  await userProfileService.updateUserProfile(clerkUserId, {
+    subscriptionPlan: 'pro', // 保持專業版
+    subscriptionStatus: mapPolarStatusToLocal(subscription.status), // 保持當前狀態
+    monthlyUsageLimit: 10000, // 保持專業版額度
+    cancelAtPeriodEnd: subscription.cancel_at_period_end || true, // 設定為將在期間結束時取消
+    currentPeriodEnd: subscription.current_period_end // 保持期間結束時間
+  });
+
+  console.log(`Subscription canceled for user ${clerkUserId} - marked for cancellation at period end (${subscription.current_period_end})`);
 }
 
 /**

@@ -13,7 +13,14 @@ import {
   Loader2
 } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { SUBSCRIPTION_CONFIG, hasProAccess, getUserConfig } from '@/types/supabase';
+import {
+  SUBSCRIPTION_CONFIG,
+  hasProAccess,
+  getUserConfig,
+  isAutoRenewing,
+  isWillExpire,
+  getUserStatusDescription
+} from '@/types/supabase';
 import {
   getSubscriptionStatusText,
   getSubscriptionStatusClass,
@@ -27,7 +34,8 @@ export default function SubscriptionPage() {
   const { user, isLoaded } = useUser();
   const { profile, loading, error } = useUserProfile();
   const router = useRouter();
-  const [upgrading, setUpgrading] = useState<string | null>(null); // 追蹤正在升級的方案
+  const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false); // 追蹤正在升級的方案
 
   // 重定向未登入用戶
   useEffect(() => {
@@ -195,6 +203,42 @@ export default function SubscriptionPage() {
     }
   };
 
+  // 處理取消訂閱
+  const handleCancelSubscription = async () => {
+    if (!user?.id || !profile) return;
+
+    try {
+      setCancelling(true);
+
+      const response = await fetch('/api/polar/schedule-downgrade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetPlan: 'free',
+          userId: user.id
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '取消訂閱失敗');
+      }
+
+      alert('訂閱已成功安排取消，將在當前計費週期結束時生效。');
+      // 重新載入頁面以更新訂閱資訊
+      window.location.reload();
+
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      alert(error instanceof Error ? error.message : '取消訂閱失敗，請稍後再試');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -212,10 +256,39 @@ export default function SubscriptionPage() {
             <Crown className="w-5 h-5 mr-2 text-yellow-500" />
             目前訂閱
           </h2>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSubscriptionStatusClass(profile.subscription_status)}`}>
-            {getSubscriptionStatusText(profile.subscription_status)}
-          </span>
+          <div className="text-right">
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSubscriptionStatusClass(profile.subscription_status)}`}>
+              {getSubscriptionStatusText(profile.subscription_status)}
+            </span>
+            <div className="text-xs text-gray-500 mt-1">
+              {getUserStatusDescription(profile)}
+            </div>
+          </div>
         </div>
+
+        {/* 狀態提示 */}
+        {isWillExpire(profile) && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center">
+              <AlertCircle className="w-4 h-4 text-yellow-600 mr-2" />
+              <span className="text-sm text-yellow-800">
+                您的訂閱將在 {profile.current_period_end ? new Date(profile.current_period_end).toLocaleDateString('zh-TW') : '計費週期結束時'} 到期。
+                如需繼續使用專業版功能，請重新啟用自動續訂。
+              </span>
+            </div>
+          </div>
+        )}
+
+        {isAutoRenewing(profile) && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center">
+              <Check className="w-4 h-4 text-green-600 mr-2" />
+              <span className="text-sm text-green-800">
+                您的專業版訂閱將自動續訂，無需任何操作。
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-6">
           <div>
@@ -275,14 +348,22 @@ export default function SubscriptionPage() {
 
             {canCancelSubscription(profile) && (
               <button
-                className="w-full border border-red-300 text-red-700 py-2 px-4 rounded-lg hover:bg-red-50 transition-colors duration-200"
+                className="w-full border border-red-300 text-red-700 py-2 px-4 rounded-lg hover:bg-red-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={cancelling}
                 onClick={() => {
                   if (confirm('確定要取消訂閱嗎？此操作將在當前計費週期結束時生效。')) {
-                    alert('取消訂閱功能將在未來版本中提供');
+                    handleCancelSubscription();
                   }
                 }}
               >
-                取消訂閱
+                {cancelling ? (
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    處理中...
+                  </div>
+                ) : (
+                  '取消訂閱'
+                )}
               </button>
             )}
 

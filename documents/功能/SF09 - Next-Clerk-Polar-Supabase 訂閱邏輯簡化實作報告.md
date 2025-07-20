@@ -3,7 +3,7 @@ title: SF09 - Next-Clerk-Polar-Supabase 訂閱邏輯簡化實作報告
 author: 開發團隊
 date: 2025-07-20
 version: 1.0
-uuid: 93450ca6afdc445db021df46a5bd7391-sf09-report
+uuid: c320fa62245048c799b4cec883e6b385
 ---
 
 # SF09 - Next-Clerk-Polar-Supabase 訂閱邏輯簡化實作報告

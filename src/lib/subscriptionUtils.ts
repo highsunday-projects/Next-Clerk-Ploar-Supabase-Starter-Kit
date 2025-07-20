@@ -5,7 +5,14 @@
  */
 
 import type { UserProfile, SubscriptionStatus } from '@/types/supabase';
-import { hasProAccess, getUserConfig } from '@/types/supabase';
+import {
+  hasProAccess,
+  getUserConfig,
+  isAutoRenewing,
+  isWillExpire,
+  isFreeUser,
+  getUserStatusDescription
+} from '@/types/supabase';
 
 /**
  * 檢查用戶是否可以升級到專業版
@@ -96,7 +103,7 @@ export function formatPrice(price: number): string {
 }
 
 /**
- * 格式化計費週期顯示
+ * 格式化計費週期顯示 - 根據三種狀態提供詳細資訊
  */
 export function formatBillingInfo(profile: UserProfile): string {
   if (!hasProAccess(profile)) {
@@ -115,19 +122,29 @@ export function formatBillingInfo(profile: UserProfile): string {
     return '訂閱已過期';
   }
 
-  // 對於付費方案，顯示下次計費日期
-  if (profile.current_period_end) {
-    return `下次計費：${new Date(profile.current_period_end).toLocaleDateString('zh-TW')}`;
+  // 根據三種狀態顯示不同資訊
+  if (isWillExpire(profile)) {
+    // 會到期狀態
+    if (profile.current_period_end) {
+      return `專業版將於 ${new Date(profile.current_period_end).toLocaleDateString('zh-TW')} 到期`;
+    }
+    return '專業版（已安排取消）';
+  } else if (isAutoRenewing(profile)) {
+    // 會續訂狀態
+    if (profile.current_period_end) {
+      return `下次計費：${new Date(profile.current_period_end).toLocaleDateString('zh-TW')}`;
+    }
+    return '專業版（自動續訂）';
   }
 
   return '專業版用戶';
 }
 
 /**
- * 獲取用戶顯示名稱
+ * 獲取用戶顯示名稱 - 根據三種狀態提供詳細描述
  */
 export function getUserDisplayName(profile: UserProfile): string {
-  return hasProAccess(profile) ? '專業版用戶' : '基礎用戶';
+  return getUserStatusDescription(profile);
 }
 
 /**

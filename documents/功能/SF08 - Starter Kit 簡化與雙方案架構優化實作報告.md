@@ -3,7 +3,7 @@ title: SF08 - Starter Kit 簡化與雙方案架構優化實作報告
 author: 開發團隊
 date: 2025-07-20
 version: 1.0
-uuid: 93450ca6afdc445db021df46a5bd7391-report
+uuid: 3af7a8bfe8fc40e4ba377479301782b8
 ---
 
 # SF08 - Starter Kit 簡化與雙方案架構優化實作報告

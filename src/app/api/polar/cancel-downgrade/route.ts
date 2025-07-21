@@ -7,7 +7,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { polarApi } from '@/lib/polar';
 import { userProfileService } from '@/lib/userProfileService';
-import type { PolarCancelDowngradeRequest } from '@/types/supabase';
+// SF10 簡化版：移除不需要的類型導入
 
 /**
  * POST /api/polar/cancel-downgrade
@@ -24,35 +24,21 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
-    // 解析請求資料
-    let requestData: PolarCancelDowngradeRequest;
-    try {
-      requestData = await request.json();
-    } catch {
-      return Response.json({
-        error: '無效的請求資料格式'
-      }, { status: 400 });
-    }
-
-    // 確保只能為自己取消降級
-    if (requestData.userId !== userId) {
-      return Response.json({
-        error: '無權限為其他用戶取消降級'
-      }, { status: 403 });
-    }
+    // SF10 簡化版：不需要解析請求資料，直接處理取消降級
+    console.log('Processing cancel downgrade request for user:', userId);
 
     // 獲取用戶當前訂閱資料
     const userProfile = await userProfileService.getOrCreateUserProfile(userId);
 
-    // 檢查用戶是否有活躍的付費訂閱
-    if (!userProfile.polar_subscription_id || userProfile.subscription_plan === 'free') {
+    // SF10 簡化版：檢查用戶是否有活躍的付費訂閱
+    if (!userProfile.polar_subscription_id || userProfile.subscription_plan !== 'pro') {
       return Response.json({
         error: '您目前沒有活躍的付費訂閱'
       }, { status: 400 });
     }
 
-    // 檢查是否有待執行的降級
-    if (!userProfile.pending_downgrade_plan || !userProfile.cancel_at_period_end) {
+    // SF10 簡化版：檢查是否為即將到期狀態
+    if (userProfile.subscription_status !== 'active_ending') {
       return Response.json({
         error: '您目前沒有待執行的降級操作'
       }, { status: 400 });
@@ -61,7 +47,7 @@ export async function POST(request: Request) {
     console.log('Cancelling downgrade:', {
       userId,
       currentPlan: userProfile.subscription_plan,
-      pendingDowngradePlan: userProfile.pending_downgrade_plan,
+      currentStatus: userProfile.subscription_status,
       subscriptionId: userProfile.polar_subscription_id
     });
 
@@ -78,11 +64,9 @@ export async function POST(request: Request) {
       cancelAtPeriodEnd: updatedSubscription.cancelAtPeriodEnd
     });
 
-    // 更新資料庫清除降級資訊
+    // SF10 簡化版：更新資料庫狀態為會續訂
     await userProfileService.updateUserProfile(userId, {
-      cancelAtPeriodEnd: false,
-      pendingDowngradePlan: null,
-      downgradeEffectiveDate: null
+      subscriptionStatus: 'active_recurring'
     });
 
     console.log('Downgrade cancelled successfully for user:', userId);

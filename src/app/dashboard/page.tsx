@@ -12,7 +12,8 @@ import {
   Loader2
 } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { hasProAccess, getUserConfig } from '@/types/supabase';
+import { hasProAccess, getUserConfig, getUserStatusDescription } from '@/types/supabase';
+import { getSubscriptionStatusText, getSubscriptionStatusClass } from '@/lib/subscriptionUtils';
 // SF09: 移除未使用的導入
 
 export default function DashboardPage() {
@@ -92,18 +93,15 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center space-x-2">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-              profile?.subscription_status === 'active'
-                ? 'bg-green-100 text-green-800'
-                : profile?.subscription_status === 'trial'
-                ? 'bg-blue-100 text-blue-800'
-                : profile?.subscription_status === 'cancelled'
-                ? 'bg-red-100 text-red-800'
-                : 'bg-gray-100 text-gray-800'
+              profile ? getSubscriptionStatusClass(profile.subscription_status) : 'bg-gray-100 text-gray-800'
             }`}>
-              {profile?.subscription_status === 'active' ? '訂閱中' :
-               profile?.subscription_status === 'trial' ? '試用中' :
-               profile?.subscription_status === 'cancelled' ? '已取消' : '已過期'}
+              {profile ? getSubscriptionStatusText(profile.subscription_status) : '載入中...'}
             </span>
+            {profile && (
+              <div className="text-xs text-gray-500">
+                {getUserStatusDescription(profile)}
+              </div>
+            )}
           </div>
         </div>
       </div>

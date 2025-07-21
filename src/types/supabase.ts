@@ -8,8 +8,8 @@
 // 訂閱方案類型 - 簡化為單一產品邏輯
 export type SubscriptionPlan = 'pro' | null;
 
-// 訂閱狀態類型
-export type SubscriptionStatus = 'active' | 'trial' | 'cancelled' | 'expired' | 'past_due' | 'inactive';
+// 訂閱狀態類型 - 簡化版 (SF10)
+export type SubscriptionStatus = 'active_recurring' | 'active_ending' | 'inactive';
 
 // 用戶訂閱資料介面
 export interface UserProfile {
@@ -22,11 +22,10 @@ export interface UserProfile {
   last_active_date: string;
   created_at: string;
   updated_at: string;
-  // Polar 整合相關欄位
+  // Polar 整合相關欄位 - SF10 簡化版：移除 cancel_at_period_end
   polar_customer_id?: string;
   polar_subscription_id?: string;
   current_period_end?: string;
-  cancel_at_period_end?: boolean;
 }
 
 // 建立用戶訂閱記錄的請求參數
@@ -39,7 +38,6 @@ export interface CreateUserProfileRequest {
   polarCustomerId?: string;
   polarSubscriptionId?: string;
   currentPeriodEnd?: string;
-  cancelAtPeriodEnd?: boolean;
 }
 
 // 更新用戶訂閱記錄的請求參數
@@ -52,7 +50,6 @@ export interface UpdateUserProfileRequest {
   polarCustomerId?: string;
   polarSubscriptionId?: string;
   currentPeriodEnd?: string;
-  cancelAtPeriodEnd?: boolean;
 }
 
 // API 回應格式
@@ -105,15 +102,16 @@ export const SUBSCRIPTION_CONFIG = {
   }
 } as const;
 
-// 權限檢查輔助函數 - 根據文件規範完整檢查三種狀態
+// 權限檢查輔助函數 - SF10 簡化版：基於新的 3 欄位結構
 export function hasProAccess(user: UserProfile): boolean {
-  // 檢查基本條件：必須是專業版且狀態為 active
-  if (user.subscription_plan !== 'pro' || user.subscription_status !== 'active') {
+  // 檢查基本條件：必須是專業版
+  if (user.subscription_plan !== 'pro') {
     return false;
   }
 
-  // 檢查是否有 Polar 訂閱 ID
-  if (!user.polar_subscription_id) {
+  // 檢查訂閱狀態：只有 active_recurring 和 active_ending 有權限
+  const activeStatuses: SubscriptionStatus[] = ['active_recurring', 'active_ending'];
+  if (!activeStatuses.includes(user.subscription_status)) {
     return false;
   }
 
@@ -129,9 +127,6 @@ export function hasProAccess(user: UserProfile): boolean {
   }
 
   // 所有檢查都通過，用戶有專業版權限
-  // 這包含兩種情況：
-  // 1. 會續訂 (cancel_at_period_end = false)
-  // 2. 會到期 (cancel_at_period_end = true) 但還沒到期
   return true;
 }
 
@@ -150,44 +145,36 @@ export function getUserSubscriptionStatus(user: UserProfile): UserSubscriptionSt
   return hasProAccess(user) ? 'subscribed' : 'unsubscribed';
 }
 
-// 檢查用戶是否為「會續訂」狀態
+// 檢查用戶是否為「會續訂」狀態 - SF10 簡化版
 export function isAutoRenewing(user: UserProfile): boolean {
-  return hasProAccess(user) && !user.cancel_at_period_end;
+  return user.subscription_status === 'active_recurring' && hasProAccess(user);
 }
 
-// 檢查用戶是否為「會到期」狀態
+// 檢查用戶是否為「會到期」狀態 - SF10 簡化版
 export function isWillExpire(user: UserProfile): boolean {
-  return hasProAccess(user) && !!user.cancel_at_period_end;
+  return user.subscription_status === 'active_ending' && hasProAccess(user);
 }
 
-// 檢查用戶是否為「免費版」狀態
+// 檢查用戶是否為「免費版」狀態 - SF10 簡化版
 export function isFreeUser(user: UserProfile): boolean {
-  return !hasProAccess(user);
+  return user.subscription_status === 'inactive' || !hasProAccess(user);
 }
 
-// 獲取詳細的用戶狀態描述
-export type DetailedUserStatus = 'auto_renewing' | 'will_expire' | 'free';
+// 獲取詳細的用戶狀態描述 - SF10 簡化版
+export type DetailedUserStatus = 'active_recurring' | 'active_ending' | 'inactive';
 
 export function getDetailedUserStatus(user: UserProfile): DetailedUserStatus {
-  if (isAutoRenewing(user)) {
-    return 'auto_renewing';
-  } else if (isWillExpire(user)) {
-    return 'will_expire';
-  } else {
-    return 'free';
-  }
+  return user.subscription_status;
 }
 
-// 獲取用戶狀態的中文描述
+// 獲取用戶狀態的中文描述 - SF10 簡化版
 export function getUserStatusDescription(user: UserProfile): string {
-  const status = getDetailedUserStatus(user);
-
-  switch (status) {
-    case 'auto_renewing':
-      return '訂閱中、會續訂';
-    case 'will_expire':
-      return '訂閱中、時間到會到期';
-    case 'free':
+  switch (user.subscription_status) {
+    case 'active_recurring':
+      return '訂閱中 (會自動續訂)';
+    case 'active_ending':
+      return '訂閱中 (即將到期)';
+    case 'inactive':
       return '免費版';
     default:
       return '未知狀態';

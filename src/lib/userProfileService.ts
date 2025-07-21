@@ -75,11 +75,10 @@ class UserProfileServiceImpl implements UserProfileService {
         trial_ends_at: data.trialEndsAt || null,
         last_active_date: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        // Polar 相關欄位
+        // Polar 相關欄位 - SF10 簡化版：移除 cancel_at_period_end
         polar_customer_id: data.polarCustomerId || null,
         polar_subscription_id: data.polarSubscriptionId || null,
-        current_period_end: data.currentPeriodEnd || null,
-        cancel_at_period_end: data.cancelAtPeriodEnd || false
+        current_period_end: data.currentPeriodEnd || null
       };
 
       const { data: newProfile, error } = await supabase
@@ -139,9 +138,7 @@ class UserProfileServiceImpl implements UserProfileService {
       if (data.currentPeriodEnd !== undefined) {
         updateData.current_period_end = data.currentPeriodEnd;
       }
-      if (data.cancelAtPeriodEnd !== undefined) {
-        updateData.cancel_at_period_end = data.cancelAtPeriodEnd;
-      }
+      // SF10 簡化版：移除 cancel_at_period_end 欄位處理
 
       console.log('Updating user profile with data:', {
         clerkUserId,

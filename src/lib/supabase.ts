@@ -113,7 +113,7 @@ export const TABLES = {
  * 常用的資料庫查詢選項
  */
 export const QUERY_OPTIONS = {
-  // 用戶訂閱資料的標準欄位
+  // 用戶訂閱資料的標準欄位 - SF10 簡化版：移除 cancel_at_period_end
   USER_PROFILE_FIELDS: `
     id,
     clerk_user_id,
@@ -126,8 +126,7 @@ export const QUERY_OPTIONS = {
     updated_at,
     polar_customer_id,
     polar_subscription_id,
-    current_period_end,
-    cancel_at_period_end
+    current_period_end
   `.replace(/\s+/g, ' ').trim()
 } as const;
 

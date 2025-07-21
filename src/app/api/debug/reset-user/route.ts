@@ -14,15 +14,14 @@ export async function POST() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 重置為基礎用戶狀態
+    // SF10 簡化版：重置為基礎用戶狀態
     await userProfileService.updateUserProfile(userId, {
       subscriptionPlan: null,
       subscriptionStatus: 'inactive',
       monthlyUsageLimit: 1000,
       polarSubscriptionId: undefined,
       polarCustomerId: undefined,
-      currentPeriodEnd: undefined,
-      cancelAtPeriodEnd: false
+      currentPeriodEnd: undefined
     });
 
     return NextResponse.json({ 

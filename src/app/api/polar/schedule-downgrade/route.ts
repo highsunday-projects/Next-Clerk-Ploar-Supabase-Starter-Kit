@@ -74,8 +74,8 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // SF09: 檢查是否已經安排取消
-    if (userProfile.cancel_at_period_end) {
+    // SF10 簡化版：檢查是否已經是即將到期狀態
+    if (userProfile.subscription_status === 'active_ending') {
       return Response.json({
         error: '您已經安排取消訂閱，無需重複操作'
       }, { status: 400 });
@@ -102,9 +102,9 @@ export async function POST(request: Request) {
       currentPeriodEnd: updatedSubscription.currentPeriodEnd
     });
 
-    // SF09: 更新資料庫記錄取消資訊
+    // SF10 簡化版：更新資料庫狀態為即將到期
     await userProfileService.updateUserProfile(userId, {
-      cancelAtPeriodEnd: true
+      subscriptionStatus: 'active_ending'
     });
 
     console.log('Downgrade scheduled successfully for user:', userId);

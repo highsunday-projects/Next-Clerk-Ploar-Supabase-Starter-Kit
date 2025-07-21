@@ -91,12 +91,11 @@ async function handleSubscriptionCreated(event: any): Promise<void> {
 
   await userProfileService.updateUserProfile(clerkUserId, {
     subscriptionPlan: 'pro',
-    subscriptionStatus: mapPolarStatusToLocal(subscription.status),
+    subscriptionStatus: mapPolarStatusToLocal(subscription.status, subscription.cancel_at_period_end),
     monthlyUsageLimit: 10000, // 專業版固定額度
     polarCustomerId: subscription.customer_id,
     polarSubscriptionId: subscription.id,
-    currentPeriodEnd: subscription.current_period_end,
-    cancelAtPeriodEnd: subscription.cancel_at_period_end || false
+    currentPeriodEnd: subscription.current_period_end
   });
 
   console.log(`Subscription created for user ${clerkUserId}: pro`);
@@ -123,32 +122,29 @@ async function handleSubscriptionUpdated(event: any): Promise<void> {
     currentPeriodEnd: subscription.current_period_end
   });
 
-  // 檢查是否為因 cancel_at_period_end 而過期的情況
-  const isExpiredCancellation = (subscription.status === 'canceled' || subscription.status === 'cancelled') && 
-                                subscription.cancel_at_period_end;
+  // SF10 簡化版：檢查是否為真正的過期/取消狀態
+  const isExpiredCancellation = (subscription.status === 'canceled' || subscription.status === 'cancelled');
 
   let updateData;
 
   if (isExpiredCancellation) {
-    // 訂閱因 cancel_at_period_end 而真正過期，降級為免費版
+    // 訂閱真正過期，降級為免費版
     updateData = {
       subscriptionPlan: null,
       subscriptionStatus: 'inactive' as SubscriptionStatus,
       monthlyUsageLimit: 1000, // 回到基礎額度
       polarSubscriptionId: undefined,
       polarCustomerId: undefined,
-      currentPeriodEnd: undefined,
-      cancelAtPeriodEnd: false
+      currentPeriodEnd: undefined
     };
     console.log(`Subscription expired for user ${clerkUserId} - downgrading to free plan`);
   } else {
     // 一般的訂閱更新，保持專業版
     updateData = {
       subscriptionPlan: 'pro' as SubscriptionPlan,
-      subscriptionStatus: mapPolarStatusToLocal(subscription.status),
+      subscriptionStatus: mapPolarStatusToLocal(subscription.status, subscription.cancel_at_period_end),
       monthlyUsageLimit: 10000, // 專業版固定額度
-      currentPeriodEnd: subscription.current_period_end,
-      cancelAtPeriodEnd: subscription.cancel_at_period_end || false
+      currentPeriodEnd: subscription.current_period_end
     };
   }
 
@@ -180,13 +176,12 @@ async function handleSubscriptionCanceled(event: any): Promise<void> {
 
   await userProfileService.getOrCreateUserProfile(clerkUserId);
 
-  // 正確處理：取消訂閱時保持訂閱有效但設定 cancel_at_period_end = true
+  // SF10 簡化版：取消訂閱時直接設定為 active_ending 狀態
   // 讓用戶享受到期前的完整服務，Polar 會在期間結束時自動觸發真正的過期事件
   await userProfileService.updateUserProfile(clerkUserId, {
     subscriptionPlan: 'pro', // 保持專業版
-    subscriptionStatus: mapPolarStatusToLocal(subscription.status), // 保持當前狀態
+    subscriptionStatus: 'active_ending', // SF10: 直接設定為即將到期狀態
     monthlyUsageLimit: 10000, // 保持專業版額度
-    cancelAtPeriodEnd: subscription.cancel_at_period_end || true, // 設定為將在期間結束時取消
     currentPeriodEnd: subscription.current_period_end // 保持期間結束時間
   });
 
@@ -217,12 +212,11 @@ async function handleCheckoutCompleted(event: any): Promise<void> {
 
       await userProfileService.updateUserProfile(clerkUserId, {
         subscriptionPlan: 'pro',
-        subscriptionStatus: 'active',
+        subscriptionStatus: 'active_recurring', // SF10: 使用新的狀態枚舉
         monthlyUsageLimit: 10000, // 專業版固定額度
         polarCustomerId: checkout.customer_id || '',
         // checkout 通常沒有 subscription_id，先留空
-        polarSubscriptionId: '',
-        cancelAtPeriodEnd: false
+        polarSubscriptionId: ''
       });
 
       console.log(`Pro subscription updated from checkout for user ${clerkUserId}`);
@@ -256,12 +250,11 @@ async function handlePaymentSucceeded(event: any): Promise<void> {
 
       await userProfileService.updateUserProfile(clerkUserId, {
         subscriptionPlan: 'pro',
-        subscriptionStatus: order.subscription.status === 'active' ? 'active' : mapPolarStatusToLocal(order.subscription.status),
+        subscriptionStatus: mapPolarStatusToLocal(order.subscription.status, order.subscription.cancelAtPeriodEnd),
         monthlyUsageLimit: 10000, // 專業版固定額度
         polarCustomerId: order.customerId || '',
         polarSubscriptionId: order.subscription.id, // 重要：設置 polar_subscription_id
-        currentPeriodEnd: order.subscription.currentPeriodEnd,
-        cancelAtPeriodEnd: order.subscription.cancelAtPeriodEnd || false
+        currentPeriodEnd: order.subscription.currentPeriodEnd
       });
 
       console.log(`Pro subscription updated from order.paid for user ${clerkUserId}, subscription_id: ${order.subscription.id}`);
@@ -279,9 +272,9 @@ async function handlePaymentFailed(event: any): Promise<void> {
   const clerkUserId = payment.metadata?.clerk_user_id;
   
   if (clerkUserId) {
-    // 付款失敗時，可能需要更新訂閱狀態為 past_due
+    // SF10 簡化版：付款失敗時設定為 inactive 狀態
     await userProfileService.updateUserProfile(clerkUserId, {
-      subscriptionStatus: 'past_due'
+      subscriptionStatus: 'inactive'
     });
   }
 
@@ -291,18 +284,28 @@ async function handlePaymentFailed(event: any): Promise<void> {
 // SF09: 移除產品 ID 映射函數，因為所有 Polar 訂閱都是專業版
 
 /**
- * 將 Polar 訂閱狀態對應到本地狀態
+ * 將 Polar 訂閱狀態對應到本地狀態 - SF10 簡化版
+ * 根據 cancel_at_period_end 和狀態決定最終的訂閱狀態
  */
-function mapPolarStatusToLocal(polarStatus: string): SubscriptionStatus {
-  const statusMap: Record<string, SubscriptionStatus> = {
-    'incomplete': 'trial',
-    'incomplete_expired': 'expired',
-    'trialing': 'trial',
-    'active': 'active',
-    'past_due': 'past_due',
-    'canceled': 'cancelled',
-    'unpaid': 'past_due'
-  };
-  
-  return statusMap[polarStatus] || 'active';
+function mapPolarStatusToLocal(polarStatus: string, cancelAtPeriodEnd: boolean = false): SubscriptionStatus {
+  // SF10: 簡化為 3 種狀態
+  switch (polarStatus) {
+    case 'active':
+      // 活躍狀態：根據是否安排取消來決定
+      return cancelAtPeriodEnd ? 'active_ending' : 'active_recurring';
+    case 'canceled':
+    case 'cancelled':
+    case 'incomplete_expired':
+    case 'unpaid':
+    case 'past_due':
+      // 所有非活躍狀態都視為 inactive
+      return 'inactive';
+    case 'incomplete':
+    case 'trialing':
+      // 試用或未完成狀態視為會續訂的活躍狀態
+      return 'active_recurring';
+    default:
+      // 預設為 inactive
+      return 'inactive';
+  }
 }

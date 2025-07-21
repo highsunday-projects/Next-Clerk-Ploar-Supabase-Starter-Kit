@@ -8,9 +8,6 @@ import type { UserProfile, SubscriptionStatus } from '@/types/supabase';
 import {
   hasProAccess,
   getUserConfig,
-  isAutoRenewing,
-  isWillExpire,
-  isFreeUser,
   getUserStatusDescription
 } from '@/types/supabase';
 
@@ -42,10 +39,10 @@ export function getSubscriptionChangeType(profile: UserProfile): 'upgrade' | 'ca
 }
 
 /**
- * 檢查訂閱狀態是否為活躍
+ * 檢查訂閱狀態是否為活躍 - SF10 簡化版
  */
 export function isActiveSubscription(status: SubscriptionStatus): boolean {
-  return status === 'active' || status === 'trial';
+  return status === 'active_recurring' || status === 'active_ending';
 }
 
 /**
@@ -56,38 +53,30 @@ export function canManagePayment(profile: UserProfile): boolean {
 }
 
 /**
- * 獲取訂閱狀態顯示文字
+ * 獲取訂閱狀態顯示文字 - SF10 簡化版
  */
 export function getSubscriptionStatusText(status: SubscriptionStatus): string {
   switch (status) {
-    case 'active':
-      return '使用中';
-    case 'trial':
-      return '試用中';
-    case 'cancelled':
-      return '已取消';
-    case 'expired':
-      return '已過期';
+    case 'active_recurring':
+      return '訂閱中 (會續訂)';
+    case 'active_ending':
+      return '訂閱中 (即將到期)';
     case 'inactive':
-      return '未訂閱';
+      return '免費版';
     default:
       return '未知狀態';
   }
 }
 
 /**
- * 獲取訂閱狀態樣式類別
+ * 獲取訂閱狀態樣式類別 - SF10 簡化版
  */
 export function getSubscriptionStatusClass(status: SubscriptionStatus): string {
   switch (status) {
-    case 'active':
+    case 'active_recurring':
       return 'bg-green-100 text-green-800';
-    case 'trial':
-      return 'bg-blue-100 text-blue-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
-    case 'expired':
-      return 'bg-gray-100 text-gray-800';
+    case 'active_ending':
+      return 'bg-yellow-100 text-yellow-800';
     case 'inactive':
       return 'bg-gray-100 text-gray-600';
     default:
@@ -103,41 +92,35 @@ export function formatPrice(price: number): string {
 }
 
 /**
- * 格式化計費週期顯示 - 根據三種狀態提供詳細資訊
+ * 格式化計費週期顯示 - SF10 簡化版：基於新的 3 種狀態
  */
 export function formatBillingInfo(profile: UserProfile): string {
   if (!hasProAccess(profile)) {
     return '基礎用戶（無限期）';
   }
 
-  if (profile.subscription_status === 'trial' && profile.trial_ends_at) {
-    return `試用期至：${new Date(profile.trial_ends_at).toLocaleDateString('zh-TW')}`;
-  }
+  // SF10: 基於新的簡化狀態邏輯
+  switch (profile.subscription_status) {
+    case 'active_recurring':
+      // 會續訂狀態
+      if (profile.current_period_end) {
+        return `下次計費：${new Date(profile.current_period_end).toLocaleDateString('zh-TW')}`;
+      }
+      return '專業版（自動續訂）';
 
-  if (profile.subscription_status === 'cancelled') {
-    return '訂閱已取消';
-  }
+    case 'active_ending':
+      // 會到期狀態
+      if (profile.current_period_end) {
+        return `專業版將於 ${new Date(profile.current_period_end).toLocaleDateString('zh-TW')} 到期`;
+      }
+      return '專業版（已安排取消）';
 
-  if (profile.subscription_status === 'expired') {
-    return '訂閱已過期';
-  }
+    case 'inactive':
+      return '基礎用戶（無限期）';
 
-  // 根據三種狀態顯示不同資訊
-  if (isWillExpire(profile)) {
-    // 會到期狀態
-    if (profile.current_period_end) {
-      return `專業版將於 ${new Date(profile.current_period_end).toLocaleDateString('zh-TW')} 到期`;
-    }
-    return '專業版（已安排取消）';
-  } else if (isAutoRenewing(profile)) {
-    // 會續訂狀態
-    if (profile.current_period_end) {
-      return `下次計費：${new Date(profile.current_period_end).toLocaleDateString('zh-TW')}`;
-    }
-    return '專業版（自動續訂）';
+    default:
+      return '未知狀態';
   }
-
-  return '專業版用戶';
 }
 
 /**

@@ -29,11 +29,10 @@ export async function GET() {
       data: {
         userId,
         userProfile,
-        // 特別關注的欄位
+        // SF10 簡化版：關注的欄位
         debugInfo: {
           polar_subscription_id: userProfile.polar_subscription_id,
           subscription_status: userProfile.subscription_status,
-          cancel_at_period_end: userProfile.cancel_at_period_end,
           current_period_end: userProfile.current_period_end,
           subscription_plan: userProfile.subscription_plan
         }

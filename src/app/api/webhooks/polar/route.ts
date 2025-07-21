@@ -12,12 +12,45 @@ import type { SubscriptionPlan, SubscriptionStatus } from '@/types/supabase';
 
 // 事件去重機制 - 避免重複處理相同事件
 const processedEvents = new Set<string>();
+const processedCancellations = new Map<string, string>();
 
 // 清理過期的事件記錄（每小時清理一次）
 setInterval(() => {
   processedEvents.clear();
+  processedCancellations.clear();
   console.log('Cleared processed events cache');
 }, 60 * 60 * 1000);
+
+/**
+ * 檢查是否為立即取消（非週期結束取消）
+ * 立即取消的特徵：
+ * 1. status = 'canceled'
+ * 2. cancelAtPeriodEnd = false
+ * 3. endsAt 接近 canceledAt（而非 currentPeriodEnd）
+ */
+function isImmediateCancellation(subscription: any): boolean {
+  if (subscription.status !== 'canceled') return false;
+  if (subscription.cancelAtPeriodEnd === true) return false;
+
+  // 檢查是否有取消時間和結束時間
+  if (!subscription.canceledAt || !subscription.endsAt) return false;
+
+  // 檢查結束時間是否接近取消時間
+  const endsAt = new Date(subscription.endsAt);
+  const canceledAt = new Date(subscription.canceledAt);
+  const timeDiff = Math.abs(endsAt.getTime() - canceledAt.getTime());
+
+  console.log('Immediate cancellation check:', {
+    status: subscription.status,
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    canceledAt: subscription.canceledAt,
+    endsAt: subscription.endsAt,
+    timeDiff: timeDiff,
+    isImmediate: timeDiff < 60000
+  });
+
+  return timeDiff < 60000; // 1分鐘內視為立即取消
+}
 
 /**
  * 使用 Polar Next.js 適配器處理 Webhook 事件
@@ -128,18 +161,50 @@ async function handleSubscriptionUpdated(event: any): Promise<void> {
   const subscription = event.data;
   const clerkUserId = subscription.metadata?.clerk_user_id;
 
-  // 事件去重檢查
-  const eventKey = `updated-${subscription.id}-${subscription.modified_at || Date.now()}`;
-  if (processedEvents.has(eventKey)) {
-    console.log('Event already processed, skipping:', eventKey);
-    return;
-  }
-  processedEvents.add(eventKey);
+  console.log(`[handleSubscriptionUpdated] Processing event for subscription ${subscription.id}`);
 
   if (!clerkUserId) {
     console.error('Missing clerk_user_id in subscription metadata');
     return;
   }
+
+  // 優先檢查立即取消，並設置強制去重標記
+  if (isImmediateCancellation(subscription)) {
+    const immediateCancelKey = `immediate-cancel-${subscription.id}`;
+
+    if (processedEvents.has(immediateCancelKey)) {
+      console.log(`[handleSubscriptionUpdated] Immediate cancellation already processed, skipping: ${immediateCancelKey}`);
+      return;
+    }
+
+    // 立即設置去重標記，防止其他事件重複處理
+    processedEvents.add(immediateCancelKey);
+    processedCancellations.set(immediateCancelKey, 'immediate-cancel-processed');
+
+    console.log(`[handleSubscriptionUpdated] Immediate cancellation detected for user ${clerkUserId}`);
+
+    // 立即取消：直接降級為免費版
+    const updateData = {
+      subscriptionPlan: null,
+      subscriptionStatus: 'inactive' as SubscriptionStatus,
+      monthlyUsageLimit: 1000, // 回到基礎額度
+      polarSubscriptionId: undefined,
+      polarCustomerId: undefined,
+      currentPeriodEnd: undefined
+    };
+
+    const result = await userProfileService.updateUserProfile(clerkUserId, updateData);
+    console.log(`[handleSubscriptionUpdated] User ${clerkUserId} immediately downgraded to free plan:`, result);
+    return;
+  }
+
+  // 事件去重檢查
+  const eventKey = `updated-${subscription.id}-${subscription.modified_at || Date.now()}`;
+  if (processedEvents.has(eventKey)) {
+    console.log('[handleSubscriptionUpdated] Event already processed, skipping:', eventKey);
+    return;
+  }
+  processedEvents.add(eventKey);
 
   console.log('Processing subscription update:', {
     subscriptionId: subscription.id,
@@ -149,6 +214,8 @@ async function handleSubscriptionUpdated(event: any): Promise<void> {
     currentPeriodStart: subscription.currentPeriodStart,
     currentPeriodEnd: subscription.currentPeriodEnd
   });
+
+  // 立即取消已在函數開始處理，這裡不應該再執行到
 
   // 智能狀態判斷：優先檢查取消標誌
   const isExpiredCancellation = (subscription.status === 'canceled' || subscription.status === 'cancelled');
@@ -201,39 +268,76 @@ async function handleSubscriptionCanceled(event: any): Promise<void> {
   const subscription = event.data;
   const clerkUserId = subscription.metadata?.clerk_user_id;
 
-  // 事件去重檢查
-  const eventKey = `canceled-${subscription.id}-${subscription.modified_at || Date.now()}`;
-  if (processedEvents.has(eventKey)) {
-    console.log('Event already processed, skipping:', eventKey);
-    return;
-  }
-  processedEvents.add(eventKey);
+  console.log(`[handleSubscriptionCanceled] Processing event for subscription ${subscription.id}`);
 
   if (!clerkUserId) {
     console.error('Missing clerk_user_id in subscription metadata');
     return;
   }
 
+  // 優先檢查立即取消，並檢查是否已被處理
+  if (isImmediateCancellation(subscription)) {
+    const immediateCancelKey = `immediate-cancel-${subscription.id}`;
+
+    if (processedEvents.has(immediateCancelKey) || processedCancellations.has(immediateCancelKey)) {
+      console.log(`[handleSubscriptionCanceled] Immediate cancellation already processed by updated event, skipping: ${immediateCancelKey}`);
+      return;
+    }
+
+    // 立即設置去重標記
+    processedEvents.add(immediateCancelKey);
+    processedCancellations.set(immediateCancelKey, 'immediate-cancel-processed');
+
+    console.log(`[handleSubscriptionCanceled] Immediate cancellation detected for user ${clerkUserId}`);
+
+    // 立即取消：直接降級為免費版
+    const updateData = {
+      subscriptionPlan: null,
+      subscriptionStatus: 'inactive' as SubscriptionStatus,
+      monthlyUsageLimit: 1000, // 回到基礎額度
+      polarSubscriptionId: undefined,
+      polarCustomerId: undefined,
+      currentPeriodEnd: undefined
+    };
+
+    const result = await userProfileService.updateUserProfile(clerkUserId, updateData);
+    console.log(`[handleSubscriptionCanceled] User ${clerkUserId} immediately downgraded to free plan:`, result);
+    return;
+  }
+
+  // 事件去重檢查
+  const eventKey = `canceled-${subscription.id}-${subscription.modified_at || Date.now()}`;
+  if (processedEvents.has(eventKey)) {
+    console.log('[handleSubscriptionCanceled] Event already processed, skipping:', eventKey);
+    return;
+  }
+  processedEvents.add(eventKey);
+
   console.log('Processing subscription cancellation:', {
     subscriptionId: subscription.id,
     userId: clerkUserId,
     status: subscription.status,
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    canceledAt: subscription.canceledAt,
+    endsAt: subscription.endsAt,
+    endedAt: subscription.endedAt,
     currentPeriodEnd: subscription.currentPeriodEnd
   });
 
+  // 立即取消已在函數開始處理，這裡不應該再執行到
+
   await userProfileService.getOrCreateUserProfile(clerkUserId);
 
-  // SF10 簡化版：取消訂閱時直接設定為 active_ending 狀態
+  // 週期結束取消：設為 active_ending 狀態
   // 讓用戶享受到期前的完整服務，Polar 會在期間結束時自動觸發真正的過期事件
   await userProfileService.updateUserProfile(clerkUserId, {
     subscriptionPlan: 'pro', // 保持專業版
-    subscriptionStatus: 'active_ending', // SF10: 直接設定為即將到期狀態
+    subscriptionStatus: 'active_ending', // 設定為即將到期狀態
     monthlyUsageLimit: 10000, // 保持專業版額度
     currentPeriodEnd: subscription.currentPeriodEnd // 保持期間結束時間
   });
 
-  console.log(`Subscription canceled for user ${clerkUserId} - marked for cancellation at period end (${subscription.current_period_end})`);
+  console.log(`Subscription canceled for user ${clerkUserId} - marked for cancellation at period end (${subscription.currentPeriodEnd})`);
 }
 
 /**

@@ -215,6 +215,42 @@ AND subscription_status = 'active_recurring';
 - 在事件處理函數中記錄處理邏輯的決策過程
 - 記錄事件去重的情況
 
+## 🧪 測試建議
+
+### 測試場景 1: 用戶取消訂閱
+1. 在 Polar 後台取消一個活躍訂閱
+2. 觀察 webhook 日誌，應該看到：
+   ```
+   Processing subscription update: {
+     subscriptionId: "xxx",
+     cancelAtPeriodEnd: true,  // ✅ 不再是 undefined
+     currentPeriodEnd: "2025-08-21T06:47:25.000Z"  // ✅ 不再是 undefined
+   }
+   Subscription marked for cancellation for user xxx - set to active_ending
+   ```
+3. 檢查資料庫，用戶狀態應為 `active_ending`
+
+### 測試場景 2: 重複事件處理
+1. 手動觸發相同的 webhook 事件
+2. 第二次應該看到：
+   ```
+   Event already processed, skipping: updated-xxx-timestamp
+   ```
+
+### 測試場景 3: 狀態映射
+1. 測試不同的 Polar 狀態值
+2. 檢查 `mapPolarStatusToLocal` 的日誌輸出：
+   ```
+   Mapping Polar status: { polarStatus: "active", cancelAtPeriodEnd: true }
+   Active status mapped to: active_ending
+   ```
+
+### 驗證清單
+- [ ] 取消訂閱後狀態正確顯示為 `active_ending`
+- [ ] 重複事件被正確過濾
+- [ ] 日誌記錄完整且清晰
+- [ ] 資料庫狀態與 Polar 後台一致
+
 ---
 
 **建立日期**: 2025-07-21  

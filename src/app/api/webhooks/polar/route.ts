@@ -10,6 +10,15 @@ import { userProfileService } from '@/lib/userProfileService';
 // SF09: 移除未使用的導入
 import type { SubscriptionPlan, SubscriptionStatus } from '@/types/supabase';
 
+// 事件去重機制 - 避免重複處理相同事件
+const processedEvents = new Set<string>();
+
+// 清理過期的事件記錄（每小時清理一次）
+setInterval(() => {
+  processedEvents.clear();
+  console.log('Cleared processed events cache');
+}, 60 * 60 * 1000);
+
 /**
  * 使用 Polar Next.js 適配器處理 Webhook 事件
  */
@@ -101,11 +110,11 @@ async function handleSubscriptionCreated(event: any): Promise<void> {
 
   await userProfileService.updateUserProfile(clerkUserId, {
     subscriptionPlan: 'pro',
-    subscriptionStatus: mapPolarStatusToLocal(subscription.status, subscription.cancel_at_period_end),
+    subscriptionStatus: mapPolarStatusToLocal(subscription.status, subscription.cancelAtPeriodEnd),
     monthlyUsageLimit: 10000, // 專業版固定額度
     polarCustomerId: subscription.customer_id,
     polarSubscriptionId: subscription.id,
-    currentPeriodEnd: subscription.current_period_end
+    currentPeriodEnd: subscription.currentPeriodEnd
   });
 
   console.log(`Subscription created for user ${clerkUserId}: pro`);
@@ -113,10 +122,19 @@ async function handleSubscriptionCreated(event: any): Promise<void> {
 
 /**
  * 處理訂閱更新事件 - SF09 簡化版
+ * 加入事件去重機制避免重複處理
  */
 async function handleSubscriptionUpdated(event: any): Promise<void> {
   const subscription = event.data;
   const clerkUserId = subscription.metadata?.clerk_user_id;
+
+  // 事件去重檢查
+  const eventKey = `updated-${subscription.id}-${subscription.modified_at || Date.now()}`;
+  if (processedEvents.has(eventKey)) {
+    console.log('Event already processed, skipping:', eventKey);
+    return;
+  }
+  processedEvents.add(eventKey);
 
   if (!clerkUserId) {
     console.error('Missing clerk_user_id in subscription metadata');
@@ -127,13 +145,14 @@ async function handleSubscriptionUpdated(event: any): Promise<void> {
     subscriptionId: subscription.id,
     userId: clerkUserId,
     status: subscription.status,
-    cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    currentPeriodStart: subscription.current_period_start,
-    currentPeriodEnd: subscription.current_period_end
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    currentPeriodStart: subscription.currentPeriodStart,
+    currentPeriodEnd: subscription.currentPeriodEnd
   });
 
-  // SF10 簡化版：檢查是否為真正的過期/取消狀態
+  // 智能狀態判斷：優先檢查取消標誌
   const isExpiredCancellation = (subscription.status === 'canceled' || subscription.status === 'cancelled');
+  const hasCancelFlag = subscription.cancelAtPeriodEnd === true || subscription.canceledAt;
 
   let updateData;
 
@@ -148,14 +167,24 @@ async function handleSubscriptionUpdated(event: any): Promise<void> {
       currentPeriodEnd: undefined
     };
     console.log(`Subscription expired for user ${clerkUserId} - downgrading to free plan`);
+  } else if (hasCancelFlag && subscription.status === 'active') {
+    // 有取消標誌的活躍訂閱，直接設為 active_ending
+    updateData = {
+      subscriptionPlan: 'pro' as SubscriptionPlan,
+      subscriptionStatus: 'active_ending' as SubscriptionStatus,
+      monthlyUsageLimit: 10000, // 專業版固定額度
+      currentPeriodEnd: subscription.currentPeriodEnd
+    };
+    console.log(`Subscription marked for cancellation for user ${clerkUserId} - set to active_ending`);
   } else {
     // 一般的訂閱更新，保持專業版
     updateData = {
       subscriptionPlan: 'pro' as SubscriptionPlan,
-      subscriptionStatus: mapPolarStatusToLocal(subscription.status, subscription.cancel_at_period_end),
+      subscriptionStatus: mapPolarStatusToLocal(subscription.status, subscription.cancelAtPeriodEnd),
       monthlyUsageLimit: 10000, // 專業版固定額度
-      currentPeriodEnd: subscription.current_period_end
+      currentPeriodEnd: subscription.currentPeriodEnd
     };
+    console.log(`Regular subscription update for user ${clerkUserId} - status: ${updateData.subscriptionStatus}`);
   }
 
   const result = await userProfileService.updateUserProfile(clerkUserId, updateData);
@@ -166,10 +195,19 @@ async function handleSubscriptionUpdated(event: any): Promise<void> {
 
 /**
  * 處理訂閱取消事件 - SF09 簡化版
+ * 加入事件去重機制避免重複處理
  */
 async function handleSubscriptionCanceled(event: any): Promise<void> {
   const subscription = event.data;
   const clerkUserId = subscription.metadata?.clerk_user_id;
+
+  // 事件去重檢查
+  const eventKey = `canceled-${subscription.id}-${subscription.modified_at || Date.now()}`;
+  if (processedEvents.has(eventKey)) {
+    console.log('Event already processed, skipping:', eventKey);
+    return;
+  }
+  processedEvents.add(eventKey);
 
   if (!clerkUserId) {
     console.error('Missing clerk_user_id in subscription metadata');
@@ -180,8 +218,8 @@ async function handleSubscriptionCanceled(event: any): Promise<void> {
     subscriptionId: subscription.id,
     userId: clerkUserId,
     status: subscription.status,
-    cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    currentPeriodEnd: subscription.current_period_end
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    currentPeriodEnd: subscription.currentPeriodEnd
   });
 
   await userProfileService.getOrCreateUserProfile(clerkUserId);
@@ -192,7 +230,7 @@ async function handleSubscriptionCanceled(event: any): Promise<void> {
     subscriptionPlan: 'pro', // 保持專業版
     subscriptionStatus: 'active_ending', // SF10: 直接設定為即將到期狀態
     monthlyUsageLimit: 10000, // 保持專業版額度
-    currentPeriodEnd: subscription.current_period_end // 保持期間結束時間
+    currentPeriodEnd: subscription.currentPeriodEnd // 保持期間結束時間
   });
 
   console.log(`Subscription canceled for user ${clerkUserId} - marked for cancellation at period end (${subscription.current_period_end})`);
@@ -295,27 +333,35 @@ async function handlePaymentFailed(event: any): Promise<void> {
 
 /**
  * 將 Polar 訂閱狀態對應到本地狀態 - SF10 簡化版
- * 根據 cancel_at_period_end 和狀態決定最終的訂閱狀態
+ * 根據 cancelAtPeriodEnd 和狀態決定最終的訂閱狀態
+ * 修正版：更安全地處理取消狀態邏輯
  */
 function mapPolarStatusToLocal(polarStatus: string, cancelAtPeriodEnd: boolean = false): SubscriptionStatus {
+  console.log('Mapping Polar status:', { polarStatus, cancelAtPeriodEnd });
+
   // SF10: 簡化為 3 種狀態
   switch (polarStatus) {
     case 'active':
       // 活躍狀態：根據是否安排取消來決定
-      return cancelAtPeriodEnd ? 'active_ending' : 'active_recurring';
+      const result = cancelAtPeriodEnd ? 'active_ending' : 'active_recurring';
+      console.log('Active status mapped to:', result);
+      return result;
     case 'canceled':
     case 'cancelled':
     case 'incomplete_expired':
     case 'unpaid':
     case 'past_due':
       // 所有非活躍狀態都視為 inactive
+      console.log('Non-active status mapped to: inactive');
       return 'inactive';
     case 'incomplete':
     case 'trialing':
       // 試用或未完成狀態視為會續訂的活躍狀態
+      console.log('Trial/incomplete status mapped to: active_recurring');
       return 'active_recurring';
     default:
       // 預設為 inactive
+      console.log('Unknown status mapped to: inactive');
       return 'inactive';
   }
 }

@@ -23,6 +23,7 @@ CREATE TABLE user_profiles (
   subscription_status VARCHAR(20) DEFAULT 'inactive' NOT NULL,
   subscription_plan VARCHAR(20) DEFAULT NULL,
   current_period_end TIMESTAMP WITH TIME ZONE,
+  cancel_at_period_end BOOLEAN DEFAULT FALSE,
   
   -- 其他業務欄位
   monthly_usage_limit INTEGER DEFAULT 1000,
@@ -102,6 +103,12 @@ CREATE POLICY "Users can update own profile" ON user_profiles
 CREATE POLICY "Users can insert own profile" ON user_profiles
   FOR INSERT 
   WITH CHECK (auth.uid()::text = clerk_user_id);
+
+-- 允許 service_role 角色插入新用戶資料
+CREATE POLICY "Service role can insert profile" ON user_profiles
+  FOR INSERT
+  TO public
+  WITH CHECK (current_setting('role') = 'service_role');
 
 -- 服務角色完整存取
 CREATE POLICY "Service role full access" ON user_profiles

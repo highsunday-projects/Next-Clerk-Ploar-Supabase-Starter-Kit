@@ -312,6 +312,6 @@ type SubscriptionStatus = 'subscribed' | 'unsubscribed';
 
 ---
 
-**文件版本**: 1.0  
+**文件版本**: 4.0  
 **最後更新**: 2025-07-20  
 **下次檢視**: 實施完成後

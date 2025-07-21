@@ -79,9 +79,19 @@ async function handleSubscriptionCreated(event: any): Promise<void> {
 
   const clerkUserId = subscription.metadata?.clerk_user_id;
 
+  // 驗證關鍵欄位
   if (!clerkUserId) {
     console.error('Missing clerk_user_id in subscription metadata');
     console.error('Available metadata:', subscription.metadata);
+    return;
+  }
+  if (!subscription.status || !subscription.customer_id || !subscription.id || !subscription.current_period_end) {
+    console.error('Missing required subscription fields:', {
+      status: subscription.status,
+      customer_id: subscription.customer_id,
+      id: subscription.id,
+      current_period_end: subscription.current_period_end
+    });
     return;
   }
 

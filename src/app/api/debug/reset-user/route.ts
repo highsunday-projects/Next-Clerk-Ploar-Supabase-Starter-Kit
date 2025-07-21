@@ -19,9 +19,9 @@ export async function POST() {
       subscriptionPlan: null,
       subscriptionStatus: 'inactive',
       monthlyUsageLimit: 1000,
-      polarSubscriptionId: undefined,
-      polarCustomerId: undefined,
-      currentPeriodEnd: undefined
+      polarSubscriptionId: null,
+      polarCustomerId: null,
+      currentPeriodEnd: null
     });
 
     return NextResponse.json({ 

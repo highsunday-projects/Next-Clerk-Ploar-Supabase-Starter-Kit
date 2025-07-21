@@ -10,6 +10,10 @@ import { userProfileService } from '@/lib/userProfileService';
 
 export async function GET(request: Request) {
   try {
+    // 僅允許非 production 環境存取
+    if (process.env.NODE_ENV === 'production') {
+      return Response.json({ error: 'Forbidden in production environment' }, { status: 403 });
+    }
     // 驗證用戶身份
     const { userId } = await auth();
 

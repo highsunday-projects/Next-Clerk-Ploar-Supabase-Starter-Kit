@@ -242,22 +242,35 @@ ORDER BY DATE(current_period_end);
 
 ### 遷移腳本範例
 ```sql
--- Step 1: 新增新欄位
-ALTER TABLE users ADD COLUMN subscription_status_new TEXT 
-CHECK (subscription_status_new IN ('active_recurring', 'active_ending', 'inactive'));
+-- 遷移腳本（具備交易安全與錯誤處理）
+DO $$
+BEGIN
+  BEGIN
+    -- Step 1: 新增新欄位
+    ALTER TABLE users ADD COLUMN subscription_status_new TEXT 
+      CHECK (subscription_status_new IN ('active_recurring', 'active_ending', 'inactive'));
+  EXCEPTION WHEN duplicate_column THEN NULL; -- 已存在則略過
+  END;
 
--- Step 2: 資料遷移
-UPDATE users SET subscription_status_new = CASE
-  WHEN subscription_plan = 'pro' AND subscription_status = 'active' 
-       AND cancel_at_period_end = false THEN 'active_recurring'
-  WHEN subscription_plan = 'pro' AND subscription_status = 'active' 
-       AND cancel_at_period_end = true THEN 'active_ending'
-  ELSE 'inactive'
+  -- Step 2: 資料遷移
+  UPDATE users SET subscription_status_new = CASE
+    WHEN subscription_plan = 'pro' AND subscription_status = 'active' 
+         AND cancel_at_period_end = false THEN 'active_recurring'
+    WHEN subscription_plan = 'pro' AND subscription_status = 'active' 
+         AND cancel_at_period_end = true THEN 'active_ending'
+    ELSE 'inactive'
+  END;
+
+  -- Step 3: 移除舊欄位 (確認穩定後執行)
+  -- ALTER TABLE users DROP COLUMN cancel_at_period_end;
+  -- ALTER TABLE users RENAME COLUMN subscription_status_new TO subscription_status;
+
+  COMMIT;
+EXCEPTION WHEN OTHERS THEN
+  ROLLBACK;
+  RAISE NOTICE 'Migration failed, all changes reverted.';
 END;
-
--- Step 3: 移除舊欄位 (確認穩定後執行)
--- ALTER TABLE users DROP COLUMN cancel_at_period_end;
--- ALTER TABLE users RENAME COLUMN subscription_status_new TO subscription_status;
+$$;
 ```
 
 ---

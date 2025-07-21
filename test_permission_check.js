@@ -4,37 +4,29 @@
  */
 
 // 模擬 hasProAccess 函數邏輯
+
+// 新版權限檢查邏輯（SF10）
 function hasProAccess(user) {
-  // 檢查基本條件：必須是專業版且狀態為 active
-  if (user.subscription_plan !== 'pro' || user.subscription_status !== 'active') {
-    return false;
-  }
-
-  // 檢查是否有 Polar 訂閱 ID
-  if (!user.polar_subscription_id) {
-    return false;
-  }
-
-  // 檢查訂閱是否還在有效期內
+  // 必須是專業版且狀態為 active_recurring 或 active_ending
+  if (user.subscription_plan !== 'pro') return false;
+  if (!['active_recurring', 'active_ending'].includes(user.subscription_status)) return false;
+  if (!user.polar_subscription_id) return false;
   if (user.current_period_end) {
     const currentTime = new Date();
     const periodEnd = new Date(user.current_period_end);
-    
-    // 如果已過期，則無權限
-    if (periodEnd <= currentTime) {
-      return false;
-    }
+    if (periodEnd <= currentTime) return false;
   }
-
   return true;
 }
 
 function isAutoRenewing(user) {
-  return hasProAccess(user) && !user.cancel_at_period_end;
+  // 只有 active_recurring 狀態才代表會自動續訂
+  return hasProAccess(user) && user.subscription_status === 'active_recurring';
 }
 
 function isWillExpire(user) {
-  return hasProAccess(user) && !!user.cancel_at_period_end;
+  // active_ending 狀態代表本期結束後不再續訂
+  return hasProAccess(user) && user.subscription_status === 'active_ending';
 }
 
 function isFreeUser(user) {
@@ -42,15 +34,15 @@ function isFreeUser(user) {
 }
 
 // 測試案例
+
 const testCases = [
   {
-    name: "會續訂用戶",
+    name: "會自動續訂用戶",
     user: {
       subscription_plan: 'pro',
-      subscription_status: 'active',
+      subscription_status: 'active_recurring',
       polar_subscription_id: 'sub_123',
       current_period_end: '2025-08-20T10:30:00Z',
-      cancel_at_period_end: false
     },
     expected: {
       hasProAccess: true,
@@ -60,13 +52,12 @@ const testCases = [
     }
   },
   {
-    name: "會到期用戶",
+    name: "本期結束後到期用戶",
     user: {
       subscription_plan: 'pro',
-      subscription_status: 'active',
+      subscription_status: 'active_ending',
       polar_subscription_id: 'sub_456',
       current_period_end: '2025-08-20T10:30:00Z',
-      cancel_at_period_end: true
     },
     expected: {
       hasProAccess: true,
@@ -82,7 +73,6 @@ const testCases = [
       subscription_status: 'inactive',
       polar_subscription_id: null,
       current_period_end: null,
-      cancel_at_period_end: false
     },
     expected: {
       hasProAccess: false,
@@ -95,10 +85,9 @@ const testCases = [
     name: "已過期用戶",
     user: {
       subscription_plan: 'pro',
-      subscription_status: 'active',
+      subscription_status: 'active_recurring',
       polar_subscription_id: 'sub_789',
       current_period_end: '2025-01-01T10:30:00Z', // 已過期
-      cancel_at_period_end: false
     },
     expected: {
       hasProAccess: false,

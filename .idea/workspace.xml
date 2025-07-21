@@ -4,15 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="03e93c0d-3325-4b1e-b22c-75672eb5a3a6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/documents/當前專案架構.md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/當前專案架構.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/documents/訂閱模組/Supabase 訂閱狀態對應關係說明.md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/訂閱模組/Supabase 訂閱狀態對應關係說明.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/api/polar/schedule-downgrade/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/polar/schedule-downgrade/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/subscriptionUtils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/subscriptionUtils.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/supabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/supabase.ts" afterDir="false" />
-    </list>
+    <list default="true" id="03e93c0d-3325-4b1e-b22c-75672eb5a3a6" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -30,12 +22,12 @@
   <component name="GitRewordedCommitMessages">
     <option name="commitMessagesMapping">
       <RewordedCommitMessageMapping>
-        <option name="originalMessage" value="adjust" />
-        <option name="rewordedMessage" value="SF05 - Polar 付費系統整合" />
+        <option name="originalMessage" value="adjust top" />
+        <option name="rewordedMessage" value="SF10 - 前端訂閱狀態顯示簡化 (簡化需求)" />
       </RewordedCommitMessageMapping>
     </option>
     <option name="currentCommit" value="1" />
-    <option name="onto" value="c1576c5e6af3b2f3f1bac76df6fd8c83cf100646" />
+    <option name="onto" value="99c9878a769ec6996fa4c0516d8deed67b53f9e9" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -75,6 +67,7 @@
       <updated>1752716954330</updated>
       <workItem from="1752716957568" duration="4429000" />
       <workItem from="1752921879652" duration="10490000" />
+      <workItem from="1753073750430" duration="674000" />
     </task>
     <servers />
   </component>

@@ -44,9 +44,9 @@ export async function POST(request: Request) {
     }
 
     // 驗證必要欄位
-    if (!requestData.targetPlan || !['pro', 'free'].includes(requestData.targetPlan)) {
+    if (!requestData.targetPlan || requestData.targetPlan !== 'free') {
       return Response.json({
-        error: '無效的目標方案，僅支援 pro 或 free'
+        error: '無效的目標方案，僅支援 free'
       }, { status: 400 });
     }
 
@@ -68,11 +68,7 @@ export async function POST(request: Request) {
     }
 
     // SF09: 檢查是否已經是目標方案（只支援降級到免費版）
-    if (requestData.targetPlan !== 'free') {
-      return Response.json({
-        error: '目前僅支援取消訂閱（降級到免費版）'
-      }, { status: 400 });
-    }
+    // 此處已於驗證必要欄位時檢查，無需重複檢查
 
     // SF10 簡化版：檢查是否已經是即將到期狀態
     if (userProfile.subscription_status === 'active_ending') {
@@ -118,9 +114,9 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('Error scheduling subscription cancellation:', error);
-
+    const isProd = process.env.NODE_ENV === 'production';
     return Response.json({
-      error: error instanceof Error ? error.message : '安排取消訂閱失敗，請稍後再試'
+      error: isProd ? '安排取消訂閱失敗，請稍後再試' : (error instanceof Error ? error.message : '安排取消訂閱失敗，請稍後再試')
     }, { status: 500 });
   }
 }

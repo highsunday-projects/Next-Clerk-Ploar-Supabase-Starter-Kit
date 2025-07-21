@@ -8,28 +8,40 @@ interface DebugData {
   userId: string;
   envConfig: Record<string, string>;
   productMapping: Record<string, string | null>;
-  userProfile: any;
-  polarSubscription: any;
+  userProfile: import('@/types/supabase').UserProfile | null;
+  polarSubscription: {
+    id: string;
+    status: string;
+    productId?: string;
+    amount?: number;
+    currency?: string;
+    currentPeriodStart?: string;
+    currentPeriodEnd?: string;
+    error?: string;
+  } | null;
 }
 
 export default function SubscriptionDebugPage() {
   const { user, isLoaded } = useUser();
   const [debugData, setDebugData] = useState<DebugData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [testResult, setTestResult] = useState<any>(null);
+  const [testResult, setTestResult] = useState<{ success?: boolean; error?: string; message?: string } | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchDebugData = async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const response = await fetch('/api/debug/subscription');
       const data = await response.json();
-      
       if (response.ok) {
         setDebugData(data.debug);
       } else {
+        setFetchError(data.error || 'API 錯誤');
         console.error('Debug API error:', data.error);
       }
     } catch (error) {
+      setFetchError(error instanceof Error ? error.message : '資料獲取失敗');
       console.error('Fetch error:', error);
     } finally {
       setLoading(false);
@@ -71,6 +83,10 @@ export default function SubscriptionDebugPage() {
 
   if (!user) {
     return <div className="p-8">請先登入</div>;
+
+  if (fetchError) {
+    return <div className="p-8 text-red-600">錯誤：{fetchError}</div>;
+  }
   }
 
   return (

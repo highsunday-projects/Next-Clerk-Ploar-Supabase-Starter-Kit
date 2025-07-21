@@ -239,6 +239,38 @@ export default function SubscriptionPage() {
     }
   };
 
+  // 處理繼續訂閱
+  const handleResumeSubscription = async () => {
+    if (!user?.id || !profile) return;
+
+    try {
+      setCancelling(true);
+
+      const response = await fetch('/api/polar/cancel-downgrade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '恢復訂閱失敗');
+      }
+
+      alert('訂閱已成功恢復，將會正常續費。');
+      // 重新載入頁面以更新訂閱資訊
+      window.location.reload();
+
+    } catch (error) {
+      console.error('Error resuming subscription:', error);
+      alert(error instanceof Error ? error.message : '恢復訂閱失敗，請稍後再試');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -347,24 +379,50 @@ export default function SubscriptionPage() {
             )}
 
             {canCancelSubscription(profile) && (
-              <button
-                className="w-full border border-red-300 text-red-700 py-2 px-4 rounded-lg hover:bg-red-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={cancelling}
-                onClick={() => {
-                  if (confirm('確定要取消訂閱嗎？此操作將在當前計費週期結束時生效。')) {
-                    handleCancelSubscription();
-                  }
-                }}
-              >
-                {cancelling ? (
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    處理中...
-                  </div>
+              <>
+                {isWillExpire(profile) ? (
+                  <button
+                    className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium border-2 border-green-500"
+                    disabled={cancelling}
+                    onClick={() => {
+                      if (confirm('確定要恢復自動續訂嗎？您的訂閱將會正常續費。')) {
+                        handleResumeSubscription();
+                      }
+                    }}
+                  >
+                    {cancelling ? (
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        處理中...
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <Crown className="w-4 h-4 mr-2" />
+                        繼續訂閱
+                      </div>
+                    )}
+                  </button>
                 ) : (
-                  '取消訂閱'
+                  <button
+                    className="w-full border border-red-300 text-red-700 py-2 px-4 rounded-lg hover:bg-red-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={cancelling}
+                    onClick={() => {
+                      if (confirm('確定要取消訂閱嗎？此操作將在當前計費週期結束時生效。')) {
+                        handleCancelSubscription();
+                      }
+                    }}
+                  >
+                    {cancelling ? (
+                      <div className="flex items-center justify-center">
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        處理中...
+                      </div>
+                    ) : (
+                      '取消訂閱'
+                    )}
+                  </button>
                 )}
-              </button>
+              </>
             )}
 
             {!isProUser && (
@@ -375,7 +433,7 @@ export default function SubscriptionPage() {
               </div>
             )}
 
-            {profile.subscription_status === 'cancelled' && (
+            {profile.subscription_status === 'inactive' && profile.subscription_plan === 'pro' && (
               <div className="text-center py-4">
                 <p className="text-sm text-red-600 font-medium">
                   訂閱已取消

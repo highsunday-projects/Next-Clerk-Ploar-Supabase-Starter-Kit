@@ -1,5 +1,5 @@
 ---
-uuid: 87fd0b322ad24b38bb42c61b1f4ae129
+uuid: 119ec17f270545adb931493014c8452d
 ---
 # Clerk 認證方式詳細說明
 

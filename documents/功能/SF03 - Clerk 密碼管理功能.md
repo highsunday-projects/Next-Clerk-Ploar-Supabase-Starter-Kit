@@ -3,7 +3,7 @@ title: Dashboard 設定頁面整合 Clerk 密碼管理功能
 author: 開發團隊
 date: 2025-07-17
 version: 1.0
-uuid: 7e632d602493469cb84dfd645da84e1a
+uuid: ee221657e0d5474484de247ea1f1493f
 ---
 
 # SF03 - Clerk 密碼管理功能 (簡化需求)

@@ -75,12 +75,10 @@ class UserProfileServiceImpl implements UserProfileService {
         trial_ends_at: data.trialEndsAt || null,
         last_active_date: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        // Polar 相關欄位
+        // Polar 相關欄位 - SF10 簡化版：移除 cancel_at_period_end
         polar_customer_id: data.polarCustomerId || null,
         polar_subscription_id: data.polarSubscriptionId || null,
-        polar_product_id: data.polarProductId || null,
-        last_payment_date: data.lastPaymentDate || null,
-        next_billing_date: data.nextBillingDate || null
+        current_period_end: data.currentPeriodEnd || null
       };
 
       const { data: newProfile, error } = await supabase
@@ -130,22 +128,22 @@ class UserProfileServiceImpl implements UserProfileService {
       if (data.lastActiveDate !== undefined) {
         updateData.last_active_date = data.lastActiveDate;
       }
-      // Polar 相關欄位更新
+      // Polar 相關欄位
       if (data.polarCustomerId !== undefined) {
         updateData.polar_customer_id = data.polarCustomerId;
       }
       if (data.polarSubscriptionId !== undefined) {
         updateData.polar_subscription_id = data.polarSubscriptionId;
       }
-      if (data.polarProductId !== undefined) {
-        updateData.polar_product_id = data.polarProductId;
+      if (data.currentPeriodEnd !== undefined) {
+        updateData.current_period_end = data.currentPeriodEnd;
       }
-      if (data.lastPaymentDate !== undefined) {
-        updateData.last_payment_date = data.lastPaymentDate;
-      }
-      if (data.nextBillingDate !== undefined) {
-        updateData.next_billing_date = data.nextBillingDate;
-      }
+      // SF10 簡化版：移除 cancel_at_period_end 欄位處理
+
+      console.log('Updating user profile with data:', {
+        clerkUserId,
+        updateData
+      });
 
       const { data: updatedProfile, error } = await supabase
         .from(TABLES.USER_PROFILES)
@@ -155,10 +153,21 @@ class UserProfileServiceImpl implements UserProfileService {
         .single();
 
       if (error) {
+        console.error('Supabase update error:', error);
         handleSupabaseError(error);
       }
 
-      return updatedProfile as unknown as UserProfile;
+      console.log('User profile updated successfully:', {
+        clerkUserId,
+        updatedProfile: {
+          subscription_plan: updatedProfile?.subscription_plan,
+          subscription_status: updatedProfile?.subscription_status,
+          monthly_usage_limit: updatedProfile?.monthly_usage_limit,
+          polar_subscription_id: updatedProfile?.polar_subscription_id
+        }
+      });
+
+      return updatedProfile;
     } catch (error) {
       console.error('Error updating user profile:', error);
       throw error;
@@ -227,11 +236,11 @@ class UserProfileServiceImpl implements UserProfileService {
       let profile = await this.getUserProfile(clerkUserId);
 
       if (!profile) {
-        // 如果不存在，建立新的免費方案記錄
+        // 如果不存在，建立新的未訂閱用戶記錄
         profile = await this.createUserProfile({
           clerkUserId,
-          subscriptionPlan: 'free',
-          subscriptionStatus: 'active',
+          subscriptionPlan: null,
+          subscriptionStatus: 'inactive',
           monthlyUsageLimit: 1000
         });
       } else {

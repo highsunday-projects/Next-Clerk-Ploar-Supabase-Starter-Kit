@@ -131,34 +131,32 @@ export function useUserProfile(): UseUserProfileReturn {
 }
 
 /**
- * 用戶訂閱狀態 Hook
- * 提供訂閱狀態的便捷檢查方法
+ * 用戶訂閱狀態 Hook - SF10 簡化版
+ * 提供基於新 3 欄位結構的訂閱狀態檢查方法
  */
 export function useSubscriptionStatus() {
   const { profile, loading, error } = useUserProfile();
 
-  const isActive = profile?.subscription_status === 'active';
-  const isTrial = profile?.subscription_status === 'trial';
-  const isCancelled = profile?.subscription_status === 'cancelled';
-  const isExpired = profile?.subscription_status === 'expired';
+  // SF10: 使用新的簡化狀態枚舉
+  const isActiveRecurring = profile?.subscription_status === 'active_recurring';
+  const isActiveEnding = profile?.subscription_status === 'active_ending';
+  const isInactive = profile?.subscription_status === 'inactive';
 
   const isPro = profile?.subscription_plan === 'pro';
-  const isEnterprise = profile?.subscription_plan === 'enterprise';
-  const isFree = profile?.subscription_plan === 'free';
+  const isFree = profile?.subscription_plan === null;
 
-  const hasActiveSubscription = isActive && (isPro || isEnterprise);
+  // 簡化的權限檢查
+  const hasActiveSubscription = isActiveRecurring || isActiveEnding;
 
   return {
     profile,
     loading,
     error,
     status: {
-      isActive,
-      isTrial,
-      isCancelled,
-      isExpired,
+      isActiveRecurring,
+      isActiveEnding,
+      isInactive,
       isPro,
-      isEnterprise,
       isFree,
       hasActiveSubscription,
     },

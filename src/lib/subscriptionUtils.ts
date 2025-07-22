@@ -1,98 +1,84 @@
 /**
- * 訂閱管理工具函數
- * 
- * 提供訂閱相關的工具函數，包含方案比較、狀態檢查等功能
+ * 訂閱管理工具函數 - SF09 簡化版
+ *
+ * 基於單一產品邏輯，僅通過訂閱狀態來區分用戶權限
  */
 
-import type { UserProfile, SubscriptionPlan, SubscriptionStatus } from '@/types/supabase';
-import { SUBSCRIPTION_PLANS } from '@/types/supabase';
+import type { UserProfile, SubscriptionStatus } from '@/types/supabase';
+import {
+  hasProAccess,
+  getUserConfig,
+  getUserStatusDescription
+} from '@/types/supabase';
 
 /**
- * 檢查是否可以升級到指定方案
+ * 檢查用戶是否可以升級到專業版
  */
-export function canUpgradeTo(currentPlan: SubscriptionPlan, targetPlan: SubscriptionPlan): boolean {
-  const currentPrice = SUBSCRIPTION_PLANS[currentPlan].price;
-  const targetPrice = SUBSCRIPTION_PLANS[targetPlan].price;
-  return targetPrice > currentPrice;
+export function canUpgradeToPro(profile: UserProfile): boolean {
+  return !hasProAccess(profile);
 }
 
 /**
- * 檢查是否可以降級到指定方案
+ * 檢查用戶是否可以取消訂閱
  */
-export function canDowngradeTo(currentPlan: SubscriptionPlan, targetPlan: SubscriptionPlan): boolean {
-  const currentPrice = SUBSCRIPTION_PLANS[currentPlan].price;
-  const targetPrice = SUBSCRIPTION_PLANS[targetPlan].price;
-  return targetPrice < currentPrice;
+export function canCancelSubscription(profile: UserProfile): boolean {
+  return hasProAccess(profile);
 }
 
 /**
- * 獲取方案變更類型
+ * 獲取訂閱變更類型
  */
-export function getPlanChangeType(
-  currentPlan: SubscriptionPlan, 
-  targetPlan: SubscriptionPlan
-): 'upgrade' | 'downgrade' | 'same' {
-  if (canUpgradeTo(currentPlan, targetPlan)) {
+export function getSubscriptionChangeType(profile: UserProfile): 'upgrade' | 'cancel' | 'none' {
+  if (canUpgradeToPro(profile)) {
     return 'upgrade';
-  } else if (canDowngradeTo(currentPlan, targetPlan)) {
-    return 'downgrade';
+  } else if (canCancelSubscription(profile)) {
+    return 'cancel';
   } else {
-    return 'same';
+    return 'none';
   }
 }
 
 /**
- * 檢查訂閱狀態是否為活躍
+ * 檢查訂閱狀態是否為活躍 - SF10 簡化版
  */
 export function isActiveSubscription(status: SubscriptionStatus): boolean {
-  return status === 'active' || status === 'trial';
+  return status === 'active_recurring' || status === 'active_ending';
 }
 
 /**
  * 檢查是否可以管理付款方式
  */
 export function canManagePayment(profile: UserProfile): boolean {
-  return profile.subscription_plan !== 'free' && isActiveSubscription(profile.subscription_status);
+  return hasProAccess(profile);
 }
 
 /**
- * 檢查是否可以取消訂閱
- */
-export function canCancelSubscription(profile: UserProfile): boolean {
-  return profile.subscription_plan !== 'free' && profile.subscription_status === 'active';
-}
-
-/**
- * 獲取訂閱狀態顯示文字
+ * 獲取訂閱狀態顯示文字 - SF10 簡化版
  */
 export function getSubscriptionStatusText(status: SubscriptionStatus): string {
   switch (status) {
-    case 'active':
-      return '使用中';
-    case 'trial':
-      return '試用中';
-    case 'cancelled':
-      return '已取消';
-    case 'expired':
-      return '已過期';
+    case 'active_recurring':
+      return '訂閱中 (會續訂)';
+    case 'active_ending':
+      return '訂閱中 (即將到期)';
+    case 'inactive':
+      return '免費版';
     default:
       return '未知狀態';
   }
 }
 
 /**
- * 獲取訂閱狀態樣式類別
+ * 獲取訂閱狀態樣式類別 - SF10 簡化版
  */
 export function getSubscriptionStatusClass(status: SubscriptionStatus): string {
   switch (status) {
-    case 'active':
+    case 'active_recurring':
       return 'bg-green-100 text-green-800';
-    case 'trial':
-      return 'bg-blue-100 text-blue-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
-    case 'expired':
-      return 'bg-gray-100 text-gray-800';
+    case 'active_ending':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'inactive':
+      return 'bg-gray-100 text-gray-600';
     default:
       return 'bg-gray-100 text-gray-800';
   }
@@ -106,50 +92,65 @@ export function formatPrice(price: number): string {
 }
 
 /**
- * 格式化計費週期顯示
+ * 格式化計費週期顯示 - SF10 簡化版：基於新的 3 種狀態
  */
 export function formatBillingInfo(profile: UserProfile): string {
-  if (profile.subscription_plan === 'free') {
-    return '免費方案（無限期）';
+  if (!hasProAccess(profile)) {
+    return '基礎用戶（無限期）';
   }
-  
-  if (profile.subscription_status === 'trial' && profile.trial_ends_at) {
-    return `試用期至：${new Date(profile.trial_ends_at).toLocaleDateString('zh-TW')}`;
+
+  // SF10: 基於新的簡化狀態邏輯
+  switch (profile.subscription_status) {
+    case 'active_recurring':
+      // 會續訂狀態
+      if (profile.current_period_end) {
+        return `下次計費：${new Date(profile.current_period_end).toLocaleDateString('zh-TW')}`;
+      }
+      return '專業版（自動續訂）';
+
+    case 'active_ending':
+      // 會到期狀態
+      if (profile.current_period_end) {
+        return `專業版將於 ${new Date(profile.current_period_end).toLocaleDateString('zh-TW')} 到期`;
+      }
+      return '專業版（已安排取消）';
+
+    case 'inactive':
+      return '基礎用戶（無限期）';
+
+    default:
+      return '未知狀態';
   }
-  
-  if (profile.subscription_status === 'cancelled') {
-    return '訂閱已取消';
-  }
-  
-  if (profile.subscription_status === 'expired') {
-    return '訂閱已過期';
-  }
-  
-  // 對於付費方案，顯示下次計費日期（這裡使用模擬資料）
-  const nextBilling = new Date();
-  nextBilling.setMonth(nextBilling.getMonth() + 1);
-  return `下次計費：${nextBilling.toLocaleDateString('zh-TW')}`;
+}
+
+/**
+ * 獲取用戶顯示名稱 - 根據三種狀態提供詳細描述
+ */
+export function getUserDisplayName(profile: UserProfile): string {
+  return getUserStatusDescription(profile);
 }
 
 /**
  * 檢查是否需要顯示升級提示
  */
 export function shouldShowUpgradePrompt(profile: UserProfile): boolean {
-  return profile.subscription_plan === 'free' && profile.subscription_status === 'active';
+  return !hasProAccess(profile);
 }
 
 /**
- * 獲取推薦的升級方案
+ * 獲取用戶權限描述
  */
-export function getRecommendedUpgrade(currentPlan: SubscriptionPlan): SubscriptionPlan | null {
-  switch (currentPlan) {
-    case 'free':
-      return 'pro';
-    case 'pro':
-      return 'enterprise';
-    case 'enterprise':
-      return null;
-    default:
-      return null;
-  }
+export function getUserPermissionDescription(profile: UserProfile): string {
+  const config = getUserConfig(profile);
+  return `${config.displayName} - ${config.features[0]}`;
 }
+
+/**
+ * 檢查用戶是否有特定功能權限
+ */
+export function hasFeatureAccess(profile: UserProfile, feature: string): boolean {
+  const config = getUserConfig(profile);
+  return (config.features as readonly string[]).includes(feature);
+}
+
+

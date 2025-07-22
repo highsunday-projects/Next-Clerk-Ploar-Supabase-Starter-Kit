@@ -12,7 +12,9 @@ import {
   Loader2
 } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { SUBSCRIPTION_PLANS } from '@/types/supabase';
+import { hasProAccess, getUserConfig, getUserStatusDescription } from '@/types/supabase';
+import { getSubscriptionStatusText, getSubscriptionStatusClass } from '@/lib/subscriptionUtils';
+// SF09: 移除未使用的導入
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
@@ -60,8 +62,8 @@ export default function DashboardPage() {
     );
   }
 
-  // 獲取當前訂閱方案資訊
-  const currentPlan = profile ? SUBSCRIPTION_PLANS[profile.subscription_plan] : SUBSCRIPTION_PLANS.free;
+  // SF09: 獲取當前用戶配置
+  const currentConfig = profile ? getUserConfig(profile) : null;
 
 
 
@@ -91,18 +93,15 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center space-x-2">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-              profile?.subscription_status === 'active'
-                ? 'bg-green-100 text-green-800'
-                : profile?.subscription_status === 'trial'
-                ? 'bg-blue-100 text-blue-800'
-                : profile?.subscription_status === 'cancelled'
-                ? 'bg-red-100 text-red-800'
-                : 'bg-gray-100 text-gray-800'
+              profile ? getSubscriptionStatusClass(profile.subscription_status) : 'bg-gray-100 text-gray-800'
             }`}>
-              {profile?.subscription_status === 'active' ? '訂閱中' :
-               profile?.subscription_status === 'trial' ? '試用中' :
-               profile?.subscription_status === 'cancelled' ? '已取消' : '已過期'}
+              {profile ? getSubscriptionStatusText(profile.subscription_status) : '載入中...'}
             </span>
+            {profile && (
+              <div className="text-xs text-gray-500">
+                {getUserStatusDescription(profile)}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -124,21 +123,21 @@ export default function DashboardPage() {
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <div className="flex items-baseline">
-              <span className="text-3xl font-bold text-gray-900">{currentPlan.displayName}</span>
+              <span className="text-3xl font-bold text-gray-900">{currentConfig?.displayName || '基礎用戶'}</span>
               <span className="ml-2 text-lg text-gray-600">
-                {currentPlan.price === 0 ? '免費' : `$${currentPlan.price}/月`}
+                {currentConfig?.price === 0 ? '免費' : `$${currentConfig?.price || 0}/月`}
               </span>
             </div>
             <p className="text-sm text-gray-500 mt-1">
               {profile?.trial_ends_at ?
                 `試用期至：${new Date(profile.trial_ends_at).toLocaleDateString('zh-TW')}` :
-                profile?.subscription_status === 'active' ? '訂閱中' : '免費方案'
+                profile && hasProAccess(profile) ? '專業版用戶' : '基礎用戶'
               }
             </p>
             <div className="mt-4">
               <h4 className="text-sm font-medium text-gray-900 mb-2">包含功能：</h4>
               <ul className="space-y-1">
-                {currentPlan.features.map((feature, index) => (
+                {currentConfig?.features.map((feature: string, index: number) => (
                   <li key={index} className="text-sm text-gray-600 flex items-center">
                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></div>
                     {feature}
@@ -148,27 +147,23 @@ export default function DashboardPage() {
             </div>
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">
-                每月使用額度：{currentPlan.monthlyUsageLimit.toLocaleString()} 次 API 呼叫
+                每月使用額度：{currentConfig?.monthlyUsageLimit.toLocaleString() || '1,000'} 次 API 呼叫
               </p>
             </div>
           </div>
           <div className="flex items-center justify-center">
             <div className="text-center">
               <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-3 ${
-                profile?.subscription_plan === 'enterprise'
-                  ? 'bg-gradient-to-br from-purple-500 to-pink-600'
-                  : profile?.subscription_plan === 'pro'
+                profile && hasProAccess(profile)
                   ? 'bg-gradient-to-br from-blue-500 to-purple-600'
                   : 'bg-gradient-to-br from-gray-400 to-gray-600'
               }`}>
                 <Crown className="w-10 h-10 text-white" />
               </div>
               <p className="text-sm text-gray-600">
-                {profile?.subscription_plan === 'enterprise'
-                  ? '享受企業版的所有功能'
-                  : profile?.subscription_plan === 'pro'
+                {profile && hasProAccess(profile)
                   ? '享受專業版的所有功能'
-                  : '免費方案基本功能'
+                  : '基礎用戶功能'
                 }
               </p>
             </div>

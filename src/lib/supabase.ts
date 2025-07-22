@@ -118,7 +118,7 @@ export const TABLES = {
  * 常用的資料庫查詢選項
  */
 export const QUERY_OPTIONS = {
-  // 用戶訂閱資料的標準欄位
+  // 用戶訂閱資料的標準欄位 - SF10 簡化版：移除 cancel_at_period_end
   USER_PROFILE_FIELDS: `
     id,
     clerk_user_id,
@@ -131,18 +131,16 @@ export const QUERY_OPTIONS = {
     updated_at,
     polar_customer_id,
     polar_subscription_id,
-    polar_product_id,
-    last_payment_date,
-    next_billing_date
+    current_period_end
   `.replace(/\s+/g, ' ').trim()
 } as const;
 
 /**
- * 預設的用戶訂閱設定
+ * 預設的用戶訂閱設定（SF09 簡化邏輯）
  */
 export const DEFAULT_USER_PROFILE = {
-  subscription_plan: 'free' as const,
-  subscription_status: 'active' as const,
+  subscription_plan: null as const,
+  subscription_status: 'inactive' as const,
   monthly_usage_limit: 1000,
   trial_ends_at: null
 } as const;

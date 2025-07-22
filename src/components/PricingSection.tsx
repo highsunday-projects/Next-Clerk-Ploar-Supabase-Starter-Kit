@@ -2,9 +2,10 @@ import { Check, Star } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PricingSection() {
+  // SF09: 簡化為單一產品邏輯 - 只展示專業版升級
   const plans = [
     {
-      name: '免費方案',
+      name: '基礎用戶',
       price: '免費',
       period: '',
       description: '適合個人使用和小型專案',
@@ -17,8 +18,8 @@ export default function PricingSection() {
       buttonStyle: 'border border-gray-300 text-gray-700 hover:bg-gray-50'
     },
     {
-      name: '專業方案',
-      price: '$29',
+      name: '專業版用戶',
+      price: '$5',
       period: '/月',
       description: '適合成長中的團隊和企業',
       features: [
@@ -30,21 +31,6 @@ export default function PricingSection() {
       buttonText: '立即升級',
       buttonStyle: 'bg-blue-600 text-white hover:bg-blue-700',
       popular: true
-    },
-    {
-      name: '企業方案',
-      price: '$99',
-      period: '/月',
-      description: '適合大型企業和高流量應用',
-      features: [
-        '每月 100,000 次 API 呼叫',
-        '所有功能存取',
-        '24/7 專屬支援',
-        '自訂整合',
-        '進階安全功能'
-      ],
-      buttonText: '全面啟用',
-      buttonStyle: 'border border-gray-300 text-gray-700 hover:bg-gray-50'
     }
   ];
 
@@ -62,7 +48,7 @@ export default function PricingSection() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <div
               key={index}

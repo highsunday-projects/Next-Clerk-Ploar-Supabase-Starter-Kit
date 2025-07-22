@@ -1,59 +1,53 @@
 /**
  * Polar 付費系統客戶端配置
- * 
+ *
  * 提供 Polar API 客戶端實例和相關的工具函數
  */
 
-// 注意：實際的 Polar SDK import 可能不同，這裡使用模擬的實作
-// import { PolarApi, Configuration } from '@polar-sh/sdk';
+import { Polar } from '@polar-sh/sdk';
+import crypto from 'crypto';
 
 // 環境變數驗證
 const POLAR_ACCESS_TOKEN = process.env.POLAR_ACCESS_TOKEN;
-const POLAR_ORGANIZATION_ID = process.env.POLAR_ORGANIZATION_ID;
+const POLAR_ORGANIZATION_ID = process.env.NEXT_PUBLIC_POLAR_ORGANIZATION_ID;
 const POLAR_WEBHOOK_SECRET = process.env.POLAR_WEBHOOK_SECRET;
 const POLAR_ENVIRONMENT = process.env.NEXT_PUBLIC_POLAR_ENVIRONMENT || 'sandbox';
 
-if (!POLAR_ACCESS_TOKEN) {
+// 在開發環境中，如果沒有設定環境變數，使用預設值避免錯誤
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+if (!POLAR_ACCESS_TOKEN && !isDevelopment) {
   throw new Error('Missing POLAR_ACCESS_TOKEN environment variable');
 }
 
-if (!POLAR_ORGANIZATION_ID) {
+if (!POLAR_ORGANIZATION_ID && !isDevelopment) {
   throw new Error('Missing POLAR_ORGANIZATION_ID environment variable');
 }
 
-if (!POLAR_WEBHOOK_SECRET) {
+if (!POLAR_WEBHOOK_SECRET && !isDevelopment) {
   throw new Error('Missing POLAR_WEBHOOK_SECRET environment variable');
 }
 
-// Polar API 配置（模擬實作）
-// 實際使用時需要根據 Polar SDK 文檔進行正確的配置
-export const polarApi = {
-  // 模擬的 API 方法，實際使用時需要替換為真實的 Polar SDK
-  customersGet: async (_params: { id: string }) => ({ data: {} }),
-  customersCreate: async (_params: { customerCreate: unknown }) => ({ data: {} }),
-  productsSearch: async (_params: { organizationId: string; isArchived: boolean }) => ({ data: { items: [] } }),
-  productsGet: async (_params: { id: string }) => ({ data: {} }),
-  checkoutsCreate: async (_params: { checkoutCreate: unknown }) => ({ data: { url: '' } }),
-  subscriptionsSearch: async (_params: { customerId: string; organizationId: string }) => ({ data: { items: [] } }),
-  subscriptionsGet: async (_params: { id: string }) => ({ data: {} }),
-  subscriptionsCancel: async (_params: { id: string }) => ({ data: {} })
-};
+// Polar API 客戶端實例
+export const polarApi = new Polar({
+  accessToken: POLAR_ACCESS_TOKEN || 'dev_token',
+  server: POLAR_ENVIRONMENT === 'production' ? 'production' : 'sandbox'
+});
 
 // 常數配置
 export const POLAR_CONFIG = {
-  ORGANIZATION_ID: POLAR_ORGANIZATION_ID,
-  WEBHOOK_SECRET: POLAR_WEBHOOK_SECRET,
+  ORGANIZATION_ID: POLAR_ORGANIZATION_ID || 'dev_org',
+  WEBHOOK_SECRET: POLAR_WEBHOOK_SECRET || 'dev_secret',
   ENVIRONMENT: POLAR_ENVIRONMENT,
-  BASE_URL: POLAR_ENVIRONMENT === 'production' 
-    ? 'https://polar.sh' 
+  BASE_URL: POLAR_ENVIRONMENT === 'production'
+    ? 'https://polar.sh'
     : 'https://sandbox.polar.sh'
 } as const;
 
 // Polar 產品 ID 對應表（需要在 Polar Dashboard 建立產品後更新）
 export const POLAR_PRODUCT_IDS = {
   free: '', // 免費方案不需要 Polar 產品
-  pro: process.env.POLAR_PRO_PRODUCT_ID || '',
-  enterprise: process.env.POLAR_ENTERPRISE_PRODUCT_ID || ''
+  pro: process.env.POLAR_PRO_PRODUCT_ID || ''
 } as const;
 
 // 訂閱方案對應的 Polar 產品配置
@@ -73,7 +67,7 @@ export const POLAR_SUBSCRIPTION_PLANS = {
   },
   pro: {
     name: 'Pro Plan',
-    price: 29,
+    price: 5,
     currency: 'USD',
     interval: 'month',
     productId: POLAR_PRODUCT_IDS.pro,
@@ -84,26 +78,12 @@ export const POLAR_SUBSCRIPTION_PLANS = {
       '詳細分析報告',
       'API 存取'
     ]
-  },
-  enterprise: {
-    name: 'Enterprise Plan',
-    price: 99,
-    currency: 'USD',
-    interval: 'month',
-    productId: POLAR_PRODUCT_IDS.enterprise,
-    features: [
-      '100,000 次 API 呼叫/月',
-      '所有功能存取',
-      '24/7 專屬支援',
-      '自訂整合',
-      '進階分析',
-      '白標解決方案'
-    ]
   }
 } as const;
 
 /**
  * 驗證 Polar Webhook 簽名
+ * Polar 使用 HMAC-SHA256 簽名驗證
  */
 export function verifyPolarWebhook(
   payload: string,
@@ -111,10 +91,20 @@ export function verifyPolarWebhook(
   webhookSecret: string = POLAR_CONFIG.WEBHOOK_SECRET
 ): boolean {
   try {
-    // 這裡需要實作 Polar 的簽名驗證邏輯
-    // 目前先返回 true，實際實作需要參考 Polar 文檔
-    console.log('Verifying webhook with payload length:', payload.length, 'signature:', signature, 'secret length:', webhookSecret.length);
-    return true;
+    // 移除 'sha256=' 前綴（如果存在）
+    const cleanSignature = signature.replace(/^sha256=/, '');
+
+    // 使用 HMAC-SHA256 計算簽名
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(payload, 'utf8')
+      .digest('hex');
+
+    // 使用時間安全的比較方法
+    return crypto.timingSafeEqual(
+      Buffer.from(cleanSignature, 'hex'),
+      Buffer.from(expectedSignature, 'hex')
+    );
   } catch (error) {
     console.error('Error verifying Polar webhook signature:', error);
     return false;
@@ -124,14 +114,14 @@ export function verifyPolarWebhook(
 /**
  * 根據訂閱方案獲取 Polar 產品 ID
  */
-export function getPolarProductId(plan: 'free' | 'pro' | 'enterprise'): string | null {
+export function getPolarProductId(plan: 'free' | 'pro'): string | null {
   return POLAR_PRODUCT_IDS[plan] || null;
 }
 
 /**
  * 根據訂閱方案獲取方案配置
  */
-export function getPolarPlanConfig(plan: 'free' | 'pro' | 'enterprise') {
+export function getPolarPlanConfig(plan: 'free' | 'pro') {
   return POLAR_SUBSCRIPTION_PLANS[plan];
 }
 

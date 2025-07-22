@@ -3,188 +3,271 @@ uuid: 9bec16718b8848d295633ecd0e52a112
 ---
 # Next-Clerk-Polar-Supabase Starter Kit
 
-> 🚀 一個現代化的 SaaS 網站模板，整合了 Next.js、Clerk、Polar 和 Supabase，讓您快速建立具備完整功能的 SaaS 應用程式。
+**Language**: [English](README.md) | [繁體中文](README.zh-TW.md)
 
-## ✨ 特色功能
+> 🚀 A modern SaaS application template that integrates Next.js, Clerk, Polar, and Supabase, providing complete user authentication, payment subscriptions, and data management functionality.
 
-- 🔐 **完整認證系統** - 使用 Clerk 提供用戶註冊、登入、社交登入、多因素認證
-- 💳 **付費訂閱功能** - 整合 Polar 處理訂閱管理、計費、發票生成
-- 🗄️ **強大資料庫** - 使用 Supabase 提供 PostgreSQL、即時同步、檔案儲存
-- 📊 **管理後台** - 用戶管理、財務報告、訂閱分析
-- 🎨 **現代化 UI** - 使用 Tailwind CSS 和 Shadcn/ui 組件
-- 🚀 **快速部署** - 支援 Vercel 一鍵部署
+[![Next.js](https://img.shields.io/badge/Next.js-15.4.1-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.x-38B2AC)](https://tailwindcss.com/)
+[![Clerk](https://img.shields.io/badge/Clerk-Auth-purple)](https://clerk.com/)
+[![Polar](https://img.shields.io/badge/Polar-Payments-blue)](https://polar.sh/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-green)](https://supabase.com/)
 
-## 🛠️ 技術棧
+## ✨ Implemented Features
 
-### 前端框架
-- **Next.js 14+** (App Router) - React 18+, TypeScript, Server Components
-- **Tailwind CSS** - 現代化 CSS 框架
-- **Shadcn/ui** - 美觀的 UI 組件庫
+- 🎨 **SaaS Landing Page** - Responsive design with Hero, Features, Pricing, Testimonials sections
+- 🔐 **Clerk Authentication** - User registration, login, route protection, profile management
+- 💳 **Polar Payment Integration** - Pro subscription ($5/month), Checkout flow, Webhook handling
+- 🗄️ **Supabase Database** - User subscription data management, real-time sync, Row Level Security
+- 📊 **User Dashboard** - Subscription status display, plan management, profile settings
+- 🔄 **Subscription Management** - Smart upgrade/downgrade, immediate/period-end cancellation, real-time sync
+- 🛡️ **Security Features** - Webhook signature verification, permission control, event deduplication
 
-### 認證系統
-- **Clerk** - 用戶管理、社交登入、組織管理、多因素認證
+## 🛠️ Tech Stack
 
-### 付費系統
-- **Polar** - 訂閱管理、付費處理、發票生成、退款處理
+### Core Framework
+- **Next.js 15.4.1** - React full-stack framework with App Router
+- **React 19.1.0** - Frontend UI framework
+- **TypeScript 5.x** - Type-safe JavaScript
 
-### 資料庫
-- **Supabase** - PostgreSQL、即時資料同步、Row Level Security、檔案儲存
+### Styling & UI
+- **Tailwind CSS 4.x** - Utility-first CSS framework
+- **Lucide React** - Modern icon library
+- **PostCSS** - CSS post-processor
 
-### 開發工具
-- **Prisma** - 類型安全的 ORM
-- **Zod** - 資料驗證
-- **React Hook Form** - 表單處理
-- **TypeScript** - 類型安全
+### Integrated Services
+- **Clerk** - User authentication and management
+- **Polar** - Payment and subscription management
+- **Supabase** - PostgreSQL database and backend services
 
-## 🎯 核心功能
+### Development Tools
+- **ESLint 9.x** - Code quality checking
+- **Turbopack** - Fast bundler for development mode
 
-### 用戶認證
-- ✅ 電子郵件註冊/登入
-- ✅ 社交登入 (Google, GitHub, Discord 等)
-- ✅ 多因素認證 (MFA)
-- ✅ 密碼重置
-- ✅ 用戶個人資料管理
-- ✅ 組織管理和邀請系統
+## 🎯 Feature Details
 
-### 付費功能
-- ✅ 多種訂閱方案
-- ✅ 方案升級/降級
-- ✅ 試用期管理
-- ✅ 自動續費
-- ✅ 發票生成
-- ✅ 付款歷史
-- ✅ 退款處理
+### 🎨 SaaS Landing Page (Completed)
+- ✅ **Header Navigation** - Fixed top navigation, responsive design, smooth scrolling, auth state integration
+- ✅ **Hero Section** - Product showcase, CTA buttons, dynamic background effects
+- ✅ **Features Section** - 4 core feature showcases with icons and descriptions
+- ✅ **Pricing Section** - Free vs Pro plan comparison with popular badges
+- ✅ **Testimonials Section** - Customer testimonials, statistics, rating displays
+- ✅ **Footer** - Complete link navigation, social media, newsletter subscription
 
-### 資料庫功能
-- ✅ 用戶資料管理
-- ✅ 組織資料
-- ✅ 權限管理
-- ✅ 即時資料同步
-- ✅ 檔案上傳和儲存
+### 🔐 Clerk Authentication System (Completed)
+- ✅ **User Registration** - Complete registration flow with email verification
+- ✅ **User Login** - Secure login system with session management
+- ✅ **Route Protection** - Middleware protection for sensitive pages with auto-redirect
+- ✅ **User Profile** - User information display and basic settings
+- ✅ **Navigation Integration** - Different interfaces based on authentication state
 
-### 管理後台
-- ✅ 用戶管理介面
-- ✅ 訂閱分析
-- ✅ 收入報告
-- ✅ 活動日誌
-- ✅ 系統設定
+### 💳 Polar Payment System (Completed)
+- ✅ **Pro Subscription** - $5/month subscription plan
+- ✅ **Checkout Flow** - Secure payment processing
+- ✅ **Webhook Handling** - Real-time event synchronization
+- ✅ **Subscription Management** - Upgrade, downgrade, and cancellation features
+- ✅ **Security Verification** - HMAC-SHA256 signature verification
 
-### 前端頁面
-- ✅ 響應式首頁
-- ✅ 功能介紹頁面
-- ✅ 價格方案頁面
-- ✅ 用戶儀表板
-- ✅ 帳戶設定頁面
-- ✅ 訂閱管理頁面
+### 🗄️ Supabase Database (Completed)
+- ✅ **User Data Table** - Complete user_profiles structure
+- ✅ **Subscription Data** - polar_customer_id, polar_subscription_id, current_period_end fields
+- ✅ **Permission Control** - Row Level Security (RLS)
+- ✅ **Real-time Sync** - Webhook-triggered automatic updates
+- ✅ **Type Safety** - Complete TypeScript type definitions
 
-## 🏗️ 專案結構
+### 📊 User Dashboard (Completed)
+- ✅ **Subscription Status** - Real-time subscription status and expiration display
+- ✅ **Plan Management** - Upgrade to Pro, subscription cancellation
+- ✅ **User Profile** - Basic user information management
+- ✅ **Navigation System** - Clear dashboard navigation
+
+## 🏗️ Project Structure
 
 ```
-next-clerk-polar-supabase-starter/
-├── src/
-│   ├── app/                 # Next.js App Router
-│   │   ├── (auth)/         # 認證相關頁面
-│   │   ├── (dashboard)/    # 儀表板頁面
-│   │   ├── api/            # API 路由
-│   │   └── globals.css     # 全域樣式
-│   ├── components/         # React 組件
-│   │   ├── ui/            # UI 組件
-│   │   ├── auth/          # 認證組件
-│   │   └── dashboard/     # 儀表板組件
-│   ├── lib/               # 工具函數
-│   ├── hooks/             # 自定義 Hooks
-│   └── types/             # TypeScript 型別定義
-├── supabase/              # Supabase 設定
-│   ├── migrations/        # 資料庫遷移
-│   └── functions/         # Edge Functions
-├── docs/                  # 文檔
-└── examples/              # 範例代碼
+Next-Clerk-Polar-Supabase Starter Kit/
+├── src/                          # Source code directory
+│   ├── app/                      # Next.js App Router directory
+│   │   ├── api/                  # API routes directory
+│   │   │   ├── user/subscription/route.ts # User subscription data API
+│   │   │   ├── polar/create-checkout/route.ts # Polar Checkout API
+│   │   │   ├── webhooks/clerk/route.ts    # Clerk Webhook handler
+│   │   │   └── webhooks/polar/route.ts    # Polar Webhook handler
+│   │   ├── sign-in/              # Sign-in page
+│   │   ├── sign-up/              # Sign-up page
+│   │   ├── dashboard/            # User dashboard
+│   │   │   ├── page.tsx          # Dashboard home (real subscription data)
+│   │   │   ├── subscription/page.tsx # Subscription management page
+│   │   │   ├── checkout-success/page.tsx # Payment success page
+│   │   │   └── profile/page.tsx  # User profile page
+│   │   ├── globals.css           # Global styles (with custom animations)
+│   │   ├── layout.tsx            # Root layout component (with ClerkProvider)
+│   │   └── page.tsx              # Home page component (SaaS landing page)
+│   ├── components/               # React components directory
+│   │   ├── Header.tsx            # Navigation component (Clerk integration)
+│   │   ├── HeroSection.tsx       # Hero section component
+│   │   ├── FeatureSection.tsx    # Features section component
+│   │   ├── PricingSection.tsx    # Pricing section component
+│   │   ├── TestimonialSection.tsx # Testimonials section component
+│   │   ├── Footer.tsx            # Footer component
+│   │   └── dashboard/DashboardNav.tsx # Dashboard navigation
+│   ├── lib/                      # Utility functions and services
+│   │   ├── supabase.ts           # Supabase client configuration
+│   │   ├── userProfileService.ts # User subscription data service
+│   │   ├── polar.ts              # Polar API client configuration
+│   │   └── subscriptionUtils.ts  # Subscription management utilities
+│   ├── types/                    # TypeScript type definitions
+│   │   └── supabase.ts           # Supabase related types
+│   ├── hooks/                    # React Hooks
+│   │   └── useUserProfile.ts     # User subscription data Hook
+│   └── middleware.ts             # Clerk route protection middleware
+├── documents/                    # Project documentation directory
+│   ├── 當前專案架構.md           # Project architecture documentation
+│   ├── Clerk整合說明文件.md      # Clerk authentication integration guide
+│   ├── Supabase配置與使用說明.md # Supabase database configuration guide
+│   ├── Polar金流整合說明.md      # Polar payment integration guide
+│   └── 功能/                     # Feature requirement documents
+├── public/                       # Static assets directory
+├── package.json                  # Project configuration and dependencies
+├── tsconfig.json                 # TypeScript configuration
+├── next.config.ts                # Next.js configuration
+├── postcss.config.mjs            # PostCSS configuration
+├── eslint.config.mjs             # ESLint configuration
+└── README.md                     # Project documentation
 ```
 
-## 🚀 快速開始
+## 🚀 Quick Start
 
-### 1. 克隆專案
+### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/next-clerk-polar-supabase-starter.git
-cd next-clerk-polar-supabase-starter
+git clone https://github.com/highsunday/Next-Clerk-Polar-Supabase-Starter-Kit.git
+cd Next-Clerk-Polar-Supabase-Starter-Kit
 ```
 
-### 2. 安裝依賴
+### 2. Install Dependencies
 ```bash
 npm install
-# 或
-yarn install
 ```
 
-### 3. 環境變數設定
-```bash
-cp .env.example .env.local
-```
+### 3. Environment Variables Setup
+Create a `.env.local` file and fill in your API keys:
 
-編輯 `.env.local` 並填入您的 API 金鑰：
 ```env
-# Clerk
+# Clerk Authentication
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 
-# Supabase
+# Supabase Database
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-# Polar
+# Polar Payment System
 POLAR_ACCESS_TOKEN=your_polar_access_token
 POLAR_WEBHOOK_SECRET=your_polar_webhook_secret
+NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID=your_polar_pro_product_id
 ```
 
-### 4. 資料庫設定
-```bash
-# 執行資料庫遷移
-npm run db:migrate
+### 4. Service Configuration
 
-# 生成 Prisma 客戶端
-npm run db:generate
-```
+#### Supabase Database Setup
+1. Create a new project at [Supabase](https://supabase.com/)
+2. Execute SQL scripts from `documents/Supabase配置與使用說明.md`
+3. Configure Row Level Security (RLS) policies
 
-### 5. 啟動開發伺服器
+#### Clerk Authentication Setup
+1. Create a new application at [Clerk](https://clerk.com/)
+2. Configure sign-in/sign-up page paths
+3. Set up webhook endpoint: `/api/webhooks/clerk`
+
+#### Polar Payment Setup
+1. Create an account at [Polar](https://polar.sh/)
+2. Create a Pro product ($5/month)
+3. Configure webhook endpoint: `/api/webhooks/polar`
+
+### 5. Start Development Server
 ```bash
 npm run dev
 ```
 
-開啟 [http://localhost:3000](http://localhost:3000) 查看結果。
+Open [http://localhost:3000](http://localhost:3000) to view the result.
 
-## 📖 文檔
+### 6. Test Features
+1. Register a new user account
+2. Login and view the dashboard
+3. Test Pro subscription flow
+4. Verify webhook event handling
 
-- [快速開始指南](./docs/getting-started.md)
-- [部署指南](./docs/deployment.md)
-- [自定義指南](./docs/customization.md)
-- [API 文檔](./docs/api.md)
+## 📖 Documentation
 
-## 🤝 貢獻
+### Integration Guides
+- [Clerk Authentication Integration Guide](./documents/user-authentication/Clerk-Integration-Guide.md)
+- [Supabase Database Configuration Guide](./documents/database/Supabase-Configuration-Guide.md)
+- [Polar Payment Integration Guide](./documents/payment/Polar-Payment-Integration-Guide.md)
+- [Polar & Supabase Integration Overview](./documents/訂閱模組/Polar與Supabase整合關聯說明.md) *(Chinese only)*
 
-歡迎貢獻！請先閱讀我們的 [貢獻指南](CONTRIBUTING.md)。
+### Architecture Documentation
+- [Project Architecture Overview](./documents/Project-Architecture-Overview.md)
+- [Feature Requirements](./documents/功能/) *(Chinese only)*
 
-1. Fork 這個專案
-2. 創建您的功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 開啟一個 Pull Request
+## 🔮 TODO Features
 
-## 📄 授權
+### Authentication System Extensions
+- [ ] Social login integration (Google, GitHub, Discord)
+- [ ] Multi-factor authentication (MFA)
+- [ ] Organization management and invitation system
+- [ ] Password reset functionality
 
-這個專案使用 MIT 授權 - 查看 [LICENSE](LICENSE) 檔案了解詳情。
+### Payment System Extensions
+- [ ] Annual subscription plans with discounts
+- [ ] Invoice download functionality
+- [ ] Refund processing
+- [ ] Trial period management
+- [ ] Payment history page
 
-## 🌟 支援
+### Database Features
+- [ ] Real-time data synchronization (Realtime)
+- [ ] File upload and storage
+- [ ] Data backup mechanisms
 
-如果這個專案對您有幫助，請給我們一個 ⭐️！
+### Frontend Features
+- [ ] Admin dashboard
+- [ ] Internationalization support (i18n)
+- [ ] Dark mode
+- [ ] PWA support
+- [ ] SEO optimization
 
-### 社群支援
-- [GitHub Discussions](https://github.com/yourusername/next-clerk-polar-supabase-starter/discussions)
-- [Discord 社群](https://discord.gg/your-discord)
+### Development Tools
+- [ ] Unit testing (Jest)
+- [ ] E2E testing (Playwright)
+- [ ] CI/CD pipeline
+- [ ] Docker containerization
 
-### 問題回報
-如果您發現任何問題，請在 [GitHub Issues](https://github.com/yourusername/next-clerk-polar-supabase-starter/issues) 中回報。
+## 🤝 Contributing
+
+Contributions are welcome! Please read our contributing guidelines first.
+
+1. Fork this project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🌟 Support
+
+If this project helps you, please give us a ⭐️!
+
+### Issue Reporting
+If you find any issues, please report them in [GitHub Issues](https://github.com/highsunday/Next-Clerk-Polar-Supabase-Starter-Kit/issues).
 
 ---
 
-由 ❤️ 製作，使用 Next.js + Clerk + Polar + Supabase
+**Project Features**: Complete SaaS application template with authentication, payments, and database integration
+**Tech Stack**: Next.js 15 + Clerk + Polar + Supabase + TypeScript + Tailwind CSS
+**Perfect for**: Developers who want to quickly build SaaS applications

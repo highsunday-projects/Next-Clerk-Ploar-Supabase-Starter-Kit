@@ -202,11 +202,10 @@ npm run dev
 
 ## 📖 詳細文檔
 
-### 整合指南
-- [Clerk 認證系統整合指南](./documents/用戶認證/Clerk整合說明文件.md) | [English](./documents/user-authentication/Clerk-Integration-Guide.md)
-- [Supabase 資料庫配置指南](./documents/Supabase配置與使用說明.md) | [English](./documents/database/Supabase-Configuration-Guide.md)
-- [Polar 金流整合說明](./documents/訂閱模組/Polar金流整合說明.md) | [English](./documents/payment/Polar-Payment-Integration-Guide.md)
-- [Polar 與 Supabase 整合關聯](./documents/訂閱模組/Polar與Supabase整合關聯說明.md)
+### 配置指南
+- [Clerk 認證系統配置指南](./documents/Clerk認證策略配置指南.md) | [English](./documents/Clerk-Authentication-Configuration-Guide.md)
+- [Supabase 資料庫配置指南](./documents/Supabase配置與使用說明.md) | [English](./documents/Supabase-Configuration-Guide.md)
+- [Polar 付費系統配置指南](./documents/Polar配置與準備說明.md) | [English](./documents/Polar-Configuration-Guide.md)
 
 ### 架構文檔
 - [當前專案架構說明](./documents/當前專案架構.md) | [English](./documents/Project-Architecture-Overview.md)
@@ -264,7 +263,7 @@ npm run dev
 如果這個專案對您有幫助，請給我們一個 ⭐️！
 
 ### 問題回報
-如果您發現任何問題，請在 [GitHub Issues](https://github.com/highsunday/Next-Clerk-Polar-Supabase-Starter-Kit/issues) 中回報。
+如果您發現任何問題，請在 [GitHub Issues](https://github.com/highsunday-projects/Next-Clerk-Polar-Supabase-Starter-Kit/issues) 中回報。
 
 ---
 

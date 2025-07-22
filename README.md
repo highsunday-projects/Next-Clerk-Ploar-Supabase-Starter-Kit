@@ -202,11 +202,10 @@ Open [http://localhost:3000](http://localhost:3000) to view the result.
 
 ## 📖 Documentation
 
-### Integration Guides
-- [Clerk Authentication Integration Guide](./documents/user-authentication/Clerk-Integration-Guide.md)
-- [Supabase Database Configuration Guide](./documents/database/Supabase-Configuration-Guide.md)
-- [Polar Payment Integration Guide](./documents/payment/Polar-Payment-Integration-Guide.md)
-- [Polar & Supabase Integration Overview](./documents/訂閱模組/Polar與Supabase整合關聯說明.md) *(Chinese only)*
+### Configuration Guides
+- [Clerk Authentication Configuration Guide](./documents/Clerk-Authentication-Configuration-Guide.md) | [繁體中文](./documents/Clerk認證策略配置指南.md)
+- [Supabase Database Configuration Guide](./documents/Supabase-Configuration-Guide.md) | [繁體中文](./documents/Supabase配置與使用說明.md)
+- [Polar Payment Configuration Guide](./documents/Polar-Configuration-Guide.md) | [繁體中文](./documents/Polar配置與準備說明.md)
 
 ### Architecture Documentation
 - [Project Architecture Overview](./documents/Project-Architecture-Overview.md)
@@ -264,7 +263,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If this project helps you, please give us a ⭐️!
 
 ### Issue Reporting
-If you find any issues, please report them in [GitHub Issues](https://github.com/highsunday/Next-Clerk-Polar-Supabase-Starter-Kit/issues).
+If you find any issues, please report them in [GitHub Issues](https://github.com/highsunday-projects/Next-Clerk-Polar-Supabase-Starter-Kit/issues).
 
 ---
 

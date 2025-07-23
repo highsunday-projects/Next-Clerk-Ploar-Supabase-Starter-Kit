@@ -1,124 +1,186 @@
 -- =====================================================
--- Next-Clerk-Polar-Supabase 簡化資料庫建立腳本
+-- Next-Clerk-Polar-Supabase Non-Destructive Database Setup Script
 -- =====================================================
--- 建立日期: 2025-07-21
--- 版本: 5.0 (簡化訂閱邏輯)
+-- Created: 2025-07-21
+-- Version: 5.1 (Non-destructive version)
 
 -- =====================================================
--- 1. 清理舊資料（謹慎使用）
+-- 1. Safety Check & Notice
 -- =====================================================
 
-DROP TABLE IF EXISTS user_profiles CASCADE;
+-- This script is designed to be non-destructive and will not delete existing data
+-- If you need to completely rebuild, please manually execute DROP TABLE commands
 
 -- =====================================================
--- 2. 建立主要資料表
+-- 2. Create Main Table (If Not Exists)
 -- =====================================================
 
-CREATE TABLE user_profiles (
-  -- 基本識別欄位
+CREATE TABLE IF NOT EXISTS user_profiles (
+  -- Basic identification fields
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
   
-  -- 簡化後的訂閱狀態欄位
+  -- Simplified subscription status fields
   subscription_status VARCHAR(20) DEFAULT 'inactive' NOT NULL,
   subscription_plan VARCHAR(20) DEFAULT NULL,
   current_period_end TIMESTAMP WITH TIME ZONE,
   cancel_at_period_end BOOLEAN DEFAULT FALSE,
   
-  -- 其他業務欄位
+  -- Other business fields
   monthly_usage_limit INTEGER DEFAULT 1000,
   trial_ends_at TIMESTAMP WITH TIME ZONE,
   
-  -- Polar 付費系統整合欄位
+  -- Polar payment system integration fields
   polar_customer_id VARCHAR(255),
   polar_subscription_id VARCHAR(255),
   
-  -- 系統追蹤欄位
+  -- System tracking fields
   last_active_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- =====================================================
--- 3. 建立約束條件
+-- 3. Safely Add Constraints (If Not Exists)
 -- =====================================================
 
--- 訂閱狀態檢查約束（3種狀態）
-ALTER TABLE user_profiles 
-ADD CONSTRAINT valid_subscription_status 
-CHECK (subscription_status IN ('active_recurring', 'active_ending', 'inactive'));
+-- Check and add subscription status constraint
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'valid_subscription_status' 
+        AND table_name = 'user_profiles'
+    ) THEN
+        ALTER TABLE user_profiles 
+        ADD CONSTRAINT valid_subscription_status 
+        CHECK (subscription_status IN ('active_recurring', 'active_ending', 'inactive'));
+    END IF;
+END $$;
 
--- 訂閱方案檢查約束
-ALTER TABLE user_profiles 
-ADD CONSTRAINT valid_subscription_plan 
-CHECK (subscription_plan IS NULL OR subscription_plan = 'pro');
+-- Check and add subscription plan constraint
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'valid_subscription_plan' 
+        AND table_name = 'user_profiles'
+    ) THEN
+        ALTER TABLE user_profiles 
+        ADD CONSTRAINT valid_subscription_plan 
+        CHECK (subscription_plan IS NULL OR subscription_plan = 'pro');
+    END IF;
+END $$;
 
--- 月使用額度必須為正數
-ALTER TABLE user_profiles 
-ADD CONSTRAINT positive_monthly_usage_limit 
-CHECK (monthly_usage_limit > 0);
+-- Check and add monthly usage limit constraint
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'positive_monthly_usage_limit' 
+        AND table_name = 'user_profiles'
+    ) THEN
+        ALTER TABLE user_profiles 
+        ADD CONSTRAINT positive_monthly_usage_limit 
+        CHECK (monthly_usage_limit > 0);
+    END IF;
+END $$;
 
--- 業務邏輯約束：活躍狀態必須有方案
-ALTER TABLE user_profiles 
-ADD CONSTRAINT active_status_requires_plan 
-CHECK (
-  (subscription_status = 'inactive' AND subscription_plan IS NULL) OR
-  (subscription_status IN ('active_recurring', 'active_ending') AND subscription_plan IS NOT NULL)
-);
+-- Check and add business logic constraint
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'active_status_requires_plan' 
+        AND table_name = 'user_profiles'
+    ) THEN
+        ALTER TABLE user_profiles 
+        ADD CONSTRAINT active_status_requires_plan 
+        CHECK (
+          (subscription_status = 'inactive' AND subscription_plan IS NULL) OR
+          (subscription_status IN ('active_recurring', 'active_ending') AND subscription_plan IS NOT NULL)
+        );
+    END IF;
+END $$;
 
 -- =====================================================
--- 4. 建立索引
+-- 4. Safely Create Indexes (If Not Exists)
 -- =====================================================
 
-CREATE INDEX idx_user_profiles_clerk_user_id ON user_profiles (clerk_user_id);
-CREATE INDEX idx_user_profiles_subscription_status ON user_profiles (subscription_status);
-CREATE INDEX idx_user_profiles_subscription_plan ON user_profiles (subscription_plan);
-CREATE INDEX idx_subscription_status_plan ON user_profiles (subscription_status, subscription_plan);
+-- Basic indexes
+CREATE INDEX IF NOT EXISTS idx_user_profiles_clerk_user_id ON user_profiles (clerk_user_id);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_subscription_status ON user_profiles (subscription_status);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_subscription_plan ON user_profiles (subscription_plan);
+CREATE INDEX IF NOT EXISTS idx_subscription_status_plan ON user_profiles (subscription_status, subscription_plan);
 
-CREATE UNIQUE INDEX idx_polar_customer_id 
-ON user_profiles (polar_customer_id) 
-WHERE polar_customer_id IS NOT NULL;
+-- Unique indexes (need special handling)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_polar_customer_id'
+    ) THEN
+        CREATE UNIQUE INDEX idx_polar_customer_id 
+        ON user_profiles (polar_customer_id) 
+        WHERE polar_customer_id IS NOT NULL;
+    END IF;
+END $$;
 
-CREATE UNIQUE INDEX idx_polar_subscription_id 
-ON user_profiles (polar_subscription_id) 
-WHERE polar_subscription_id IS NOT NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_polar_subscription_id'
+    ) THEN
+        CREATE UNIQUE INDEX idx_polar_subscription_id 
+        ON user_profiles (polar_subscription_id) 
+        WHERE polar_subscription_id IS NOT NULL;
+    END IF;
+END $$;
 
 -- =====================================================
--- 5. 啟用 Row Level Security
+-- 5. Safely Enable Row Level Security
 -- =====================================================
 
+-- Enable RLS (if not already enabled)
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
--- 用戶查看自己的資料
+-- =====================================================
+-- 6. Safely Create or Replace Policies
+-- =====================================================
+
+-- Drop existing policies and recreate them (ensure latest version)
+DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
 CREATE POLICY "Users can view own profile" ON user_profiles
   FOR SELECT 
   USING (auth.uid()::text = clerk_user_id);
 
--- 用戶更新自己的資料
+DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
 CREATE POLICY "Users can update own profile" ON user_profiles
   FOR UPDATE 
   USING (auth.uid()::text = clerk_user_id);
 
--- 用戶插入自己的資料
+DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
 CREATE POLICY "Users can insert own profile" ON user_profiles
   FOR INSERT 
   WITH CHECK (auth.uid()::text = clerk_user_id);
 
--- 允許 service_role 角色插入新用戶資料
+DROP POLICY IF EXISTS "Service role can insert profile" ON user_profiles;
 CREATE POLICY "Service role can insert profile" ON user_profiles
   FOR INSERT
   TO public
   WITH CHECK (current_setting('role') = 'service_role');
 
--- 服務角色完整存取
+DROP POLICY IF EXISTS "Service role full access" ON user_profiles;
 CREATE POLICY "Service role full access" ON user_profiles
   FOR ALL 
   USING (current_setting('role') = 'service_role');
 
 -- =====================================================
--- 6. 建立觸發器
+-- 7. Safely Create Trigger Function and Triggers
 -- =====================================================
 
+-- Create or replace trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -127,14 +189,32 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Safely create trigger
+DROP TRIGGER IF EXISTS update_user_profiles_updated_at ON user_profiles;
 CREATE TRIGGER update_user_profiles_updated_at 
     BEFORE UPDATE ON user_profiles 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
 
 -- =====================================================
--- 7. 設定權限
+-- 8. Set Permissions
 -- =====================================================
 
+-- Grant permissions (will not override existing permissions)
 GRANT SELECT, INSERT, UPDATE ON user_profiles TO authenticated;
 GRANT ALL ON user_profiles TO service_role;
+
+-- =====================================================
+-- 9. Completion Notice
+-- =====================================================
+
+DO $$
+BEGIN
+    RAISE NOTICE 'Non-destructive database script completed successfully!';
+    RAISE NOTICE '- Table created or confirmed to exist';
+    RAISE NOTICE '- Constraints safely added';
+    RAISE NOTICE '- Indexes created';
+    RAISE NOTICE '- RLS policies updated';
+    RAISE NOTICE '- Triggers configured';
+    RAISE NOTICE '- Permissions granted';
+END $$;

@@ -1,9 +1,9 @@
 ---
 title: Polar Configuration and Setup Guide
 author: Development Team
-date: 2025-07-22
+date: '2025-07-22'
 version: 1.0
-uuid: a1b2c3d4e5f6789012345678901234567890abcd
+uuid: 4a685a211cbf49eda57233db9e1dee50
 ---
 
 # Polar Configuration and Setup Guide

@@ -51,10 +51,17 @@ export async function GET(
       }, { status: 400 });
     }
     
-    // 建立 Checkout Session
+    // 建立 Checkout Session（目前只支援專業版）
+    if (plan !== 'pro') {
+      return NextResponse.json({
+        success: false,
+        error: '目前只支援專業版訂閱'
+      }, { status: 400 });
+    }
+
     const checkoutUrl = await polarService.createCheckoutSession(
       userId,
-      plan as 'pro' | 'enterprise',
+      plan as 'pro',
       email,
       name
     );

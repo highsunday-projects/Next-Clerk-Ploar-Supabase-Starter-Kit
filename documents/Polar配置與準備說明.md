@@ -1,9 +1,9 @@
 ---
 title: Polar 配置與準備說明
 author: 開發團隊
-date: 2025-07-18
+date: '2025-07-18'
 version: 1.0
-uuid: a1b2c3d4e5f6789012345678901234567890abcd
+uuid: 3672b7fbe56f4a1880b5a0d27f7da0fe
 ---
 
 # Polar 配置與準備說明
@@ -76,25 +76,12 @@ Polar 提供兩個環境：
 ```
 產品名稱: Pro Plan
 描述: 適合成長中的團隊和企業
-價格: $29 USD / 月
+價格: $5 USD / 月
 功能:
 - 10,000 次 API 呼叫/月
 - 進階功能存取
 - 優先支援
 - 詳細分析報告
-```
-
-#### 企業方案 (Enterprise Plan)
-```
-產品名稱: Enterprise Plan
-描述: 適合大型企業和高流量應用
-價格: $99 USD / 月
-功能:
-- 100,000 次 API 呼叫/月
-- 所有功能存取
-- 24/7 專屬支援
-- 自訂整合
-- 進階分析
 ```
 
 ### 3.2 建立步驟
@@ -106,16 +93,15 @@ Polar 提供兩個環境：
    - **描述**: 詳細的方案說明
    - **類型**: 選擇 "Subscription"
 4. 設定價格：
-   - **金額**: 29 或 99
+   - **金額**: 5
    - **貨幣**: USD
    - **計費週期**: Monthly
 5. 儲存產品
 
 ### 3.3 記錄產品 ID
 
-建立完成後，記錄每個產品的 ID：
+建立完成後，記錄產品的 ID：
 - **Pro Plan Product ID**: `prod_xxxxxxxxxx`
-- **Enterprise Plan Product ID**: `prod_xxxxxxxxxx`
 
 ## 🔑 第四步：獲取 API 金鑰
 
@@ -167,9 +153,8 @@ POLAR_WEBHOOK_SECRET=polar_wh_xxxxxxxxxx
 POLAR_ORGANIZATION_ID=org_xxxxxxxxxx
 NEXT_PUBLIC_POLAR_ENVIRONMENT=sandbox
 
-# Polar Product IDs
-POLAR_PRO_PRODUCT_ID=prod_xxxxxxxxxx
-POLAR_ENTERPRISE_PRODUCT_ID=prod_xxxxxxxxxx
+# Polar Product IDs  
+NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID=prod_xxxxxxxxxx
 ```
 
 ### 6.2 環境變數說明
@@ -180,8 +165,7 @@ POLAR_ENTERPRISE_PRODUCT_ID=prod_xxxxxxxxxx
 | `POLAR_WEBHOOK_SECRET` | Webhook 簽名驗證密鑰 | `polar_wh_xxx` |
 | `POLAR_ORGANIZATION_ID` | 組織 ID | `org_xxx` |
 | `NEXT_PUBLIC_POLAR_ENVIRONMENT` | 環境設定 | `sandbox` 或 `production` |
-| `POLAR_PRO_PRODUCT_ID` | 專業方案產品 ID | `prod_xxx` |
-| `POLAR_ENTERPRISE_PRODUCT_ID` | 企業方案產品 ID | `prod_xxx` |
+| `NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID` | 專業方案產品 ID | `prod_xxx` |
 
 ## 🗄️ 第七步：資料庫遷移
 

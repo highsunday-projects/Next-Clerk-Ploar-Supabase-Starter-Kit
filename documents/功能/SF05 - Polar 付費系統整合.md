@@ -1,9 +1,9 @@
 ---
 title: Polar 付費系統整合，實現真實的訂閱付費功能
 author: 開發團隊
-date: 2025-07-18
+date: '2025-07-18'
 version: 1.0
-uuid: 93450ca6afdc445db021df46a5bd7391
+uuid: 7a8a6389b74248b89204b3dbcec78110
 ---
 
 # SF05 - Polar 付費系統整合 (簡化需求)

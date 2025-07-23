@@ -1,5 +1,5 @@
 ---
-uuid: 9d0e684bc89b45e8a014bafdd260738f
+uuid: db50133401d84fd0ad44d3ead17493e5
 ---
 # Polar Payment Integration Guide
 

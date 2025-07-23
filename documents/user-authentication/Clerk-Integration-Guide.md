@@ -1,5 +1,5 @@
 ---
-uuid: e3f0737bd0804b48a021da2d5e640598
+uuid: 20c6352f701b4079bfdde3f2e6e87c04
 ---
 # Clerk Authentication System Integration Guide
 

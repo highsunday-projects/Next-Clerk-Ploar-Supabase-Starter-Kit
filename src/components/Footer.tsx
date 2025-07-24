@@ -1,41 +1,46 @@
+'use client';
+
 import { Github, Twitter, Linkedin, Mail } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Footer() {
+  const { t } = useLanguage();
+
   const footerLinks = {
     product: {
-      title: '產品',
+      title: t('footer.sections.product.title'),
       links: [
-        { name: '功能', href: '#features' },
-        { name: '定價', href: '#pricing' },
-        { name: '更新日誌', href: '#' },
-        { name: '路線圖', href: '#' }
+        { name: t('footer.sections.product.links.features'), href: '#features' },
+        { name: t('footer.sections.product.links.pricing'), href: '#pricing' },
+        { name: t('footer.sections.product.links.changelog'), href: '#' },
+        { name: t('footer.sections.product.links.roadmap'), href: '#' }
       ]
     },
     company: {
-      title: '公司',
+      title: t('footer.sections.company.title'),
       links: [
-        { name: '關於我們', href: '#' },
-        { name: '部落格', href: '#' },
-        { name: '職涯', href: '#' },
-        { name: '聯絡我們', href: '#' }
+        { name: t('footer.sections.company.links.about'), href: '#' },
+        { name: t('footer.sections.company.links.blog'), href: '#' },
+        { name: t('footer.sections.company.links.careers'), href: '#' },
+        { name: t('footer.sections.company.links.contact'), href: '#' }
       ]
     },
     resources: {
-      title: '資源',
+      title: t('footer.sections.resources.title'),
       links: [
-        { name: '文檔', href: '#' },
-        { name: 'API 參考', href: '#' },
-        { name: '教學', href: '#' },
-        { name: '社群', href: '#' }
+        { name: t('footer.sections.resources.links.docs'), href: '#' },
+        { name: t('footer.sections.resources.links.api'), href: '#' },
+        { name: t('footer.sections.resources.links.tutorials'), href: '#' },
+        { name: t('footer.sections.resources.links.community'), href: '#' }
       ]
     },
     legal: {
-      title: '法律',
+      title: t('footer.sections.legal.title'),
       links: [
-        { name: '隱私政策', href: '#' },
-        { name: '服務條款', href: '#' },
-        { name: 'Cookie 政策', href: '#' },
-        { name: '安全', href: '#' }
+        { name: t('footer.sections.legal.links.privacy'), href: '#' },
+        { name: t('footer.sections.legal.links.terms'), href: '#' },
+        { name: t('footer.sections.legal.links.cookies'), href: '#' },
+        { name: t('footer.sections.legal.links.security'), href: '#' }
       ]
     }
   };
@@ -56,12 +61,10 @@ export default function Footer() {
             {/* Company Info */}
             <div className="lg:col-span-2">
               <h3 className="text-2xl font-bold mb-4">
-                SaaS Starter Kit
+                {t('header.brand')}
               </h3>
               <p className="text-gray-400 mb-6 leading-relaxed">
-                快速建立現代化 SaaS 應用程式的完整解決方案。
-                整合 Next.js、Clerk、Polar 和 Supabase，
-                讓您專注於核心業務邏輯。
+                {t('footer.description')}
               </p>
               
               {/* Social Links */}
@@ -107,10 +110,10 @@ export default function Footer() {
         <div className="border-t border-gray-800 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
-              © 2025 SaaS Starter Kit. 版權所有。
+              {t('footer.copyright')}
             </div>
             <div className="flex items-center space-x-6 text-sm text-gray-400">
-              <span>使用 ❤️ 製作</span>
+              <span>{t('footer.madeWith')}</span>
               <span>•</span>
               <span>Next.js + Clerk + Polar + Supabase</span>
             </div>

@@ -1,6 +1,10 @@
+'use client';
+
 import { ArrowRight, Play } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function HeroSection() {
+  const { t } = useLanguage();
   return (
     <section className="pt-20 pb-16 bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -8,39 +12,38 @@ export default function HeroSection() {
           {/* Left Content */}
           <div className="text-center lg:text-left">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-              快速建立您的
-              <span className="text-blue-600"> SaaS 應用程式</span>
+              {t('hero.title')}
+              <span className="text-blue-600">{t('hero.titleHighlight')}</span>
             </h1>
             <p className="mt-6 text-xl text-gray-600 leading-relaxed">
-              整合 Next.js、Clerk、Polar 和 Supabase 的完整解決方案。
-              讓您專注於核心業務邏輯，而不是基礎架構。
+              {t('hero.description')}
             </p>
             
             {/* Feature highlights */}
             <div className="mt-8 flex flex-wrap gap-4 justify-center lg:justify-start">
               <div className="flex items-center text-sm text-gray-600">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                完整認證系統
+                {t('hero.features.auth')}
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                付費訂閱功能
+                {t('hero.features.payment')}
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                即時資料庫
+                {t('hero.features.database')}
               </div>
             </div>
 
             {/* CTA Buttons */}
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <button className="bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center justify-center group">
-                立即開始
+                {t('hero.cta.getStarted')}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
               </button>
               <button className="border border-gray-300 text-gray-700 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-all duration-200 flex items-center justify-center">
                 <Play className="mr-2 w-5 h-5" />
-                觀看演示
+                {t('hero.cta.watchDemo')}
               </button>
             </div>
 

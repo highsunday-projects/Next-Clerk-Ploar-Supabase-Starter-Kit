@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Lock, 
   Eye, 
@@ -27,6 +28,7 @@ interface PasswordValidation {
 
 export default function PasswordManager() {
   const { user } = useUser();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<PasswordFormData>({
     currentPassword: '',
     newPassword: '',
@@ -43,13 +45,13 @@ export default function PasswordManager() {
     text: string;
   }>({ type: null, text: '' });
 
-  // 分析用戶狀態
+  // Analyze user status
   const hasPassword = user?.passwordEnabled || false;
   const hasGoogleAccount = user?.externalAccounts?.some(
     account => account.provider === 'google'
   ) || false;
 
-  // 密碼驗證邏輯
+  // Password validation logic
   const validatePassword = (password: string): PasswordValidation => {
     const minLength = password.length >= 8;
     const hasNumber = /\d/.test(password);
@@ -66,10 +68,10 @@ export default function PasswordManager() {
   const passwordValidation = validatePassword(formData.newPassword);
   const passwordsMatch = formData.newPassword === formData.confirmPassword;
 
-  // 表單處理
+  // Form handling
   const handleInputChange = (field: keyof PasswordFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // 清除訊息當用戶開始輸入
+    // Clear message when user starts typing
     if (message.type) {
       setMessage({ type: null, text: '' });
     }
@@ -79,15 +81,15 @@ export default function PasswordManager() {
     setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
-  // 提交處理
+  // Submit handling
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 基本驗證
+    // Basic validation
     if (!passwordValidation.isValid) {
       setMessage({
         type: 'error',
-        text: '新密碼不符合安全要求'
+        text: t('dashboard.profile.password.validation.notSecure')
       });
       return;
     }
@@ -95,7 +97,7 @@ export default function PasswordManager() {
     if (!passwordsMatch) {
       setMessage({
         type: 'error',
-        text: '新密碼與確認密碼不一致'
+        text: t('dashboard.profile.password.validation.mismatch')
       });
       return;
     }
@@ -103,7 +105,7 @@ export default function PasswordManager() {
     if (hasPassword && !formData.currentPassword) {
       setMessage({
         type: 'error',
-        text: '請輸入目前密碼'
+        text: t('dashboard.profile.password.validation.currentRequired')
       });
       return;
     }
@@ -112,15 +114,15 @@ export default function PasswordManager() {
     setMessage({ type: null, text: '' });
 
     try {
-      // 根據用戶狀態調用不同的 API
+      // Call different APIs based on user status
       if (hasPassword) {
-        // 有密碼用戶：需要提供目前密碼
+        // Users with password: need to provide current password
         await user?.updatePassword({
           currentPassword: formData.currentPassword,
           newPassword: formData.newPassword
         });
       } else {
-        // 無密碼用戶：直接設置新密碼
+        // Users without password: directly set new password
         await user?.updatePassword({
           newPassword: formData.newPassword
         });
@@ -128,10 +130,10 @@ export default function PasswordManager() {
 
       setMessage({
         type: 'success',
-        text: hasPassword ? '密碼變更成功！' : '密碼設置成功！現在您可以使用電子郵件和密碼登入。'
+        text: hasPassword ? t('dashboard.profile.password.success.updated') : t('dashboard.profile.password.success.created')
       });
 
-      // 清空表單
+      // Clear form
       setFormData({
         currentPassword: '',
         newPassword: '',
@@ -141,8 +143,8 @@ export default function PasswordManager() {
     } catch (error: unknown) {
       console.error('Password update error:', error);
 
-      // 處理不同類型的錯誤
-      let errorMessage = '密碼更新失敗，請稍後再試';
+      // Handle different types of errors
+      let errorMessage = t('dashboard.profile.password.error.updateFailed');
 
       if (error && typeof error === 'object' && 'errors' in error) {
         const errorObj = error as { errors?: Array<{ message?: string }> };
@@ -170,44 +172,44 @@ export default function PasswordManager() {
       <div className="flex items-center mb-6">
         <Lock className="w-5 h-5 text-blue-600 mr-3" />
         <div>
-          <h3 className="text-lg font-medium text-gray-900">密碼管理</h3>
+          <h3 className="text-lg font-medium text-gray-900">{t('dashboard.profile.password.title')}</h3>
           <p className="text-sm text-gray-600">
-            {hasPassword ? '變更您的登入密碼' : '設置密碼作為備用登入方式'}
+            {hasPassword ? t('dashboard.profile.password.subtitleUpdate') : t('dashboard.profile.password.subtitleSetup')}
           </p>
         </div>
       </div>
 
-      {/* 登入方式狀態 */}
+      {/* Login method status */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <h4 className="text-sm font-medium text-gray-900 mb-2">目前登入方式</h4>
+        <h4 className="text-sm font-medium text-gray-900 mb-2">{t('dashboard.profile.password.currentMethods')}</h4>
         <div className="flex flex-wrap gap-2">
           {hasGoogleAccount && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
               <Shield className="w-3 h-3 mr-1" />
-              Google 帳戶
+              {t('dashboard.profile.password.googleAccount')}
             </span>
           )}
           {hasPassword && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
               <Lock className="w-3 h-3 mr-1" />
-              密碼登入
+              {t('dashboard.profile.password.passwordLogin')}
             </span>
           )}
           {!hasPassword && !hasGoogleAccount && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              無登入方式
+              {t('dashboard.profile.password.noLoginMethod')}
             </span>
           )}
         </div>
       </div>
 
-      {/* 密碼表單 */}
+      {/* Password form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* 目前密碼（僅有密碼用戶顯示） */}
+        {/* Current password (only shown for users with password) */}
         {hasPassword && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              目前密碼
+              {t('dashboard.profile.password.currentPassword')}
             </label>
             <div className="relative">
               <input
@@ -215,7 +217,7 @@ export default function PasswordManager() {
                 value={formData.currentPassword}
                 onChange={(e) => handleInputChange('currentPassword', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
-                placeholder="輸入目前密碼"
+                placeholder={t('dashboard.profile.password.enterCurrentPassword')}
                 required={hasPassword}
               />
               <button
@@ -233,10 +235,10 @@ export default function PasswordManager() {
           </div>
         )}
 
-        {/* 新密碼 */}
+        {/* New password */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {hasPassword ? '新密碼' : '設置密碼'}
+            {hasPassword ? t('dashboard.profile.password.newPassword') : t('dashboard.profile.password.setupPassword')}
           </label>
           <div className="relative">
             <input
@@ -244,7 +246,7 @@ export default function PasswordManager() {
               value={formData.newPassword}
               onChange={(e) => handleInputChange('newPassword', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
-              placeholder={hasPassword ? '輸入新密碼' : '輸入密碼'}
+              placeholder={hasPassword ? t('dashboard.profile.password.enterNewPassword') : t('dashboard.profile.password.enterPassword')}
               required
             />
             <button
@@ -260,7 +262,7 @@ export default function PasswordManager() {
             </button>
           </div>
           
-          {/* 密碼強度指示 */}
+          {/* Password strength indicator */}
           {formData.newPassword && (
             <div className="mt-2 space-y-1">
               <div className={`text-xs flex items-center ${
@@ -271,7 +273,7 @@ export default function PasswordManager() {
                 ) : (
                   <AlertCircle className="w-3 h-3 mr-1" />
                 )}
-                至少 8 個字元
+                {t('dashboard.profile.password.minLength')}
               </div>
               <div className={`text-xs flex items-center ${
                 passwordValidation.hasLetter ? 'text-green-600' : 'text-red-600'
@@ -281,7 +283,7 @@ export default function PasswordManager() {
                 ) : (
                   <AlertCircle className="w-3 h-3 mr-1" />
                 )}
-                包含英文字母
+                {t('dashboard.profile.password.hasLetter')}
               </div>
               <div className={`text-xs flex items-center ${
                 passwordValidation.hasNumber ? 'text-green-600' : 'text-red-600'
@@ -291,16 +293,16 @@ export default function PasswordManager() {
                 ) : (
                   <AlertCircle className="w-3 h-3 mr-1" />
                 )}
-                包含數字
+                {t('dashboard.profile.password.hasNumber')}
               </div>
             </div>
           )}
         </div>
 
-        {/* 確認密碼 */}
+        {/* Confirm password */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            確認密碼
+            {t('dashboard.profile.password.confirmPassword')}
           </label>
           <div className="relative">
             <input
@@ -308,7 +310,7 @@ export default function PasswordManager() {
               value={formData.confirmPassword}
               onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
-              placeholder="再次輸入密碼"
+              placeholder={t('dashboard.profile.password.enterPasswordAgain')}
               required
             />
             <button
@@ -324,7 +326,7 @@ export default function PasswordManager() {
             </button>
           </div>
           
-          {/* 密碼匹配指示 */}
+          {/* Password match indicator */}
           {formData.confirmPassword && (
             <div className={`mt-1 text-xs flex items-center ${
               passwordsMatch ? 'text-green-600' : 'text-red-600'
@@ -334,12 +336,12 @@ export default function PasswordManager() {
               ) : (
                 <AlertCircle className="w-3 h-3 mr-1" />
               )}
-              {passwordsMatch ? '密碼一致' : '密碼不一致'}
+              {passwordsMatch ? t('dashboard.profile.password.passwordMatch') : t('dashboard.profile.password.passwordMismatch')}
             </div>
           )}
         </div>
 
-        {/* 訊息顯示 */}
+        {/* Message display */}
         {message.type && (
           <div className={`p-3 rounded-lg flex items-center ${
             message.type === 'success' 
@@ -355,7 +357,7 @@ export default function PasswordManager() {
           </div>
         )}
 
-        {/* 提交按鈕 */}
+        {/* Submit button */}
         <div className="pt-4">
           <button
             type="submit"
@@ -365,10 +367,10 @@ export default function PasswordManager() {
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {hasPassword ? '更新中...' : '設置中...'}
+                {hasPassword ? t('dashboard.profile.password.updating') : t('dashboard.profile.password.setting')}
               </>
             ) : (
-              hasPassword ? '更新密碼' : '設置密碼'
+              hasPassword ? t('dashboard.profile.password.updatePassword') : t('dashboard.profile.password.setPassword')
             )}
           </button>
         </div>

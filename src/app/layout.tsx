@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
+import { LanguageProvider } from '@/contexts/LanguageContext';
+import LanguageLoader from '@/components/LanguageLoader';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "SaaS Starter Kit",
-  description: "Next.js + Clerk + Polar + Supabase SaaS 應用程式模板",
+  description: "Complete SaaS application template with Next.js, Clerk, Polar, and Supabase",
 };
 
 export default function RootLayout({
@@ -25,11 +27,15 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="zh-TW">
+      <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          {children}
+          <LanguageProvider>
+            <LanguageLoader>
+              {children}
+            </LanguageLoader>
+          </LanguageProvider>
         </body>
       </html>
     </ClerkProvider>

@@ -1,38 +1,27 @@
+'use client';
+
 import { Star, Quote } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function TestimonialSection() {
-  const testimonials = [
-    {
-      name: '張小明',
-      role: '創辦人',
-      company: 'TechStart',
-      avatar: '/api/placeholder/64/64',
-      content: '這個 Starter Kit 讓我們在兩週內就上線了我們的 SaaS 產品。認證、付費和資料庫都已經完美整合，省下了數個月的開發時間。',
-      rating: 5
-    },
-    {
-      name: '李美華',
-      role: '技術總監',
-      company: 'InnovateLab',
-      avatar: '/api/placeholder/64/64',
-      content: '程式碼品質非常高，文檔詳細，支援也很棒。我們的團隊能夠快速上手並客製化符合我們需求的功能。',
-      rating: 5
-    },
-    {
-      name: '王大偉',
-      role: '產品經理',
-      company: 'StartupHub',
-      avatar: '/api/placeholder/64/64',
-      content: '從概念到產品上線只花了一個月。這個模板包含了所有我們需要的功能，讓我們能專注在核心業務邏輯上。',
-      rating: 5
-    }
-  ];
+  const { t } = useLanguage();
+
+  const testimonials = (t('testimonials.items') as unknown as Array<{
+    name: string;
+    role: string;
+    company: string;
+    content: string;
+  }>).map(item => ({
+    ...item,
+    avatar: '/api/placeholder/64/64',
+    rating: 5
+  }));
 
   const stats = [
-    { number: '1,000+', label: '滿意客戶' },
-    { number: '50+', label: '國家使用' },
-    { number: '99.9%', label: '正常運行時間' },
-    { number: '24/7', label: '技術支援' }
+    { number: '1,000+', label: t('testimonials.stats.items.customers') },
+    { number: '50+', label: t('testimonials.stats.items.countries') },
+    { number: '99.9%', label: t('testimonials.stats.items.uptime') },
+    { number: '24/7', label: t('testimonials.stats.items.support') }
   ];
 
   return (
@@ -41,10 +30,10 @@ export default function TestimonialSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            客戶怎麼說
+            {t('testimonials.title')}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            來自世界各地開發者和企業的真實回饋
+            {t('testimonials.subtitle')}
           </p>
         </div>
 
@@ -94,10 +83,10 @@ export default function TestimonialSection() {
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold mb-2">
-              值得信賴的數字
+              {t('testimonials.stats.title')}
             </h3>
             <p className="text-blue-100">
-              我們的成果說明一切
+              {t('testimonials.stats.subtitle')}
             </p>
           </div>
 

@@ -4,10 +4,13 @@ import { useState } from 'react';
 import { Menu, X, User } from 'lucide-react';
 import { useUser, UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isSignedIn } = useUser();
+  const { t } = useLanguage();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -28,7 +31,7 @@ export default function Header() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link href="/" className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors duration-200">
-              SaaS Starter Kit
+              {t('header.brand')}
             </Link>
           </div>
 
@@ -38,24 +41,25 @@ export default function Header() {
               onClick={() => scrollToSection('features')}
               className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
             >
-              功能
+              {t('header.navigation.features')}
             </button>
             <button
               onClick={() => scrollToSection('pricing')}
               className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
             >
-              定價
+              {t('header.navigation.pricing')}
             </button>
             <button
               onClick={() => scrollToSection('about')}
               className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
             >
-              關於
+              {t('header.navigation.about')}
             </button>
           </nav>
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
+            <LanguageSwitcher />
             {isSignedIn ? (
               <div className="flex items-center space-x-4">
                 <Link
@@ -63,7 +67,7 @@ export default function Header() {
                   className="text-gray-700 hover:text-blue-600 transition-colors duration-200 flex items-center"
                 >
                   <User className="w-4 h-4 mr-1" />
-                  儀表板
+                  {t('header.navigation.dashboard')}
                 </Link>
                 <UserButton
                   appearance={{
@@ -77,12 +81,12 @@ export default function Header() {
               <>
                 <SignInButton mode="modal">
                   <button className="text-gray-700 hover:text-blue-600 transition-colors duration-200">
-                    登入
+                    {t('header.auth.signIn')}
                   </button>
                 </SignInButton>
                 <SignUpButton mode="modal">
                   <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                    註冊
+                    {t('header.auth.signUp')}
                   </button>
                 </SignUpButton>
               </>
@@ -108,20 +112,28 @@ export default function Header() {
                 onClick={() => scrollToSection('features')}
                 className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200"
               >
-                功能
+                {t('header.navigation.features')}
               </button>
               <button
                 onClick={() => scrollToSection('pricing')}
                 className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200"
               >
-                定價
+                {t('header.navigation.pricing')}
               </button>
               <button
                 onClick={() => scrollToSection('about')}
                 className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200"
               >
-                關於
+                {t('header.navigation.about')}
               </button>
+
+              {/* Mobile Language Switcher */}
+              <div className="pt-4 border-t border-gray-200">
+                <div className="px-3 py-2">
+                  <LanguageSwitcher />
+                </div>
+              </div>
+
               <div className="pt-4 border-t border-gray-200">
                 {isSignedIn ? (
                   <div className="space-y-2">
@@ -131,7 +143,7 @@ export default function Header() {
                       className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200 flex items-center"
                     >
                       <User className="w-4 h-4 mr-2" />
-                      儀表板
+                      {t('header.navigation.dashboard')}
                     </Link>
                     <div className="px-3 py-2">
                       <UserButton
@@ -147,12 +159,12 @@ export default function Header() {
                   <>
                     <SignInButton mode="modal">
                       <button className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200">
-                        登入
+                        {t('header.auth.signIn')}
                       </button>
                     </SignInButton>
                     <SignUpButton mode="modal">
                       <button className="block w-full text-left px-3 py-2 mt-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
-                        註冊
+                        {t('header.auth.signUp')}
                       </button>
                     </SignUpButton>
                   </>

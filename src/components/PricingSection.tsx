@@ -1,34 +1,30 @@
+'use client';
+
 import { Check, Star } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function PricingSection() {
+  const { t } = useLanguage();
+
   // SF09: 簡化為單一產品邏輯 - 只展示專業版升級
   const plans = [
     {
-      name: '基礎用戶',
-      price: '免費',
+      name: t('pricing.plans.free.name'),
+      price: t('pricing.plans.free.price'),
       period: '',
-      description: '適合個人使用和小型專案',
-      features: [
-        '每月 1,000 次 API 呼叫',
-        '基本功能存取',
-        '社群支援'
-      ],
-      buttonText: '開始使用',
+      description: t('pricing.plans.free.description'),
+      features: t('pricing.plans.free.features') as unknown as string[],
+      buttonText: t('pricing.plans.free.buttonText'),
       buttonStyle: 'border border-gray-300 text-gray-700 hover:bg-gray-50'
     },
     {
-      name: '專業版用戶',
-      price: '$5',
-      period: '/月',
-      description: '適合成長中的團隊和企業',
-      features: [
-        '每月 10,000 次 API 呼叫',
-        '進階功能存取',
-        '優先支援',
-        '詳細分析報告'
-      ],
-      buttonText: '立即升級',
+      name: t('pricing.plans.pro.name'),
+      price: t('pricing.plans.pro.price'),
+      period: t('pricing.plans.pro.period'),
+      description: t('pricing.plans.pro.description'),
+      features: t('pricing.plans.pro.features') as unknown as string[],
+      buttonText: t('pricing.plans.pro.buttonText'),
       buttonStyle: 'bg-blue-600 text-white hover:bg-blue-700',
       popular: true
     }
@@ -40,10 +36,10 @@ export default function PricingSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            選擇適合您的方案
+            {t('pricing.title')}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            從個人專案到企業級應用，我們提供靈活的定價方案
+            {t('pricing.subtitle')}
           </p>
         </div>
 
@@ -63,7 +59,7 @@ export default function PricingSection() {
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                   <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center">
                     <Star className="w-4 h-4 mr-1" />
-                    最受歡迎
+                    {t('pricing.popular')}
                   </div>
                 </div>
               )}
@@ -112,20 +108,20 @@ export default function PricingSection() {
         {/* Bottom Info */}
         <div className="text-center mt-16">
           <p className="text-gray-600 mb-4">
-            免費方案無需信用卡，付費方案可隨時升級或降級
+            {t('pricing.bottomInfo')}
           </p>
           <div className="flex justify-center items-center space-x-8 text-sm text-gray-500">
             <div className="flex items-center">
               <Check className="w-4 h-4 text-green-500 mr-2" />
-              隨時取消
+              {t('pricing.guarantees.cancel')}
             </div>
             <div className="flex items-center">
               <Check className="w-4 h-4 text-green-500 mr-2" />
-              無設定費用
+              {t('pricing.guarantees.noSetup')}
             </div>
             <div className="flex items-center">
               <Check className="w-4 h-4 text-green-500 mr-2" />
-              即時生效
+              {t('pricing.guarantees.instant')}
             </div>
           </div>
         </div>

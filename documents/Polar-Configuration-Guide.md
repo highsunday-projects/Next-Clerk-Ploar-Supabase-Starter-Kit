@@ -1,57 +1,50 @@
 ---
-title: Polar Configuration and Setup Guide
-author: Development Team
-date: 2025-07-22
-version: 1.0
-uuid: a1b2c3d4e5f6789012345678901234567890abcd
+uuid: 3672b7fbe56f4a1880b5a0d27f7da0fe
 ---
+# Polar Payment System Configuration Guide
 
-# Polar Configuration and Setup Guide
+## 📋 What is Polar?
 
-## 📋 Document Overview
+Polar is a modern payment platform designed specifically for developers, providing comprehensive subscription management, billing, and payment processing solutions.
 
-This document provides detailed instructions on how to configure the Polar payment platform, including account setup, product creation, API configuration, and environment preparation.
+### 🎯 Key Advantages
 
-### Document Information
-- **Created**: 2025-07-22
-- **Version**: 1.0
-- **Related Feature**: SF05 - Polar Payment System Integration
-- **Maintainer**: Development Team
+- **💰 Developer-Friendly Pricing**: Low fees, transparent pricing structure
+- **🚀 Quick Integration**: Complete SDK and API documentation for fast deployment
+- **🔄 Subscription Management**: Flexible subscription plans, upgrades/downgrades, trial period management
+- **📊 Detailed Analytics**: Revenue reports, customer insights, business metrics tracking
+- **🛡️ Secure & Reliable**: Enterprise-grade security, PCI compliance, data encryption
+- **🌐 Global Support**: Multi-currency, multi-language, international payment methods
+- **🔧 Developer Tools**: Webhooks, testing environment, detailed logs
 
-## 🎯 Preparation Checklist
+### 🏗️ Use Cases
 
-Before starting integration, ensure you complete the following preparation work:
+- **SaaS Applications**: Monthly subscriptions, usage-based billing, enterprise plans
+- **Digital Content Platforms**: Content subscriptions, one-time purchases, membership systems
+- **Developer Tools**: API subscriptions, usage-based billing, freemium models
+- **Online Services**: Professional services, course subscriptions, software licensing
 
-- [ ] Create Polar account
-- [ ] Set up organization and products
-- [ ] Obtain API keys
-- [ ] Configure Webhooks
-- [ ] Update environment variables
-- [ ] Execute database migration
+## 🚀 Quick Start
 
-## 🚀 Step 1: Create Polar Account
+### Step 1: Create Polar Account
 
-### 1.1 Register Polar Account
-
-1. Go to [Polar.sh](https://polar.sh)
+1. Go to [Polar Sandbox](https://sandbox.polar.sh) **(Important: Start with Sandbox testing environment)**
 2. Click "Sign Up" to register new account
 3. Use GitHub or Google account for quick registration
 4. Complete email verification
 
-### 1.2 Choose Environment
+**Environment Description**:
 
 Polar provides two environments:
+- **Sandbox** (https://sandbox.polar.sh): Testing environment for development and testing, **recommended to start here**
+- **Production** (https://polar.sh): Live environment for actual operations
 
-- **Sandbox**: Testing environment for development and testing
-- **Production**: Live environment for actual operations
+**Important Reminders**:
+- ✅ **Must complete all configuration and testing in Sandbox environment first**
+- ✅ Switch to Production environment only after confirming all features work properly
+- ⚠️ Never test or learn directly in Production environment
 
-**Recommended Flow**:
-1. Complete integration and testing in Sandbox environment first
-2. Switch to Production after confirming functionality works
-
-## 🏢 Step 2: Set Up Organization
-
-### 2.1 Create Organization
+### Step 2: Set Up Organization
 
 1. Login to Polar Dashboard
 2. Click "Create Organization"
@@ -60,15 +53,11 @@ Polar provides two environments:
    - **Organization Slug**: URL-friendly identifier
    - **Description**: Brief organization description
 
-### 2.2 Organization Settings
-
 After creating organization, record the following information:
-- **Organization ID**: `org_xxxxxxxxxx`
+- **Organization ID**: `12345678-abcd-1234-5678-123456789abc`
 - **Organization Slug**: Your set slug
 
-## 📦 Step 3: Create Products and Plans
-
-### 3.1 Create Products
+### Step 3: Create Products and Plans
 
 Based on our subscription plans, need to create the following products:
 
@@ -76,7 +65,7 @@ Based on our subscription plans, need to create the following products:
 ```
 Product Name: Pro Plan
 Description: Perfect for growing teams and businesses
-Price: $29 USD / month
+Price: $5 USD / month
 Features:
 - 10,000 API calls/month
 - Advanced feature access
@@ -84,20 +73,7 @@ Features:
 - Detailed analytics
 ```
 
-#### Enterprise Plan
-```
-Product Name: Enterprise Plan
-Description: Perfect for large enterprises and high-traffic applications
-Price: $99 USD / month
-Features:
-- 100,000 API calls/month
-- All feature access
-- 24/7 dedicated support
-- Custom integrations
-- Advanced analytics
-```
-
-### 3.2 Creation Steps
+**Creation Steps**:
 
 1. In Polar Dashboard click "Products"
 2. Click "Create Product"
@@ -106,117 +82,104 @@ Features:
    - **Description**: Detailed plan description
    - **Type**: Select "Subscription"
 4. Set pricing:
-   - **Amount**: 29 or 99
+   - **Amount**: 5
    - **Currency**: USD
    - **Billing Period**: Monthly
 5. Save product
 
-### 3.3 Record Product IDs
-
-After creation, record each product's ID:
+After creation, record the product ID:
 - **Pro Plan Product ID**: `prod_xxxxxxxxxx`
-- **Enterprise Plan Product ID**: `prod_xxxxxxxxxx`
 
-## 🔑 Step 4: Obtain API Keys
+### Step 4: Obtain API Keys
 
-### 4.1 Create API Token
-
-1. Go to Polar Dashboard "Settings" > "API"
-2. Click "Create API Token"
-3. Set permissions:
+1. In Polar Dashboard, go to **"Settings"** → **"General"** → **"Developers"**
+2. In **"Manage access tokens to authenticate with the Polar API"** section
+3. Click **"New Token"** to create new API Token
+4. Set Token information:
    - **Name**: "SaaS App Integration"
-   - **Permissions**: Select required permissions (recommend full permissions)
-4. Copy and securely save API Token
+   - **Permissions**: Select required permissions (recommend selecting all permissions)
+5. Copy and securely save API Token
 
-### 4.2 API Token Format
+**API Token Format**:
+- **Sandbox**: `polar_oat_xxxxxxxxxx`
+- **Production**: `polar_oat_xxxxxxxxxx`
 
-- **Sandbox**: `polar_pat_sandbox_xxxxxxxxxx`
-- **Production**: `polar_pat_xxxxxxxxxx`
-
-## 🔗 Step 5: Configure Webhook
-
-### 5.1 Create Webhook
+### Step 5: Configure Webhook
 
 1. In Polar Dashboard go to "Settings" > "Webhooks"
 2. Click "Create Webhook"
 3. Configure Webhook:
-   - **URL**: `https://yourdomain.com/api/webhooks/polar`
-   - **Events**: Select the following events
+   - **URL**: `https://yourdomain.com/api/webhooks/polar` **(Important: Must include `/api/webhooks/polar` path)**
+   - **Events**: Check the following events
      - `checkout.created`
-     - `checkout.updated`
+     - `order.created`
+     - `order.paid`
      - `subscription.created`
      - `subscription.updated`
-     - `subscription.canceled`
+     - `subscription.uncanceled`
 
-### 5.2 Webhook Secret
+**Webhook URL Description**:
+- ✅ Correct format: `https://yourdomain.com/api/webhooks/polar`
+- ✅ Development environment: `https://abc123.ngrok.io/api/webhooks/polar`
+- ❌ Wrong format: `https://yourdomain.com` (missing path)
+- ❌ Wrong format: `https://yourdomain.com/webhooks/polar` (incorrect path)
 
 After creating Webhook, Polar will provide a Secret:
-- **Format**: `polar_wh_xxxxxxxxxx`
+- **Format**: 32-character hexadecimal string (e.g., `a1b2c3d4e5f6789012345678901234ab`)
 - **Purpose**: Verify authenticity of Webhook requests
 
-## ⚙️ Step 6: Environment Variables Configuration
+**Development Environment Testing Instructions**:
 
-### 6.1 Update .env.local
+Since Webhooks require public URLs, in development environment we use ngrok to expose local localhost to the internet for testing:
+
+```bash
+# 1. Install ngrok (if not already installed)
+npm install -g ngrok
+
+# 2. Start your development server
+npm run dev  # Usually on port 3000
+
+# 3. Start ngrok tunnel in another terminal window
+ngrok http 3000
+
+# 4. ngrok will provide a public URL, similar to:
+# Forwarding    https://abc123.ngrok.io -> http://localhost:3000
+
+# 5. Set the ngrok provided URL to Polar Webhook (Important: add /api/webhooks/polar)
+# Example: https://abc123.ngrok.io/api/webhooks/polar
+```
+
+**Important Reminders**:
+- ngrok will expose your localhost:3000 to the public internet
+- Each restart of ngrok generates a new URL, requiring Polar Webhook settings update
+- This is only for development testing, use real domain names for production environment
+
+### Step 6: Environment Variables Configuration
 
 Add the following environment variables to your `.env.local` file:
 
 ```env
 # Polar Configuration
-POLAR_ACCESS_TOKEN=polar_pat_sandbox_xxxxxxxxxx
-POLAR_WEBHOOK_SECRET=polar_wh_xxxxxxxxxx
-POLAR_ORGANIZATION_ID=org_xxxxxxxxxx
+POLAR_ACCESS_TOKEN=polar_oat_xxxxxxxxxx
+POLAR_WEBHOOK_SECRET=a1b2c3d4e5f6789012345678901234ab
+POLAR_ORGANIZATION_ID=12345678-abcd-1234-5678-123456789abc
 NEXT_PUBLIC_POLAR_ENVIRONMENT=sandbox
 
-# Polar Product IDs
-POLAR_PRO_PRODUCT_ID=prod_xxxxxxxxxx
-POLAR_ENTERPRISE_PRODUCT_ID=prod_xxxxxxxxxx
+# Polar Product IDs  
+NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID=prod_xxxxxxxxxx
 ```
 
-### 6.2 Environment Variables Description
+**Environment Variables Description**:
 
 | Variable Name | Description | Example Value |
 |---------------|-------------|---------------|
-| `POLAR_ACCESS_TOKEN` | Polar API access token | `polar_pat_sandbox_xxx` |
-| `POLAR_WEBHOOK_SECRET` | Webhook signature verification key | `polar_wh_xxx` |
-| `POLAR_ORGANIZATION_ID` | Organization ID | `org_xxx` |
+| `POLAR_ACCESS_TOKEN` | Polar API access token | `polar_oat_xxx` |
+| `POLAR_WEBHOOK_SECRET` | Webhook signature verification key | `a1b2c3d4e5f6789012345678901234ab` |
+| `POLAR_ORGANIZATION_ID` | Organization ID | `12345678-abcd-1234-5678-123456789abc` |
 | `NEXT_PUBLIC_POLAR_ENVIRONMENT` | Environment setting | `sandbox` or `production` |
-| `POLAR_PRO_PRODUCT_ID` | Pro plan product ID | `prod_xxx` |
-| `POLAR_ENTERPRISE_PRODUCT_ID` | Enterprise plan product ID | `prod_xxx` |
+| `NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID` | Pro plan product ID | `prod_xxx` |
 
-## 🗄️ Step 7: Database Migration
-
-### 7.1 Execute SQL Migration
-
-Execute the following script in Supabase Dashboard SQL Editor:
-
-```sql
--- Add Polar related fields
-ALTER TABLE user_profiles 
-ADD COLUMN IF NOT EXISTS polar_customer_id VARCHAR(255),
-ADD COLUMN IF NOT EXISTS polar_subscription_id VARCHAR(255),
-ADD COLUMN IF NOT EXISTS polar_product_id VARCHAR(255),
-ADD COLUMN IF NOT EXISTS last_payment_date TIMESTAMP WITH TIME ZONE,
-ADD COLUMN IF NOT EXISTS next_billing_date TIMESTAMP WITH TIME ZONE;
-
--- Create indexes
-CREATE INDEX IF NOT EXISTS idx_user_profiles_polar_customer_id 
-ON user_profiles(polar_customer_id);
-```
-
-### 7.2 Verify Migration
-
-Execute the following query to confirm fields were successfully added:
-
-```sql
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'user_profiles' 
-AND column_name LIKE 'polar_%';
-```
-
-## 🧪 Step 8: Test Configuration
-
-### 8.1 Test API Connection
+### Step 7: Test Configuration
 
 ```bash
 # Test API connection
@@ -224,7 +187,7 @@ curl -H "Authorization: Bearer YOUR_POLAR_ACCESS_TOKEN" \
      https://sandbox-api.polar.sh/v1/organizations/YOUR_ORG_ID
 ```
 
-### 8.2 Test Product Retrieval
+**Test Product Retrieval**:
 
 ```bash
 # Test product list
@@ -232,86 +195,200 @@ curl -H "Authorization: Bearer YOUR_POLAR_ACCESS_TOKEN" \
      https://sandbox-api.polar.sh/v1/products?organization_id=YOUR_ORG_ID
 ```
 
-### 8.3 Test Webhook
+**Test Webhook (using ngrok)**:
 
-Use ngrok or similar tool to test local Webhook:
+Since Webhooks require public URLs, in development environment we use ngrok to expose local localhost to the internet for testing:
 
 ```bash
-# Install ngrok
+# 1. Install ngrok (if not already installed)
 npm install -g ngrok
 
-# Start tunnel
+# 2. Start your development server
+npm run dev  # Usually on port 3000
+
+# 3. Start ngrok tunnel in another terminal window
 ngrok http 3000
 
-# Update Polar Webhook URL to ngrok provided URL
+# 4. ngrok will provide a public URL, similar to:
+# Forwarding    https://abc123.ngrok.io -> http://localhost:3000
+
+# 5. Set the ngrok provided URL to Polar Webhook (Important: add /api/webhooks/polar)
 # Example: https://abc123.ngrok.io/api/webhooks/polar
 ```
 
-## 🔒 Security Considerations
+**Important Notes**:
+- ngrok will expose your localhost:3000 to the public internet
+- Each restart of ngrok generates a new URL, requiring Polar Webhook settings update
+- This is only for development testing, use real domain names for production environment
 
-### 9.1 API Key Security
+## 🎁 Recommended Configuration
 
-- ✅ Use environment variables to store sensitive information
-- ✅ Don't commit API keys to version control
-- ✅ Regularly rotate API keys
-- ✅ Use principle of least privilege
+### Basic Configuration (Suitable for most applications)
 
-### 9.2 Webhook Security
+```
+Environment Settings:
+✅ Complete testing in Sandbox environment first
+✅ Confirm all features work properly
+✅ Then switch to Production environment
 
-- ✅ Verify Webhook signatures
-- ✅ Use HTTPS endpoints
-- ✅ Implement retry mechanisms
-- ✅ Log all Webhook events
+Product Settings:
+✅ Pro Plan - $5 USD/month
+✅ Clear feature descriptions
+✅ Appropriate usage limits
+```
 
-## 🚀 Step 9: Deployment Preparation
+### Advanced Configuration (Enterprise applications)
 
-### 9.1 Production Environment Switch
+```
+Security Considerations:
+✅ Secure API key storage
+✅ Webhook signature verification
+✅ Regular key rotation
+✅ Monitoring and logging
 
-When ready to go live, need to:
+Business Processes:
+✅ Complete testing procedures
+✅ Error handling mechanisms  
+✅ Customer support processes
+✅ Data backup plans
+```
+
+### Production Environment Deployment
+
+When ready to go live, need to complete the following steps:
 
 1. Repeat above steps in Polar Production environment
 2. Update environment variables:
    ```env
-   POLAR_ACCESS_TOKEN=polar_pat_xxxxxxxxxx  # Remove sandbox
+   POLAR_ACCESS_TOKEN=polar_oat_xxxxxxxxxx
    NEXT_PUBLIC_POLAR_ENVIRONMENT=production
    ```
 3. Update Webhook URL to official domain
 4. Test complete payment flow
 
-### 9.2 Go-Live Checklist
+## 🧪 Testing and Verification
 
-- [ ] Production API keys configured
-- [ ] Webhook URL points to production environment
-- [ ] Product prices and descriptions correct
-- [ ] Payment flow fully functional
-- [ ] Customer support process ready
+### Test Checklist
 
-## 📞 Support and Resources
+#### Account and Organization Testing
+- [ ] Successfully register Polar account
+- [ ] Create organization and obtain Organization ID
+- [ ] Product creation successful, obtain Product ID
+- [ ] API Token correctly generated and saved
 
-### Official Resources
+#### API Connection Testing
+- [ ] API test calls successfully return organization information
+- [ ] Product list API correctly returns product data
+- [ ] Environment variables correctly loaded and used
+- [ ] Sandbox and Production environments properly distinguished
 
-- **Polar Documentation**: https://docs.polar.sh
-- **API Reference**: https://docs.polar.sh/api
-- **SDK Documentation**: https://docs.polar.sh/sdk
+#### Webhook Integration Testing
+- [ ] Webhook URL configured correctly
+- [ ] Test events can be triggered and received properly
+- [ ] Webhook signature verification works normally
+- [ ] Local development environment ngrok testing successful
 
-### Community Support
+#### Database Integration Testing  
+- [ ] Supabase database migration executed successfully
+- [ ] Polar related fields correctly created and indexed
+- [ ] User data and Polar customer ID correctly associated
+- [ ] Subscription status update mechanism works normally
 
-- **Discord**: Polar official Discord community
-- **GitHub**: Polar SDK and example projects
+#### Security Testing
+- [ ] API keys securely stored, not exposed in frontend
+- [ ] Webhook Secret correctly configured and verified
+- [ ] Environment variables security check
+- [ ] Production environment configuration isolated from test environment
 
-## 🎉 Completion Confirmation
+### Testing Steps
 
-After completing all configuration, you should be able to:
+#### 1. Basic API Connection Testing
+```bash
+# Test organization information
+curl -H "Authorization: Bearer YOUR_POLAR_ACCESS_TOKEN" \
+     https://sandbox-api.polar.sh/v1/organizations/YOUR_ORG_ID
 
-- ✅ See organization and products in Polar Dashboard
-- ✅ API test calls succeed
-- ✅ Webhook correctly receives events
-- ✅ Environment variables correctly set
-- ✅ Database structure updated
+# Test product list
+curl -H "Authorization: Bearer YOUR_POLAR_ACCESS_TOKEN" \
+     https://sandbox-api.polar.sh/v1/products?organization_id=YOUR_ORG_ID
+```
+
+#### 2. Local Webhook Testing (using ngrok)
+```bash
+# 1. Ensure development server is running
+npm run dev
+
+# 2. Start ngrok in new terminal window
+ngrok http 3000
+
+# 3. Copy ngrok provided HTTPS URL
+# Example: https://abc123.ngrok.io
+
+# 4. Go to Polar Dashboard to update Webhook URL
+# Set to: https://abc123.ngrok.io/api/webhooks/polar
+```
+
+**ngrok Usage Instructions**:
+- ngrok maps local localhost:3000 to public HTTPS URL
+- This allows Polar to send Webhook events to your local development environment
+- Suitable for testing Webhook functionality during development phase
+
+#### 3. Integration Flow Testing
+- Create test user in application
+- Simulate subscription flow
+- Check customer and subscription data in Polar Dashboard
+- Verify Webhook events are processed correctly
+
+**Important: Subscription Status Check**
+If subscription succeeds but Dashboard still shows free version, this usually indicates:
+- ✅ Polar payment processing successful
+- ❌ Webhook events not processed correctly
+- 🔧 Need to check Webhook configuration and processing logic
+
+**Troubleshooting Steps**:
+1. Check if subscription record exists in Polar Dashboard
+2. Confirm Webhook URL is correctly configured: must include `/api/webhooks/polar` path
+3. Test if Webhook URL is accessible (especially important when using ngrok)
+4. Check application logs for Webhook event reception records
+5. Verify Webhook Secret is correctly configured
+
+#### 4. Credit Card Payment Testing
+In Sandbox environment, you can use test credit cards for payment testing:
+
+**Test Card Information** (Source: [Stripe Test Cards Documentation](https://docs.stripe.com/testing)):
+
+| Card Brand | Card Number | CVC | Expiry Date | Description |
+|------------|-------------|-----|-------------|-------------|
+| **Visa** | `4242424242424242` | Any 3 digits | Any future date | Successful payment test card |
+| **Visa** | `4000000000000002` | Any 3 digits | Any future date | Declined payment test card |
+
+**Usage Example**:
+```
+Test credit card number: Visa    4242424242424242    Any 3 digits    Any future date
+Expiry date: 12/34
+CVC: 123
+Postal code: 10001 (or any valid postal code)
+```
+
+**Notes**:
+- Only use test cards in Sandbox environment
+- Test cards will not generate actual charges
+- Can test various payment scenarios (success, failure, requires verification, etc.)
+
+## 📚 Related Resources
+
+- [Polar Official Documentation](https://docs.polar.sh)
+- [Polar API Reference](https://docs.polar.sh/api)  
+- [Polar SDK Documentation](https://docs.polar.sh/sdk)
+- [Polar Discord Community](https://discord.gg/polar)
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: 2025-07-22  
+**Document Version**: 2.0  
+**Last Updated**: 2025-07-23  
 **Maintainer**: Development Team  
-**Status**: ✅ Setup Complete
+**Update Content**:
+- Reorganized document structure, unified style
+- Added complete testing and verification section  
+- Optimized step descriptions and formatting
+- Added recommended configuration guide

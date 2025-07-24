@@ -172,20 +172,46 @@ NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID=your_polar_pro_product_id
 
 ### 4. Service Configuration
 
-#### Supabase Database Setup
-1. Create a new project at [Supabase](https://supabase.com/)
-2. Execute SQL scripts from `documents/Supabase配置與使用說明.md`
-3. Configure Row Level Security (RLS) policies
+Before you can start using the application, you need to configure three core services in the following order: Clerk (authentication), Supabase (database), and Polar (payments). We recommend following this sequence as later services depend on the previous configurations.
 
 #### Clerk Authentication Setup
-1. Create a new application at [Clerk](https://clerk.com/)
-2. Configure sign-in/sign-up page paths
-3. Set up webhook endpoint: `/api/webhooks/clerk`
+Create authentication application, configure sign-in pages, and set up webhook integration.
+
+**Key Steps:**
+1. Create new application in Clerk Dashboard
+2. Configure authentication strategies (Email + Password / Social login)
+3. Set sign-in/sign-up page routes
+4. Configure webhook endpoint `/api/webhooks/clerk`
+5. Obtain API keys and set environment variables
+6. Test user registration and login flow
+
+📖 For detailed steps, see: [Clerk Authentication Configuration Guide](./documents/Clerk-Authentication-Configuration-Guide.md)
+
+#### Supabase Database Setup
+Set up PostgreSQL database, create user data table structure, and configure security policies.
+
+**Key Steps:**
+1. Create new project on Supabase
+2. Execute SQL scripts to create `user_profiles` table
+3. Configure Row Level Security (RLS) policies
+4. Obtain API keys and set environment variables
+5. Test database connection and permissions
+6. Integrate Clerk webhooks to automatically create user profiles
+
+📖 For detailed steps, see: [Supabase Configuration Guide](./documents/Supabase-Configuration-Guide.md)
 
 #### Polar Payment Setup
-1. Create an account at [Polar](https://polar.sh/)
-2. Create a Pro product ($5/month)
-3. Configure webhook endpoint: `/api/webhooks/polar`
+Create payment account, set up subscription products, and configure webhook event handling.
+
+**Key Steps:**
+1. Register Polar account and choose environment (Sandbox/Production)
+2. Create organization and Pro product ($5/month)
+3. Configure webhook endpoint `/api/webhooks/polar`
+4. Obtain Access Token and Webhook Secret
+5. Set environment variables and test payment flow
+6. Verify webhook events sync with Supabase data
+
+📖 For detailed steps, see: [Polar Configuration Guide](./documents/Polar-Configuration-Guide.md)
 
 ### 5. Start Development Server
 ```bash

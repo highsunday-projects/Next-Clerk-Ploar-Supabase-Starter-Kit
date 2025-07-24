@@ -1,5 +1,5 @@
 ---
-uuid: b02-polar-immediate-cancellation-fix
+uuid: 5fa11f82518941aba9a76bca26380c82
 ---
 
 # B02 - Polar 立即取消訂閱狀態錯誤修正

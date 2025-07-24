@@ -36,6 +36,7 @@ export default function SubscriptionPage() {
   const router = useRouter();
   const [upgrading, setUpgrading] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false); // 追蹤正在升級的方案
+  const [isProcessing, setIsProcessing] = useState(false); // 追蹤處理狀態
 
   // 重定向未登入用戶
   useEffect(() => {
@@ -268,6 +269,43 @@ export default function SubscriptionPage() {
       alert(error instanceof Error ? error.message : '恢復訂閱失敗，請稍後再試');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  // 處理客戶入口
+  const handleCustomerPortal = async () => {
+    if (!user?.id || !profile) return;
+
+    try {
+      setIsProcessing(true);
+
+      const response = await fetch('/api/polar/customer-portal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '無法開啟客戶入口');
+      }
+
+      if (data.portalUrl) {
+        window.open(data.portalUrl, '_blank');
+      } else {
+        throw new Error('未收到客戶入口URL');
+      }
+
+    } catch (error) {
+      console.error('Error opening customer portal:', error);
+      alert(error instanceof Error ? error.message : '無法開啟客戶入口，請稍後再試');
+    } finally {
+      setIsProcessing(false);
     }
   };
 

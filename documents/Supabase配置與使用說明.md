@@ -1,73 +1,62 @@
 ---
-uuid: bab7e9e4edc1457e8ba335edcfb99ca7
+uuid: 86693f9b721f45a5901240929ad6567a
 ---
 # Supabase 配置與使用說明
 
-## 📋 文件概述
+## 📋 什麼是 Supabase？
 
-本文件詳細說明如何在 Next-Clerk-Polar-Supabase Starter Kit 中配置和使用 Supabase 資料庫，包含完整的設定步驟、資料庫結構設計和最佳實踐。
+Supabase 是一個開源的 Firebase 替代方案，為開發者提供完整的後端即服務 (Backend-as-a-Service) 解決方案。它基於 PostgreSQL 資料庫，並提供即時訂閱、身份驗證、即時 API、檔案儲存等功能。
 
-### 文件資訊
-- **建立日期**: 2025-07-17
-- **版本**: 1.0
-- **適用範圍**: Next.js 15.4.1 + Supabase
-- **維護者**: 開發團隊
+### 🎯 主要優勢
 
-## 🎯 整合目標
+- **🗄️ 強大的資料庫**：基於 PostgreSQL，功能完整且穩定
+- **🔐 內建安全機制**：Row Level Security (RLS) 提供精細的權限控制
+- **⚡ 即時功能**：WebSocket 即時資料同步和低延遲更新
+- **🚀 開發體驗**：自動生成 RESTful API、型別安全的 TypeScript 支援
+- **💰 成本效益**：慷慨的免費額度、透明計價模式
+- **🔧 開發者友善**：豐富的客戶端 SDK 和詳細文檔
 
-- ✅ 建立 Supabase 專案和資料庫連接
-- ✅ 設計用戶訂閱資料表結構
-- ✅ 實現用戶訂閱資料的 CRUD 操作
-- ✅ 整合 Clerk 認證系統與 Supabase
-- ✅ 提供安全的資料存取控制
+### 🏗️ 適用場景
 
-## 🛠️ 技術架構
-
-### 核心組件
-- **@supabase/supabase-js**: Supabase 的 JavaScript 客戶端 SDK
-- **PostgreSQL**: 強大的關聯式資料庫
-- **Row Level Security (RLS)**: 資料安全控制
-- **Real-time**: 即時資料同步功能
-
-### 檔案結構
-```
-src/
-├── lib/
-│   ├── supabase.ts                    # Supabase 客戶端配置
-│   └── userProfileService.ts          # 用戶訂閱資料服務
-├── types/
-│   └── supabase.ts                    # TypeScript 類型定義
-├── hooks/
-│   └── useUserProfile.ts              # 用戶訂閱資料 Hook
-├── app/api/
-│   ├── user/subscription/route.ts     # 訂閱資料 API 路由
-│   └── webhooks/clerk/route.ts        # Clerk Webhook 處理
-└── .env.local                         # 環境變數配置
-```
+- **SaaS 應用程式**：提供完整的用戶資料管理和訂閱功能
+- **即時應用**：聊天室、協作工具、即時儀表板
+- **電商平台**：商品管理、訂單處理、用戶資料
+- **內容管理系統**：文章、媒體檔案的儲存和管理
 
 ## 🚀 快速開始
 
-### 1. 建立 Supabase 專案
+### 步驟 1: 建立 Supabase 專案
 
 1. 前往 [Supabase Dashboard](https://app.supabase.com/)
-2. 點擊 "New Project" 建立新專案
-3. 選擇組織和設定專案名稱
-4. 選擇資料庫區域（建議選擇離用戶最近的區域）
-5. 設定資料庫密碼（請妥善保存）
-6. 等待專案建立完成
+2. 點擊 **"New Project"** 建立新專案
+3. 填寫專案資訊：
+   - **Organization**: 選擇或建立組織
+   - **Name**: 輸入專案名稱
+   - **Database Password**: 設定資料庫密碼（請妥善保存）
+   - **Region**: 選擇離用戶最近的區域（建議選擇亞太地區）
+4. 點擊 **"Create new project"** 完成建立
+5. 等待專案初始化完成（約 2-3 分鐘）
 
-### 2. 獲取 API 金鑰
+### 步驟 2: 獲取 API 金鑰和 Project URL
 
-在專案 Dashboard 中：
-1. 前往 **Settings** → **API**
-2. 複製以下金鑰：
-   - **Project URL**: 專案的 API 端點
+#### 2.1 獲取 Project URL
+1. 在專案 Dashboard 中，前往 **Settings** → **Data API**
+2. 在 **Project URL** 區域，複製完整的 URL：
+   - 格式：`https://your-project-id.supabase.co`
+
+#### 2.2 獲取 API Keys
+1. 在專案 Dashboard 中，前往 **Settings** → **API Keys**
+2. 複製以下兩個金鑰：
    - **anon public**: 匿名公開金鑰（前端使用）
    - **service_role**: 服務角色金鑰（後端使用，具有完整權限）
 
-### 3. 環境變數設定
+**重要安全提醒**：
+- `anon public` 金鑰可以在前端使用，受 RLS 權限控制
+- `service_role` 金鑰具有完整資料庫權限，**絕對不可暴露在前端代碼中**
 
-在 `.env.local` 檔案中設定：
+### 步驟 3: 環境變數設定
+
+在您的 `.env.local` 檔案中添加：
 
 ```env
 # Supabase 配置
@@ -76,235 +65,316 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your_service_role_key_here
 ```
 
-### 4. 建立資料庫表格
+### 步驟 4: 建立資料庫表格
 
-在 Supabase SQL Editor 中執行以下 SQL：
+1. 在 Supabase Dashboard 中，前往 **SQL Editor**
+2. 點擊 **"New Query"**
+3. 複製並執行以下完整的 SQL 腳本：
 
 ```sql
--- 建立用戶訂閱資料表
-CREATE TABLE user_profiles (
+-- =====================================================
+-- Next-Clerk-Polar-Supabase Non-Destructive Database Setup Script
+-- =====================================================
+-- Created: 2025-07-21
+-- Version: 5.1 (Non-destructive version)
+
+-- =====================================================
+-- 1. Safety Check & Notice
+-- =====================================================
+
+-- This script is designed to be non-destructive and will not delete existing data
+-- If you need to completely rebuild, please manually execute DROP TABLE commands
+
+-- =====================================================
+-- 2. Create Main Table (If Not Exists)
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS user_profiles (
+  -- Basic identification fields
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
-  subscription_plan VARCHAR(20) DEFAULT 'free',
-  subscription_status VARCHAR(20) DEFAULT 'active',
-
-  -- Polar 付費系統整合欄位
-  polar_customer_id VARCHAR(255),           -- Polar 客戶 ID
-  polar_subscription_id VARCHAR(255),       -- Polar 訂閱 ID
-  current_period_end TIMESTAMP WITH TIME ZONE, -- 當前計費週期結束時間
-  cancel_at_period_end BOOLEAN DEFAULT FALSE,   -- 是否在週期結束時取消訂閱
-
+  
+  -- Simplified subscription status fields
+  subscription_status VARCHAR(20) DEFAULT 'inactive' NOT NULL,
+  subscription_plan VARCHAR(20) DEFAULT NULL,
+  current_period_end TIMESTAMP WITH TIME ZONE,
+  cancel_at_period_end BOOLEAN DEFAULT FALSE,
+  
+  -- Other business fields
   monthly_usage_limit INTEGER DEFAULT 1000,
   trial_ends_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Polar payment system integration fields
+  polar_customer_id VARCHAR(255),
+  polar_subscription_id VARCHAR(255),
+  
+  -- System tracking fields
   last_active_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 建立訂閱方案檢查約束
-ALTER TABLE user_profiles
-ADD CONSTRAINT valid_subscription_plan
-CHECK (subscription_plan IN ('free', 'pro', 'enterprise'));
+-- =====================================================
+-- 3. Safely Add Constraints (If Not Exists)
+-- =====================================================
 
-ALTER TABLE user_profiles
-ADD CONSTRAINT valid_subscription_status
-CHECK (subscription_status IN ('active', 'trial', 'cancelled', 'expired'));
+-- Check and add subscription status constraint
+DO $
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'valid_subscription_status' 
+        AND table_name = 'user_profiles'
+    ) THEN
+        ALTER TABLE user_profiles 
+        ADD CONSTRAINT valid_subscription_status 
+        CHECK (subscription_status IN ('active_recurring', 'active_ending', 'inactive'));
+    END IF;
+END $;
 
--- 檢查約束條件
-SELECT conname, pg_get_constraintdef(oid)
-FROM pg_constraint
-WHERE conrelid = 'user_profiles'::regclass;
+-- Check and add subscription plan constraint
+DO $
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'valid_subscription_plan' 
+        AND table_name = 'user_profiles'
+    ) THEN
+        ALTER TABLE user_profiles 
+        ADD CONSTRAINT valid_subscription_plan 
+        CHECK (subscription_plan IS NULL OR subscription_plan = 'pro');
+    END IF;
+END $;
 
--- 檢查索引
-SELECT indexname, indexdef
-FROM pg_indexes
-WHERE tablename = 'user_profiles';
+-- Check and add monthly usage limit constraint
+DO $
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'positive_monthly_usage_limit' 
+        AND table_name = 'user_profiles'
+    ) THEN
+        ALTER TABLE user_profiles 
+        ADD CONSTRAINT positive_monthly_usage_limit 
+        CHECK (monthly_usage_limit > 0);
+    END IF;
+END $;
 
--- 啟用 Row Level Security
+-- Check and add business logic constraint
+DO $
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'active_status_requires_plan' 
+        AND table_name = 'user_profiles'
+    ) THEN
+        ALTER TABLE user_profiles 
+        ADD CONSTRAINT active_status_requires_plan 
+        CHECK (
+          (subscription_status = 'inactive' AND subscription_plan IS NULL) OR
+          (subscription_status IN ('active_recurring', 'active_ending') AND subscription_plan IS NOT NULL)
+        );
+    END IF;
+END $;
+
+-- =====================================================
+-- 4. Safely Create Indexes (If Not Exists)
+-- =====================================================
+
+-- Basic indexes
+CREATE INDEX IF NOT EXISTS idx_user_profiles_clerk_user_id ON user_profiles (clerk_user_id);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_subscription_status ON user_profiles (subscription_status);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_subscription_plan ON user_profiles (subscription_plan);
+CREATE INDEX IF NOT EXISTS idx_subscription_status_plan ON user_profiles (subscription_status, subscription_plan);
+
+-- Unique indexes (need special handling)
+DO $
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_polar_customer_id'
+    ) THEN
+        CREATE UNIQUE INDEX idx_polar_customer_id 
+        ON user_profiles (polar_customer_id) 
+        WHERE polar_customer_id IS NOT NULL;
+    END IF;
+END $;
+
+DO $
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_polar_subscription_id'
+    ) THEN
+        CREATE UNIQUE INDEX idx_polar_subscription_id 
+        ON user_profiles (polar_subscription_id) 
+        WHERE polar_subscription_id IS NOT NULL;
+    END IF;
+END $;
+
+-- =====================================================
+-- 5. Safely Enable Row Level Security
+-- =====================================================
+
+-- Enable RLS (if not already enabled)
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
--- 建立安全政策（暫時允許所有操作，後續可配合 Clerk Auth 細化）
+-- =====================================================
+-- 6. Safely Create or Replace Policies
+-- =====================================================
+
+-- Drop existing policies and recreate them (ensure latest version)
+DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
 CREATE POLICY "Users can view own profile" ON user_profiles
-  FOR SELECT USING (true);
+  FOR SELECT 
+  USING (auth.uid()::text = clerk_user_id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
 CREATE POLICY "Users can update own profile" ON user_profiles
-  FOR UPDATE USING (true);
+  FOR UPDATE 
+  USING (auth.uid()::text = clerk_user_id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
 CREATE POLICY "Users can insert own profile" ON user_profiles
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT 
+  WITH CHECK (auth.uid()::text = clerk_user_id);
+
+DROP POLICY IF EXISTS "Service role can insert profile" ON user_profiles;
+CREATE POLICY "Service role can insert profile" ON user_profiles
+  FOR INSERT
+  TO public
+  WITH CHECK (current_setting('role') = 'service_role');
+
+DROP POLICY IF EXISTS "Service role full access" ON user_profiles;
+CREATE POLICY "Service role full access" ON user_profiles
+  FOR ALL 
+  USING (current_setting('role') = 'service_role');
+
+-- =====================================================
+-- 7. Safely Create Trigger Function and Triggers
+-- =====================================================
+
+-- Create or replace trigger function
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$ LANGUAGE plpgsql;
+
+-- Safely create trigger
+DROP TRIGGER IF EXISTS update_user_profiles_updated_at ON user_profiles;
+CREATE TRIGGER update_user_profiles_updated_at 
+    BEFORE UPDATE ON user_profiles 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- =====================================================
+-- 8. Set Permissions
+-- =====================================================
+
+-- Grant permissions (will not override existing permissions)
+GRANT SELECT, INSERT, UPDATE ON user_profiles TO authenticated;
+GRANT ALL ON user_profiles TO service_role;
+
+-- =====================================================
+-- 9. Completion Notice
+-- =====================================================
+
+DO $
+BEGIN
+    RAISE NOTICE 'Non-destructive database script completed successfully!';
+    RAISE NOTICE '- Table created or confirmed to exist';
+    RAISE NOTICE '- Constraints safely added';
+    RAISE NOTICE '- Indexes created';
+    RAISE NOTICE '- RLS policies updated';
+    RAISE NOTICE '- Triggers configured';
+    RAISE NOTICE '- Permissions granted';
+END $;
 ```
 
-### 5. 安裝依賴
+4. 點擊 **"Run"** 執行 SQL
+5. 執行成功後，前往 **Table Editor** 查看建立的資料表
+
+**執行驗證**：
+- SQL 執行完成後，會在下方看到執行結果和成功訊息
+- 前往左側選單的 **Table Editor**，應該會看到新建立的 `user_profiles` 資料表
+- 點擊資料表名稱可以查看表格結構、欄位定義和約束條件
+- 在 **Policies** 標籤中可以確認 Row Level Security 政策已正確建立
+
+**重要說明**：
+- 包含完整的約束條件、索引和安全設定
+- 使用簡化的訂閱邏輯：`inactive`, `active_recurring`, `active_ending`
+- 執行前請確保已備份重要資料
+- 如有疑問請先在測試環境中執行
+
+### 步驟 5: 安裝依賴套件
 
 ```bash
-npm install @supabase/supabase-js svix
+npm install @supabase/supabase-js
 ```
 
-## 📖 詳細配置指南
+### 步驟 6: 配置客戶端
 
-### Supabase 客戶端配置
+**專案已預先配置好 Supabase 客戶端**，位於 `src/lib/supabase.ts`，包含：
 
-`src/lib/supabase.ts` 提供了兩種客戶端實例：
+- **前端客戶端**：使用 anon key，受 RLS 權限控制
+- **後端管理員客戶端**：使用 service role key，具完整資料庫權限
 
-```typescript
-// 客戶端實例（前端使用）
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
-// 管理員實例（後端使用）
-export const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceRoleKey);
-```
+## 🧪 測試驗證
 
-### 用戶訂閱資料服務
+### 測試清單
 
-`src/lib/userProfileService.ts` 提供完整的 CRUD 操作：
+#### 資料庫連接測試
+- [ ] 成功連接到 Supabase 專案
+- [ ] 前端客戶端正常運作
+- [ ] 後端管理員客戶端正常運作
+- [ ] 環境變數正確載入
 
-- `getUserProfile(clerkUserId)`: 獲取用戶訂閱資料
-- `createUserProfile(data)`: 建立新的訂閱記錄
-- `updateUserProfile(clerkUserId, data)`: 更新訂閱資料
-- `updateLastActiveDate(clerkUserId)`: 更新最後活躍時間
-- `getOrCreateUserProfile(clerkUserId)`: 獲取或建立訂閱記錄
+#### 資料表操作測試
+- [ ] 可以成功建立用戶資料
+- [ ] 可以讀取用戶訂閱資料
+- [ ] 可以更新訂閱方案和狀態
+- [ ] 約束條件正確運作
 
-### API 路由
+#### 整合測試
+- [ ] 新用戶註冊時自動建立訂閱記錄
+- [ ] Dashboard 正確顯示用戶資料
+- [ ] Polar 付費系統欄位正確更新
+- [ ] 錯誤處理適當運作
 
-`src/app/api/user/subscription/route.ts` 提供 RESTful API：
-
-- `GET /api/user/subscription`: 獲取當前用戶訂閱資料
-- `POST /api/user/subscription`: 建立新的訂閱記錄
-- `PATCH /api/user/subscription`: 更新訂閱資料
-
-### Clerk Webhook 整合
-
-`src/app/api/webhooks/clerk/route.ts` 處理用戶事件：
-
-- `user.created`: 自動建立免費方案訂閱記錄
-- `user.updated`: 更新最後活躍時間
-- `user.deleted`: 記錄用戶刪除事件
-
-## 🔐 安全性配置
-
-### Row Level Security (RLS)
-
-目前使用基本的 RLS 政策，允許所有操作。未來可以配合 Clerk JWT 實現更細緻的權限控制：
-
-```sql
--- 進階安全政策範例（未來實作）
-CREATE POLICY "Users can only access own data" ON user_profiles
-  FOR ALL USING (auth.jwt() ->> 'sub' = clerk_user_id);
-```
-
-### 環境變數安全
-
-- ✅ 使用 `.env.local` 存放敏感資訊
-- ✅ 不要將 `.env.local` 提交到版本控制
-- ✅ 生產環境使用不同的金鑰
-- ✅ 定期輪換 API 金鑰
-
-## 🧪 測試指南
-
-### 功能測試清單
-
-- [ ] **資料庫連接**: 成功連接到 Supabase
-- [ ] **用戶註冊**: 新用戶註冊時自動建立訂閱記錄
-- [ ] **資料讀取**: 可以正確讀取用戶訂閱資料
-- [ ] **資料更新**: 可以更新訂閱方案和狀態
-- [ ] **Webhook 處理**: Clerk 事件正確觸發資料庫操作
-- [ ] **錯誤處理**: 適當處理資料庫錯誤和連接問題
+#### 安全性測試
+- [ ] RLS 政策正確限制資料存取
+- [ ] 無法直接存取其他用戶資料
+- [ ] API 金鑰安全性確認
+- [ ] 前端不暴露敏感資訊
 
 ### 測試步驟
 
-1. **連接測試**
-   ```bash
-   # 在瀏覽器控制台測試
-   fetch('/api/user/subscription')
-     .then(res => res.json())
-     .then(console.log);
-   ```
+#### 1. 基本連接測試
+```bash
+# 在瀏覽器控制台執行
+fetch('/api/user/subscription')
+  .then(res => res.json())
+  .then(console.log);
+```
 
-2. **註冊流程測試**
-   - 註冊新用戶
-   - 檢查 Supabase 中是否自動建立訂閱記錄
-   - 確認預設為免費方案
+#### 2. 用戶註冊流程測試
+- 註冊新用戶帳戶
+- 檢查 Supabase 中是否自動建立 `user_profiles` 記錄
+- 確認預設值（免費方案、active 狀態）正確
 
-3. **Dashboard 顯示測試**
-   - 登入用戶
-   - 檢查 Dashboard 是否顯示真實訂閱資料
-   - 確認資料格式正確
+#### 3. Dashboard 資料顯示測試
+- 登入並訪問用戶儀表板
+- 確認顯示真實的訂閱資料
+- 測試資料更新功能
 
-## 🔧 故障排除
 
-### 常見問題
-
-**Q: 無法連接到 Supabase**
-A: 檢查以下項目：
-- 環境變數是否正確設定
-- Supabase 專案是否正常運行
-- 網路連接是否正常
-- API 金鑰是否有效
-
-**Q: 資料庫操作失敗**
-A: 檢查：
-- SQL 表格是否正確建立
-- RLS 政策是否正確設定
-- 資料格式是否符合約束條件
-
-**Q: Webhook 不觸發**
-A: 確認：
-- Clerk Webhook 設定是否正確
-- Webhook URL 是否可訪問
-- Webhook 密鑰是否正確
-
-**Q: 權限錯誤**
-A: 檢查：
-- 是否使用正確的客戶端實例
-- RLS 政策是否允許操作
-- 用戶身份驗證是否正確
-
-## 📈 效能優化
-
-### 查詢優化
-- 使用適當的索引
-- 限制查詢結果數量
-- 使用 select 指定需要的欄位
-
-### 連接管理
-- 重用客戶端實例
-- 適當處理連接錯誤
-- 使用連接池（生產環境）
-
-### 快取策略
-- 實現適當的資料快取
-- 使用 React Query 或 SWR
-- 避免不必要的重複查詢
-
-## 🔮 未來擴展
-
-### 進階功能
-- 實時資料同步
-- 進階權限控制
-- 資料分析和報告
-- 自動備份和恢復
-
-### 整合準備
-- **Polar**: ✅ 付費訂閱狀態同步（已整合）
-- **分析**: 使用統計追蹤
-- **通知**: 訂閱狀態變更通知
-
-### Polar 付費系統整合
-- **polar_customer_id**: 儲存 Polar 客戶識別碼
-- **polar_subscription_id**: 儲存 Polar 訂閱識別碼
-- **current_period_end**: 追蹤計費週期結束時間
-- **cancel_at_period_end**: 管理訂閱取消狀態
-
-## 📚 參考資源
+## 📚 相關資源
 
 - [Supabase 官方文檔](https://supabase.com/docs)
 - [PostgreSQL 文檔](https://www.postgresql.org/docs/)
 - [Row Level Security 指南](https://supabase.com/docs/guides/auth/row-level-security)
 - [Supabase JavaScript 客戶端](https://supabase.com/docs/reference/javascript)
-
----
-
-**文檔版本**: 1.1
-**最後更新**: 2025-07-19
-**維護者**: 開發團隊
-**更新內容**: 整合 Polar 付費系統欄位

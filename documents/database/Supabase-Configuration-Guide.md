@@ -1,5 +1,5 @@
 ---
-uuid: bab7e9e4edc1457e8ba335edcfb99ca7
+uuid: 67788ca7519847f987aeca941f96dcd0
 ---
 # Supabase Configuration and Usage Guide
 

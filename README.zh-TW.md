@@ -1,5 +1,5 @@
 ---
-uuid: 9bec16718b8848d295633ecd0e52a112
+uuid: 60110caad6d5470699fd1a9d7ba285e6
 ---
 # Next-Clerk-Polar-Supabase Starter Kit
 
@@ -172,20 +172,46 @@ NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID=your_polar_pro_product_id
 
 ### 4. 設定服務
 
-#### Supabase 資料庫設定
-1. 在 [Supabase](https://supabase.com/) 建立新專案
-2. 執行 `documents/Supabase配置與使用說明.md` 中的 SQL 腳本
-3. 設定 Row Level Security (RLS) 政策
+在開始使用之前，您需要依序設定三個核心服務：Clerk（認證）、Supabase（資料庫）和 Polar（付費）。建議按此順序進行配置，因為後續服務依賴前面的設定。
 
 #### Clerk 認證設定
-1. 在 [Clerk](https://clerk.com/) 建立新應用程式
-2. 設定登入/註冊頁面路徑
-3. 配置 Webhook 端點：`/api/webhooks/clerk`
+建立認證應用程式、配置登入頁面、設定 Webhook 整合。
+
+**主要步驟：**
+1. 在 Clerk Dashboard 建立新應用程式
+2. 配置認證策略（Email + Password / 社交登入）
+3. 設定登入/註冊頁面路徑
+4. 配置 Webhook 端點 `/api/webhooks/clerk`
+5. 獲取 API 金鑰並設定環境變數
+6. 測試用戶註冊和登入流程
+
+📖 詳細步驟請參考：[Clerk 認證策略配置指南](./documents/Clerk認證策略配置指南.md)
+
+#### Supabase 資料庫設定
+設定 PostgreSQL 資料庫、建立用戶資料表結構、配置安全政策。
+
+**主要步驟：**
+1. 在 Supabase 建立新專案
+2. 執行 SQL 腳本建立 `user_profiles` 資料表
+3. 設定 Row Level Security (RLS) 政策
+4. 獲取 API 金鑰並配置環境變數
+5. 測試資料庫連接和權限
+6. 整合 Clerk Webhook 以自動建立用戶資料
+
+📖 詳細步驟請參考：[Supabase 配置與使用說明](./documents/Supabase配置與使用說明.md)
 
 #### Polar 付費設定
-1. 在 [Polar](https://polar.sh/) 建立帳戶
-2. 建立專業版產品 ($5/月)
-3. 配置 Webhook 端點：`/api/webhooks/polar`
+建立付費帳戶、設定訂閱產品、配置 Webhook 事件處理。
+
+**主要步驟：**
+1. 註冊 Polar 帳戶並選擇環境（Sandbox/Production）
+2. 建立組織和專業版產品（$5/月）
+3. 配置 Webhook 端點 `/api/webhooks/polar`
+4. 獲取 Access Token 和 Webhook Secret
+5. 設定環境變數並測試付費流程
+6. 驗證 Webhook 事件與 Supabase 資料同步
+
+📖 詳細步驟請參考：[Polar 配置與準備說明](./documents/Polar配置與準備說明.md)
 
 ### 5. 啟動開發伺服器
 ```bash

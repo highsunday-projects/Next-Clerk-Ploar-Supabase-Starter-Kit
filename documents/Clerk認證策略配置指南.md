@@ -1,105 +1,142 @@
 ---
-uuid: 7934755f4e714ce2ab6addece8b7072e
+uuid: 775ca7334b98405b8738ed530689f6dc
 ---
 # Clerk 認證系統配置指南
 
-## 📋 問題描述
+## 📋 什麼是 Clerk？
 
-您可能遇到以下困惑的情況：
-- 註冊時系統要求設置密碼
-- 登入時卻沒有密碼輸入欄位
-- 只能看到 Google 登入按鈕
+Clerk 是一個現代化的用戶認證和身份管理平台，專為開發者設計，提供完整的認證解決方案。
 
-這是因為 Clerk 的認證策略配置不一致導致的。
+### 🎯 主要優勢
 
-## 🔍 問題原因
+- **🚀 快速整合**：幾分鐘內即可完成認證系統設置
+- **🛡️ 企業級安全**：內建多因素認證、會話管理和安全監控
+- **🎨 美觀介面**：提供現代化、可自訂的認證 UI 組件
+- **🔗 社交登入**：支援 Google、GitHub、Microsoft 等多種第三方登入
+- **📱 多平台支援**：Web、移動應用和後端 API 全方位支援
+- **⚡ 高效能**：全球 CDN 和快速響應時間
+- **🔧 開發者友善**：豐富的 SDK、詳細文檔和活躍社群
 
-Clerk 允許為 **註冊** 和 **登入** 分別配置不同的認證方式。如果配置不當，會出現：
+### 🏗️ 適用場景
 
-### 錯誤配置示例
-```
-註冊 (Sign-up):
-✅ Email + Password
-✅ Google
+- **SaaS 應用程式**：提供完整的用戶管理和訂閱功能
+- **企業應用**：支援組織管理、角色權限和 SSO 整合
+- **個人專案**：快速實現用戶註冊、登入和個人資料管理
+- **電商平台**：安全的用戶認證和購物車會話管理
 
-登入 (Sign-in):
-❌ Email + Password (未啟用)
-✅ Google (僅啟用)
-```
+## 🚀 快速開始
 
-這會導致用戶註冊時設置了密碼，但登入時找不到密碼欄位。
-
-## 🛠️ 解決步驟
-
-### 步驟 1: 進入 Clerk Dashboard
+### 步驟 1: 建立 Clerk 帳戶和應用
 
 1. 前往 [Clerk Dashboard](https://clerk.com)
-2. 選擇您的專案
-3. 點擊左側選單的 **User & Authentication**
+2. 註冊新帳戶或使用現有帳戶登入
+3. 點擊 **"Create application"** 建立新應用
+4. 填寫應用資訊：
+   - **Application name**: 您的應用名稱
+   - **Choose your preferred sign-in method**: 選擇認證方式
+5. 點擊 **"Create application"** 完成建立
 
-### 步驟 2: 配置 Email, Phone, Username
+**注意**：框架選擇頁面可以忽略，因為我們的專案已經預先配置好所需的 Clerk 整合。
 
-1. 點擊 **Email, Phone, Username**
-2. 確保以下設定：
+### 步驟 2: 配置認證策略
 
-#### Email Address 設定
-- **Required for sign-up**: ✅ 啟用
-- **Used for sign-in**: ✅ 啟用
+#### 2.1 基本認證設定
 
-#### Password 設定
-- **Required for sign-up**: ✅ 啟用
-- **Used for sign-in**: ✅ 啟用
+1. 在 Clerk Dashboard 中，點擊左側選單的 **"User & Authentication"**
+2. 在認證方式選擇中，根據需求勾選以下選項：
 
-### 步驟 3: 配置 Social Connections
+#### 推薦設定（直接勾選即可）：
+- ✅ **Email** - 基本電子郵件認證
+- ✅ **Google** - Google 社交登入
+- ✅ **GitHub** - GitHub 社交登入
+- ✅ **Username** - 用戶名選項
 
-1. 點擊 **Social Connections**
-2. 根據需求啟用社交登入選項：
+**注意**：只需要勾選您想要啟用的認證方式即可，系統會自動同時啟用註冊和登入功能。
 
-#### Google 設定（推薦）
-- **Enable for sign-up**: ✅ 啟用
-- **Enable for sign-in**: ✅ 啟用
+### 步驟 3: 獲取 API 金鑰
 
-#### GitHub 設定（可選）
-- **Enable for sign-up**: 可選
-- **Enable for sign-in**: 可選
+1. 在 Clerk Dashboard 中，先點擊 **"Configure"** 標籤頁
+2. 然後前往 **"Developers"** → **"API Keys"**
+3. 複製以下金鑰：
+   - **Publishable key**: 前端使用的公開金鑰
+   - **Secret key**: 後端使用的私密金鑰
 
-### 步驟 4: 驗證設定
+### 步驟 4: 環境變數設定
 
-完成設定後，您的認證策略應該如下：
+在您的 `.env.local` 檔案中添加：
 
+```env
+# Clerk 認證系統
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxxxx
+CLERK_SECRET_KEY=sk_test_xxxxxxxxxx
 ```
-註冊 (Sign-up):
-✅ Email + Password
-✅ Google
-✅ GitHub (可選)
 
-登入 (Sign-in):
-✅ Email + Password
-✅ Google
-✅ GitHub (可選)
+### 步驟 5: 配置 Webhook（可選，推薦）
+
+**說明**：Webhook 不是必需的，系統會在用戶首次訪問儀表板時自動建立 Supabase 用戶資料。但配置 Webhook 可以提供更好的用戶體驗和資料完整性。
+
+#### 🎯 兩種用戶資料建立機制
+
+| 機制 | 觸發時機 | 優點 | 缺點 |
+|------|----------|------|------|
+| **延遲建立**（預設） | 首次訪問儀表板時 | 無需配置、簡單可靠 | 首次載入稍慢 |
+| **Webhook 即時建立** | 用戶註冊時 | 即時建立、更好體驗 | 需要額外配置 |
+
+#### 🚀 如果選擇配置 Webhook（推薦）
+
+1. 在 Clerk Dashboard 的 **"Configure"** 標籤頁中，前往 **"Webhooks"**
+2. 點擊 **"Add Endpoint"**
+3. 設定 Webhook：
+   - **Endpoint URL**: `https://yourdomain.com/api/webhooks/clerk`
+   - **Events**: 勾選以下事件
+     - ✅ `user.created` - 用戶註冊時自動建立訂閱資料
+     - ✅ `user.updated` - 更新用戶活躍時間
+     - ✅ `user.deleted` - 記錄用戶刪除事件
+4. 複製 **Signing Secret** 並添加到環境變數
+
+### 步驟 6: 更新環境變數
+
+#### 基本配置（必要）
+```env
+# Clerk 認證系統
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxxxx
+CLERK_SECRET_KEY=sk_test_xxxxxxxxxx
+```
+
+#### 如果配置了 Webhook（可選）
+```env
+# Clerk 認證系統
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxxxx
+CLERK_SECRET_KEY=sk_test_xxxxxxxxxx
+CLERK_WEBHOOK_SECRET=whsec_xxxxxxxxxx
 ```
 
 ## 🎯 推薦配置
 
 ### 基本配置（適合大多數應用）
+
 ```
 認證方式:
-✅ Email + Password (主要方式)
-✅ Google (便利選項)
+✅ Email (主要方式)
+✅ Google (Gmail) (便利選項)
+✅ GitHub (便利選項)
 
 要求設定:
 - Email: 必需
-- Password: 必需
-- Email 驗證: 啟用
+- Google: 推薦啟用
+- GitHub: 推薦啟用
+- Username: 可選
 ```
 
 ### 進階配置（企業級應用）
+
 ```
 認證方式:
-✅ Email + Password
-✅ Google
-✅ GitHub
-✅ Microsoft (企業用戶)
+✅ Email
+✅ Google (Gmail)
+✅ GitHub  
+✅ Username
+✅ 其他社交登入選項
 
 安全設定:
 ✅ Multi-factor Authentication
@@ -112,86 +149,30 @@ Clerk 允許為 **註冊** 和 **登入** 分別配置不同的認證方式。�
 ### 測試清單
 
 #### 註冊流程測試
-- [ ] 可以使用 Email + Password 註冊
+- [ ] 可以使用 Email 註冊
 - [ ] 可以使用 Google 帳戶註冊
+- [ ] 可以使用 GitHub 帳戶註冊
 - [ ] 註冊後收到驗證郵件
 - [ ] 驗證後可以正常登入
 
 #### 登入流程測試
-- [ ] 可以使用 Email + Password 登入
+- [ ] 可以使用 Email 登入
 - [ ] 可以使用 Google 帳戶登入
-- [ ] 錯誤密碼時顯示適當錯誤訊息
+- [ ] 可以使用 GitHub 帳戶登入
+- [ ] 錯誤資訊時顯示適當錯誤訊息
 - [ ] 登入成功後正確重定向
+
+#### 用戶資料建立測試
+- [ ] 註冊後首次訪問儀表板能正常載入
+- [ ] 用戶資料在 Supabase 中正確建立
+- [ ] 如果配置了 Webhook：註冊時立即建立用戶資料
+- [ ] 如果未配置 Webhook：首次訪問時自動建立用戶資料
 
 #### 密碼管理測試
 - [ ] 可以在個人資料頁面變更密碼
 - [ ] Google 用戶可以設置密碼作為備用登入
 - [ ] 密碼強度驗證正常運作
 
-## 🔧 常見問題解決
-
-### Q1: 設定後仍然看不到密碼欄位
-**解決方案**：
-1. 清除瀏覽器快取
-2. 重啟開發伺服器
-3. 檢查是否在正確的環境（Development/Production）
-4. 確認 API 金鑰是否正確
-
-### Q2: Google 登入後無法設置密碼
-**解決方案**：
-1. 確保 Password 在 Sign-up 和 Sign-in 都已啟用
-2. 檢查個人資料頁面的密碼管理組件
-3. 確認用戶的 `passwordEnabled` 狀態
-
-### Q3: 用戶抱怨登入方式不一致
-**解決方案**：
-1. 統一註冊和登入的認證策略
-2. 在 UI 中清楚說明可用的登入方式
-3. 提供密碼重置功能
-
-## 📱 用戶體驗建議
-
-### 登入頁面優化
-```typescript
-// 在登入頁面顯示可用的登入方式
-<div className="text-center text-sm text-gray-600 mb-4">
-  您可以使用以下方式登入：
-  <div className="flex justify-center space-x-4 mt-2">
-    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
-      電子郵件 + 密碼
-    </span>
-    <span className="bg-red-100 text-red-800 px-2 py-1 rounded">
-      Google 帳戶
-    </span>
-  </div>
-</div>
-```
-
-### 註冊頁面說明
-```typescript
-// 在註冊頁面說明密碼用途
-<p className="text-xs text-gray-500 mt-2">
-  設置密碼後，您可以使用電子郵件和密碼登入，
-  也可以繼續使用 Google 帳戶登入。
-</p>
-```
-
-## 🔐 安全性考量
-
-### 密碼策略
-- **最小長度**: 8 個字元
-- **複雜度**: 包含字母和數字
-- **歷史**: 避免重複使用最近的密碼
-
-### 會話管理
-- **自動登出**: 設定適當的會話過期時間
-- **多裝置**: 允許多裝置同時登入
-- **安全登出**: 確保所有會話正確終止
-
-### 監控和日誌
-- **登入嘗試**: 監控失敗的登入嘗試
-- **異常活動**: 檢測可疑的帳戶活動
-- **審計日誌**: 記錄重要的安全事件
 
 ## 📚 相關資源
 
@@ -202,6 +183,11 @@ Clerk 允許為 **註冊** 和 **登入** 分別配置不同的認證方式。�
 
 ---
 
-**文檔版本**: 1.0  
-**最後更新**: 2025-07-16  
+**文檔版本**: 2.1
+**最後更新**: 2025-07-23
 **維護者**: 開發團隊
+**更新內容**:
+- 修正 Webhook 配置說明：從「必要」改為「可選」
+- 新增兩種用戶資料建立機制的比較說明
+- 更新測試驗證清單，包含用戶資料建立測試
+- 澄清系統實際使用延遲建立機制，Webhook 為額外保障

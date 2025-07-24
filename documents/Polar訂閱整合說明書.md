@@ -1,9 +1,9 @@
 ---
 title: Polar 訂閱整合說明書
 author: 開發團隊
-date: 2025-07-18
+date: '2025-07-18'
 version: 1.0
-uuid: b2c3d4e5f6789012345678901234567890abcdef
+uuid: f76f9cb9870c437d9cf9d84afdc1810a
 ---
 
 # Polar 訂閱整合說明書

@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * 處理用戶建立事件
- * 自動為新用戶建立免費方案的訂閱記錄
+ * 自動為新用戶建立未訂閱狀態的用戶記錄
  */
 async function handleUserCreated(event: ClerkWebhookEvent) {
   try {
@@ -117,11 +117,11 @@ async function handleUserCreated(event: ClerkWebhookEvent) {
     
     console.log(`Processing user.created event for user: ${userId}`);
 
-    // 建立預設的免費方案訂閱記錄
+    // 建立預設的未訂閱用戶記錄（與延遲建立機制保持一致）
     const profile = await userProfileService.createUserProfile({
       clerkUserId: userId,
-      subscriptionPlan: 'free',
-      subscriptionStatus: 'active',
+      subscriptionPlan: null,        // 未訂閱用戶
+      subscriptionStatus: 'inactive', // 未啟用狀態
       monthlyUsageLimit: 1000
     });
 

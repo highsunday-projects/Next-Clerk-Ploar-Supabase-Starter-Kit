@@ -1,5 +1,5 @@
 ---
-uuid: b01-polar-webhook-field-mapping-fix
+uuid: 2e04bce689f64074b02e4f6ff20e7abf
 ---
 
 # B01 - Polar Webhook 欄位映射錯誤修正

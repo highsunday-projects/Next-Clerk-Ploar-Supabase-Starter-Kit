@@ -86,7 +86,7 @@ class PolarService {
   /**
    * 根據訂閱方案獲取產品
    */
-  async getProductByPlan(plan: 'pro' | 'enterprise'): Promise<PolarProduct | null> {
+  async getProductByPlan(plan: 'pro'): Promise<PolarProduct | null> {
     try {
       const productId = getPolarProductId(plan);
       if (!productId) {
@@ -105,11 +105,11 @@ class PolarService {
   }
   
   /**
-   * 建立 Checkout Session
+   * 建立 Checkout Session（目前只支援專業版）
    */
   async createCheckoutSession(
     clerkUserId: string,
-    plan: 'pro' | 'enterprise',
+    plan: 'pro',
     email: string,
     name?: string
   ): Promise<string> {
@@ -205,6 +205,8 @@ class PolarService {
   
   /**
    * 同步 Polar 訂閱狀態到 Supabase
+   * @deprecated 此函數已不再使用，實際的訂閱同步邏輯已移至 /api/webhooks/polar/route.ts
+   * 保留此函數僅作為參考
    */
   async syncSubscriptionToSupabase(
     clerkUserId: string,
@@ -212,38 +214,33 @@ class PolarService {
     product: PolarProduct
   ): Promise<void> {
     try {
-      // 根據 Polar 產品 ID 判斷訂閱方案
-      let subscriptionPlan: 'free' | 'pro' | 'enterprise' = 'free';
+      // 根據 Polar 產品 ID 判斷訂閱方案（簡化版：只支援專業版）
+      let subscriptionPlan: 'pro' | null = null;
       let monthlyUsageLimit = 1000;
-      
+
       if (product.id === getPolarProductId('pro')) {
         subscriptionPlan = 'pro';
         monthlyUsageLimit = 10000;
-      } else if (product.id === getPolarProductId('enterprise')) {
-        subscriptionPlan = 'enterprise';
-        monthlyUsageLimit = 100000;
       }
+      // 注意：此函數已不再使用，僅作為參考保留
       
-      // 轉換 Polar 訂閱狀態
-      let subscriptionStatus: 'active' | 'trial' | 'cancelled' | 'expired' = 'active';
+      // 轉換 Polar 訂閱狀態（使用新的 3 狀態系統）
+      let subscriptionStatus: 'active_recurring' | 'active_ending' | 'inactive' = 'inactive';
       switch (subscription.status) {
         case 'trialing':
-          subscriptionStatus = 'trial';
-          break;
         case 'active':
-          subscriptionStatus = 'active';
+          subscriptionStatus = 'active_recurring';
           break;
         case 'canceled':
         case 'unpaid':
-          subscriptionStatus = 'cancelled';
-          break;
         case 'incomplete_expired':
         case 'past_due':
-          subscriptionStatus = 'expired';
+          subscriptionStatus = 'inactive';
           break;
         default:
-          subscriptionStatus = 'active';
+          subscriptionStatus = 'inactive';
       }
+      // 注意：此函數已不再使用，實際狀態映射請參考 /api/webhooks/polar/route.ts
       
       // 更新 Supabase 用戶資料
       await userProfileService.updateUserProfile(clerkUserId, {
@@ -263,13 +260,13 @@ class PolarService {
   }
   
   /**
-   * 處理訂閱降級（取消後回到免費方案）
+   * 處理訂閱降級（取消後回到未訂閱狀態）
    */
   async handleSubscriptionDowngrade(clerkUserId: string): Promise<void> {
     try {
       await userProfileService.updateUserProfile(clerkUserId, {
-        subscriptionPlan: 'free',
-        subscriptionStatus: 'active',
+        subscriptionPlan: null,           // 未訂閱狀態
+        subscriptionStatus: 'inactive',   // 未啟用狀態
         monthlyUsageLimit: 1000,
         polarSubscriptionId: undefined,
         polarProductId: undefined,

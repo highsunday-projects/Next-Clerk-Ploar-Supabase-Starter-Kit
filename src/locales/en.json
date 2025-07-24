@@ -1,0 +1,375 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "user": "User"
+  },
+  "header": {
+    "brand": "SaaS Starter Kit",
+    "navigation": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "about": "About",
+      "dashboard": "Dashboard"
+    },
+    "auth": {
+      "signIn": "Sign In",
+      "signUp": "Sign Up",
+      "signOut": "Sign Out"
+    }
+  },
+  "hero": {
+    "title": "Build Your",
+    "titleHighlight": " SaaS Application",
+    "description": "Complete solution integrating Next.js, Clerk, Polar, and Supabase. Focus on your core business logic, not infrastructure.",
+    "features": {
+      "auth": "Complete Authentication",
+      "payment": "Payment Subscriptions",
+      "database": "Real-time Database"
+    },
+    "cta": {
+      "getStarted": "Get Started",
+      "watchDemo": "Watch Demo"
+    }
+  },
+  "features": {
+    "title": "Why Choose Our Starter Kit?",
+    "subtitle": "Integrating industry best practices and top-tier services to get your SaaS product online quickly",
+    "cta": {
+      "title": "Ready to Start Building Your SaaS?",
+      "subtitle": "All features are pre-configured, so you can focus on your core business logic",
+      "button": "View All Features"
+    },
+    "items": {
+      "auth": {
+        "title": "Complete Authentication",
+        "description": "Use Clerk for secure user authentication, social logins, multi-factor authentication, and organization management.",
+        "highlights": ["Social Login", "Multi-Factor Auth", "Organization Management", "User Permissions"]
+      },
+      "payment": {
+        "title": "Payment Subscription Management",
+        "description": "Integrate Polar for subscription billing, invoice generation, refund processing, and revenue analytics.",
+        "highlights": ["Subscription Billing", "Invoice Generation", "Refund Processing", "Revenue Analytics"]
+      },
+      "database": {
+        "title": "Powerful Database",
+        "description": "Use Supabase for PostgreSQL database, real-time sync, file storage, and Row Level Security.",
+        "highlights": ["PostgreSQL", "Real-time Sync", "File Storage", "Security Control"]
+      },
+      "development": {
+        "title": "Rapid Development",
+        "description": "Built on Next.js 15 and TypeScript, providing modern development experience and optimal performance.",
+        "highlights": ["Next.js 15", "TypeScript", "Responsive Design", "SEO Optimized"]
+      }
+    }
+  },
+  "pricing": {
+    "title": "Choose the Right Plan for You",
+    "subtitle": "From personal projects to enterprise applications, we offer flexible pricing plans",
+    "popular": "Most Popular",
+    "plans": {
+      "free": {
+        "name": "Basic User",
+        "price": "Free",
+        "description": "Perfect for personal use and small projects",
+        "features": [
+          "1,000 API calls per month",
+          "Basic feature access",
+          "Community support"
+        ],
+        "buttonText": "Get Started"
+      },
+      "pro": {
+        "name": "Professional User",
+        "price": "$5",
+        "period": "/month",
+        "description": "Perfect for growing teams and businesses",
+        "features": [
+          "10,000 API calls per month",
+          "Advanced feature access",
+          "Priority support",
+          "Detailed analytics"
+        ],
+        "buttonText": "Upgrade Now"
+      }
+    },
+    "bottomInfo": "Free plan requires no credit card, paid plans can be upgraded or downgraded anytime",
+    "guarantees": {
+      "cancel": "Cancel Anytime",
+      "noSetup": "No Setup Fees",
+      "instant": "Instant Activation"
+    }
+  },
+  "testimonials": {
+    "title": "What Our Customers Say",
+    "subtitle": "Real feedback from developers and businesses worldwide",
+    "items": [
+      {
+        "name": "John Smith",
+        "role": "Founder",
+        "company": "TechStart",
+        "content": "This Starter Kit got our SaaS product online in just two weeks. Authentication, payments, and database are perfectly integrated, saving us months of development time."
+      },
+      {
+        "name": "Sarah Johnson",
+        "role": "CTO",
+        "company": "InnovateLab",
+        "content": "The code quality is excellent, documentation is detailed, and support is great. Our team was able to quickly get up to speed and customize features to meet our needs."
+      },
+      {
+        "name": "David Wilson",
+        "role": "Product Manager",
+        "company": "StartupHub",
+        "content": "From concept to product launch took only one month. This template includes all the features we needed, allowing us to focus on core business logic."
+      }
+    ],
+    "stats": {
+      "title": "Trusted Numbers",
+      "subtitle": "Our results speak for themselves",
+      "items": {
+        "customers": "Happy Customers",
+        "countries": "Countries",
+        "uptime": "Uptime",
+        "support": "Support"
+      }
+    }
+  },
+  "footer": {
+    "description": "Complete solution for building modern SaaS applications quickly. Integrating Next.js, Clerk, Polar, and Supabase, so you can focus on your core business logic.",
+    "sections": {
+      "product": {
+        "title": "Product",
+        "links": {
+          "features": "Features",
+          "pricing": "Pricing",
+          "changelog": "Changelog",
+          "roadmap": "Roadmap"
+        }
+      },
+      "company": {
+        "title": "Company",
+        "links": {
+          "about": "About Us",
+          "blog": "Blog",
+          "careers": "Careers",
+          "contact": "Contact Us"
+        }
+      },
+      "resources": {
+        "title": "Resources",
+        "links": {
+          "docs": "Documentation",
+          "api": "API Reference",
+          "tutorials": "Tutorials",
+          "community": "Community"
+        }
+      },
+      "legal": {
+        "title": "Legal",
+        "links": {
+          "privacy": "Privacy Policy",
+          "terms": "Terms of Service",
+          "cookies": "Cookie Policy",
+          "security": "Security"
+        }
+      }
+    },
+    "copyright": "© 2025 SaaS Starter Kit. All rights reserved.",
+    "madeWith": "Made with ❤️"
+  },
+  "dashboard": {
+    "nav": {
+      "title": "Dashboard",
+      "backToHome": "Back to Home",
+      "welcome": "Welcome back, {name}",
+      "items": {
+        "overview": "Overview",
+        "subscription": "Subscription",
+        "profile": "Profile"
+      }
+    },
+    "overview": {
+      "title": "Welcome back, {name}!",
+      "subtitle": "Manage your subscription and view usage statistics",
+      "errorLoading": "Error loading subscription data",
+      "currentPlan": "Current Subscription Plan",
+      "manageSubscription": "Manage Subscription",
+      "features": "Included features:",
+      "monthlyUsage": "Monthly usage quota: {limit} API calls",
+      "proFeatures": "Enjoy all professional features",
+      "basicFeatures": "Basic user features",
+      "trialUntil": "Trial period until",
+      "quickActions": "Quick Actions",
+      "actions": {
+        "manageSubscription": "Manage Subscription",
+        "manageSubscriptionDesc": "Upgrade or manage plans",
+        "profile": "Profile",
+        "profileDesc": "Manage account settings",
+        "apiDocs": "API Documentation",
+        "apiDocsDesc": "View usage guide"
+      }
+    },
+    "subscription": {
+      "title": "Subscription Management",
+      "subtitle": "Manage your subscription plan, payment methods, and billing information",
+      "loadingData": "Loading subscription data...",
+      "errorLoading": "Error loading subscription data",
+      "notFound": "Subscription data not found",
+      "notFoundDesc": "Please refresh the page or contact customer support",
+      "paymentSuccess": "Payment successful! Your subscription has been upgraded, please wait a moment for the system to sync data.",
+      "paymentCanceled": "Payment canceled, you can retry upgrading anytime.",
+      "currentSubscription": "Current Subscription",
+      "currentStatus": "Current Status",
+      "billingInfo": "Billing Information",
+      "nextBilling": "Next billing: {date}",
+      "willExpire": "Will expire on {date}",
+      "autoRenew": "Auto-renew",
+      "willCancel": "Will cancel at period end",
+      "upgradeNow": "Upgrade Now",
+      "cancelSubscription": "Cancel Subscription",
+      "continueSubscription": "Continue Subscription",
+      "confirmCancel": "Confirm Cancellation",
+      "cancelWarning": "After cancellation, you will lose professional features at the end of the current billing cycle.",
+      "processing": "Processing...",
+      "upgrading": "Upgrading...",
+      "loading": "Loading...",
+      "paymentMethod": "Payment method",
+      "monthlyQuota": "Monthly quota",
+      "apiCalls": "API calls",
+      "includedFeatures": "Included features:",
+      "manageSubscription": "Manage Subscription",
+      "viewInvoices": "View Invoices",
+      "unlimited": "Unlimited (Basic User)",
+      "noPaymentRequired": "No payment required",
+      "basicUserNoPayment": "You are currently a basic user, no payment management required",
+      "subscriptionCancelled": "Subscription cancelled",
+      "canResubscribe": "You can resubscribe to any plan",
+      "upgradeRecommended": "⚡ Recommended Upgrade",
+      "upgradeToPro": "Upgrade to Professional",
+      "confirmUpgrade": "Are you sure you want to upgrade to Professional?\\n\\nAfter upgrading, you will enjoy more features and higher usage quotas.",
+      "confirmCancelSub": "Are you sure you want to cancel your subscription? This action will take effect at the end of the current billing cycle.",
+      "confirmResume": "Are you sure you want to resume automatic renewal? Your subscription will be charged normally.",
+      "billingCycleEnd": "end of billing cycle",
+      "alerts": {
+        "paymentSuccess": "Payment successful! Your subscription has been upgraded, please wait a moment for the system to sync data.",
+        "paymentCanceled": "Payment canceled, you can retry upgrading anytime.",
+        "subscriptionCancelSuccess": "Subscription successfully scheduled for cancellation, will take effect at the end of the current billing cycle.",
+        "subscriptionResumeSuccess": "Subscription successfully resumed, will renew normally.",
+        "upgradeError": "Failed to process subscription request",
+        "cancelError": "Failed to cancel subscription, please try again later", 
+        "resumeError": "Failed to resume subscription, please try again later",
+        "portalError": "Unable to open customer portal, please try again later",
+        "portalUrlError": "Did not receive customer portal URL",
+        "unknownResponseFormat": "Unknown response format",
+        "featureComparison": "Feature comparison details will be available in future versions"
+      },
+      "status": {
+        "willExpireWarning": "Your subscription will expire on {date}. To continue using professional features, please re-enable automatic renewal.",
+        "autoRenewActive": "Your professional subscription will auto-renew, no action required.",
+        "activeRecurring": "Active (Auto-renew)",
+        "activeEnding": "Active (Ending)",
+        "inactive": "Free Plan",
+        "unknown": "Unknown"
+      },
+      "ui": {
+        "perMonth": "/month",
+        "paymentMethod": "Payment method:",
+        "monthlyQuota": "Monthly quota:",
+        "apiCallsUnit": " API calls",
+        "includedFeatures": "Included features:",
+        "currentBasicUser": "Current - Basic User",
+        "upgradeAfterPro": "Upgrade - Professional ⭐",
+        "billingNotice": "Billing Notice",
+        "billingNoticeDesc": "Plan changes will take effect in the next billing cycle. If you upgrade, you will be charged proportionally immediately. If you downgrade, the change will take effect at the end of the current billing cycle.",
+        "upgradeRecommendedBadge": "⚡ Recommended Upgrade",
+        "upgradeToProfessional": "Upgrade to Professional",
+        "efficiencyBoost": "🚀 10x functionality improvement, double your efficiency!",
+        "limitedOffer": "💰 Limited time 50% OFF",
+        "avgEfficiencyIncrease": "✨ Professional users average {percent}% efficiency improvement",
+        "basicUserLimits": "Basic user features",
+        "proUserBenefits": "All advanced features",
+        "prioritySupport": "24-hour priority support", 
+        "detailedAnalytics": "Detailed data analytics",
+        "upgradeInstantly": "🚀 Upgrade Now - Only $5/month",
+        "learnMoreFeatures": "💡 Learn More Features",
+        "moneyBackGuarantee": "30-day guarantee",
+        "cancelAnytime": "Cancel anytime",
+        "instantActivation": "Instant activation",
+        "basicUserNeedNoPayment": "You are currently a basic user, no payment management required",
+        "subscriptionCancelledStatus": "Subscription cancelled",
+        "canResubscribeAnytime": "You can resubscribe to any plan"
+      },
+      "dialogs": {
+        "confirmCancel": "Are you sure you want to cancel your subscription? This action will take effect at the end of the current billing cycle.",
+        "confirmResume": "Are you sure you want to resume automatic renewal? Your subscription will be charged normally.",
+        "confirmUpgradeDialog": "Are you sure you want to upgrade to Professional?\\n\\nAfter upgrading, you will enjoy more features and higher usage quotas."
+      },
+      "errors": {
+        "processingFailed": "Processing subscription request failed, please try again",
+        "cancelFailed": "Failed to cancel subscription",
+        "resumeFailed": "Failed to resume subscription", 
+        "portalOpenFailed": "Unable to open customer portal"
+      }
+    },
+    "profile": {
+      "title": "Profile",
+      "subtitle": "View and manage your account information",
+      "fields": {
+        "name": "Name",
+        "email": "Email",
+        "registrationDate": "Registration Date",
+        "accountStatus": "Account Status",
+        "verified": "Verified",
+        "notSet": "Not set"
+      },
+      "password": {
+        "title": "Password Management",
+        "subtitleUpdate": "Change your login password",
+        "subtitleSetup": "Set password as backup login method",
+        "currentMethods": "Current login methods",
+        "googleAccount": "Google Account",
+        "passwordLogin": "Password Login",
+        "noLoginMethod": "No login method",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "setupPassword": "Set Password",
+        "confirmPassword": "Confirm Password",
+        "enterCurrentPassword": "Enter current password",
+        "enterNewPassword": "Enter new password",
+        "enterPassword": "Enter password",
+        "enterPasswordAgain": "Enter password again",
+        "passwordMatch": "Passwords match",
+        "passwordMismatch": "Passwords don't match",
+        "minLength": "At least 8 characters",
+        "hasLetter": "Contains letters",
+        "hasNumber": "Contains numbers",
+        "updatePassword": "Update Password",
+        "setPassword": "Set Password",
+        "updating": "Updating...",
+        "setting": "Setting...",
+        "validation": {
+          "notSecure": "New password doesn't meet security requirements",
+          "mismatch": "New password and confirmation don't match",
+          "currentRequired": "Please enter current password"
+        },
+        "success": {
+          "updated": "Password updated successfully!",
+          "created": "Password set successfully! You can now login with email and password."
+        },
+        "error": {
+          "updateFailed": "Password update failed, please try again later"
+        }
+      }
+    }
+  }
+}

@@ -1,30 +1,35 @@
+'use client';
+
 import { Shield, CreditCard, Database, Zap } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function FeatureSection() {
+  const { t } = useLanguage();
+
   const features = [
     {
       icon: Shield,
-      title: '完整認證系統',
-      description: '使用 Clerk 提供安全的用戶認證、社交登入、多因素認證和組織管理功能。',
-      highlights: ['社交登入', '多因素認證', '組織管理', '用戶權限']
+      title: t('features.items.auth.title'),
+      description: t('features.items.auth.description'),
+      highlights: t('features.items.auth.highlights') as unknown as string[]
     },
     {
       icon: CreditCard,
-      title: '付費訂閱管理',
-      description: '整合 Polar 處理訂閱計費、發票生成、退款處理和收入分析。',
-      highlights: ['訂閱計費', '發票生成', '退款處理', '收入分析']
+      title: t('features.items.payment.title'),
+      description: t('features.items.payment.description'),
+      highlights: t('features.items.payment.highlights') as unknown as string[]
     },
     {
       icon: Database,
-      title: '強大資料庫',
-      description: '使用 Supabase 提供 PostgreSQL 資料庫、即時同步、檔案儲存和 Row Level Security。',
-      highlights: ['PostgreSQL', '即時同步', '檔案儲存', '安全控制']
+      title: t('features.items.database.title'),
+      description: t('features.items.database.description'),
+      highlights: t('features.items.database.highlights') as unknown as string[]
     },
     {
       icon: Zap,
-      title: '快速開發',
-      description: '基於 Next.js 15 和 TypeScript，提供現代化的開發體驗和最佳效能。',
-      highlights: ['Next.js 15', 'TypeScript', '響應式設計', 'SEO 優化']
+      title: t('features.items.development.title'),
+      description: t('features.items.development.description'),
+      highlights: t('features.items.development.highlights') as unknown as string[]
     }
   ];
 
@@ -34,10 +39,10 @@ export default function FeatureSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            為什麼選擇我們的 Starter Kit？
+            {t('features.title')}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            整合業界最佳實踐和頂級服務，讓您的 SaaS 產品快速上線
+            {t('features.subtitle')}
           </p>
         </div>
 
@@ -80,13 +85,13 @@ export default function FeatureSection() {
         <div className="text-center mt-16">
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              準備好開始建立您的 SaaS 了嗎？
+              {t('features.cta.title')}
             </h3>
             <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-              所有功能都已預先配置完成，您只需要專注於您的核心業務邏輯
+              {t('features.cta.subtitle')}
             </p>
             <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
-              查看完整功能
+              {t('features.cta.button')}
             </button>
           </div>
         </div>

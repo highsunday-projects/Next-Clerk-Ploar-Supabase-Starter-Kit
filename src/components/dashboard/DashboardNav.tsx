@@ -12,16 +12,19 @@ import {
   X,
   ArrowLeft
 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function DashboardNav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const { user } = useUser();
+  const { t } = useLanguage();
 
   const navigation = [
-    { name: '總覽', href: '/dashboard', icon: Home },
-    { name: '訂閱管理', href: '/dashboard/subscription', icon: CreditCard },
-    { name: '個人資料', href: '/dashboard/profile', icon: User },
+    { name: t('dashboard.nav.items.overview'), href: '/dashboard', icon: Home },
+    { name: t('dashboard.nav.items.subscription'), href: '/dashboard/subscription', icon: CreditCard },
+    { name: t('dashboard.nav.items.profile'), href: '/dashboard/profile', icon: User },
   ];
 
   const isActive = (href: string) => {
@@ -43,13 +46,13 @@ export default function DashboardNav() {
               className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200 mr-6"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
-              返回首頁
+              {t('dashboard.nav.backToHome')}
             </Link>
 
             {/* Logo */}
             <div className="flex-shrink-0">
               <h1 className="text-xl font-bold text-gray-900">
-                儀表板
+                {t('dashboard.nav.title')}
               </h1>
             </div>
 
@@ -74,10 +77,11 @@ export default function DashboardNav() {
 
           {/* Right side */}
           <div className="flex items-center">
-            {/* User info */}
+            {/* Language switcher and User info */}
             <div className="hidden md:flex items-center space-x-4">
+              <LanguageSwitcher variant="compact" />
               <span className="text-sm text-gray-700">
-                歡迎回來，{user?.firstName || user?.emailAddresses[0]?.emailAddress}
+                {t('dashboard.nav.welcome', { name: user?.firstName || user?.emailAddresses[0]?.emailAddress || t('common.user') })}
               </span>
               <UserButton 
                 appearance={{
@@ -133,12 +137,15 @@ export default function DashboardNav() {
                 />
                 <div className="ml-3">
                   <div className="text-base font-medium text-gray-800">
-                    {user?.firstName || '用戶'}
+                    {user?.firstName || t('common.user')}
                   </div>
                   <div className="text-sm text-gray-500">
                     {user?.emailAddresses[0]?.emailAddress}
                   </div>
                 </div>
+              </div>
+              <div className="px-4 py-3 border-t border-gray-200">
+                <LanguageSwitcher />
               </div>
             </div>
           </div>

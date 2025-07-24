@@ -22,67 +22,65 @@ import {
   getUserStatusDescription
 } from '@/types/supabase';
 import {
-  getSubscriptionStatusText,
   getSubscriptionStatusClass,
-  formatBillingInfo,
   canManagePayment,
-  canCancelSubscription,
-  formatPrice
+  canCancelSubscription
 } from '@/lib/subscriptionUtils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function SubscriptionPage() {
   const { user, isLoaded } = useUser();
   const { profile, loading, error } = useUserProfile();
+  const { t } = useLanguage();
   const router = useRouter();
   const [upgrading, setUpgrading] = useState<string | null>(null);
-  const [cancelling, setCancelling] = useState(false); // 追蹤正在升級的方案
-  const [isProcessing, setIsProcessing] = useState(false); // 追蹤處理狀態
-
-  // 重定向未登入用戶
+  const [cancelling, setCancelling] = useState(false); // Track plan upgrade status
+  const [isProcessing, setIsProcessing] = useState(false); // Track processing state
+  // Redirect unauthenticated users
   useEffect(() => {
     if (isLoaded && !user) {
       router.push('/sign-in');
     }
   }, [isLoaded, user, router]);
 
-  // 處理 Polar Checkout 回調
+  // Handle Polar Checkout callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const success = urlParams.get('success');
     const canceled = urlParams.get('canceled');
 
     if (success === 'true') {
-      // 付款成功，顯示成功訊息並清理 URL
-      alert('付款成功！您的訂閱已升級，請稍等片刻讓系統同步資料。');
+      // Payment success, show success message and clean URL
+      alert(t('dashboard.subscription.alerts.paymentSuccess'));
       window.history.replaceState({}, '', '/dashboard/subscription');
     } else if (canceled === 'true') {
-      // 付款取消，顯示取消訊息並清理 URL
-      alert('付款已取消，您可以隨時重新嘗試升級。');
+      // Payment canceled, show cancel message and clean URL
+      alert(t('dashboard.subscription.alerts.paymentCanceled'));
       window.history.replaceState({}, '', '/dashboard/subscription');
     }
 
-    // 重置升級狀態
+    // Reset upgrade state
     setUpgrading(null);
   }, []);
 
-  // 載入中狀態
+  // Loading state
   if (!isLoaded || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">載入訂閱資料中...</p>
+          <p className="text-gray-600">{t('dashboard.subscription.loadingData')}</p>
         </div>
       </div>
     );
   }
 
-  // 用戶未登入
+  // User not authenticated
   if (!user) {
     return null;
   }
 
-  // 錯誤狀態
+  // Error state
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
@@ -91,7 +89,7 @@ export default function SubscriptionPage() {
             <AlertCircle className="w-5 h-5 text-red-400" />
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">載入訂閱資料時發生錯誤</h3>
+            <h3 className="text-sm font-medium text-red-800">{t('dashboard.subscription.errorLoading')}</h3>
             <p className="text-sm text-red-700 mt-1">{error}</p>
           </div>
         </div>
@@ -99,63 +97,82 @@ export default function SubscriptionPage() {
     );
   }
 
-  // 如果沒有訂閱資料，顯示預設免費方案
+  // If no subscription data, show default free plan
   if (!profile) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
         <div className="flex items-center">
           <AlertCircle className="w-5 h-5 text-yellow-400 mr-3" />
           <div>
-            <h3 className="text-sm font-medium text-yellow-800">找不到訂閱資料</h3>
-            <p className="text-sm text-yellow-700 mt-1">請重新整理頁面或聯繫客服支援</p>
+            <h3 className="text-sm font-medium text-yellow-800">{t('dashboard.subscription.notFound')}</h3>
+            <p className="text-sm text-yellow-700 mt-1">{t('dashboard.subscription.notFoundDesc')}</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // SF09: 獲取當前用戶配置
+  // SF09: Get current user configuration
   const currentConfig = getUserConfig(profile);
   const isProUser = hasProAccess(profile);
 
-  // 當前訂閱資料
+  // Current subscription data
   const currentSubscription = {
-    plan: currentConfig.displayName,
+    plan: isProUser ? t('pricing.plans.pro.name') : t('pricing.plans.free.name'),
     price: currentConfig.price,
     period: 'month',
     status: profile.subscription_status,
     nextBilling: profile.trial_ends_at ?
-      new Date(profile.trial_ends_at).toLocaleDateString('zh-TW') :
-      isProUser ? formatBillingInfo(profile) : '無限期（基礎用戶）',
-    paymentMethod: isProUser ? '**** **** **** 4242' : '無需付款',
-    features: currentConfig.features,
+      new Date(profile.trial_ends_at).toLocaleDateString() :
+      isProUser ? (() => {
+        switch (profile.subscription_status) {
+          case 'active_recurring':
+            return profile.current_period_end 
+              ? t('dashboard.subscription.nextBilling', { date: new Date(profile.current_period_end).toLocaleDateString() })
+              : t('dashboard.subscription.autoRenew');
+          case 'active_ending':
+            return profile.current_period_end 
+              ? t('dashboard.subscription.willExpire', { date: new Date(profile.current_period_end).toLocaleDateString() })
+              : t('dashboard.subscription.willCancel');
+          default:
+            return t('dashboard.subscription.unlimited');
+        }
+      })() : t('dashboard.subscription.unlimited'),
+    paymentMethod: isProUser ? '**** **** **** 4242' : t('dashboard.subscription.noPaymentRequired'),
+    features: isProUser ? [
+      t('pricing.plans.pro.features.0'),
+      t('pricing.plans.pro.features.1'),
+      t('pricing.plans.pro.features.2'),
+      t('pricing.plans.pro.features.3')
+    ] : [
+      t('pricing.plans.free.features.0'),
+      t('pricing.plans.free.features.1'),
+      t('pricing.plans.free.features.2')
+    ],
     monthlyLimit: currentConfig.monthlyUsageLimit
   };
 
-  // SF09: 簡化方案邏輯 - 只顯示升級選項
+  // SF09: Simplified plan logic - only show upgrade options
   const plans = isProUser ? [] : [{
     id: 'pro',
     name: SUBSCRIPTION_CONFIG.pro.displayName,
     price: SUBSCRIPTION_CONFIG.pro.price,
     period: 'month',
-    description: '適合成長中的團隊和企業',
+    description: t('pricing.plans.pro.description'),
     features: SUBSCRIPTION_CONFIG.pro.features,
     current: false,
     popular: true,
     monthlyLimit: SUBSCRIPTION_CONFIG.pro.monthlyUsageLimit
   }];
 
-  // SF09: 處理專業版升級
+  // SF09: Handle professional upgrade
   const handlePlanUpgrade = async (planId: string) => {
     if (planId !== 'pro' || isProUser) {
-      return; // 不處理免費方案或相同方案
+      return; // Don't handle free plan or same plan
     }
 
-    // 確認升級
-    const confirmed = confirm(
-      '您確定要升級到專業版嗎？\n\n' +
-      '升級後您將享受更多功能和更高的使用額度。'
-    );
+    // Confirm upgrade
+    const confirmed = confirm(t('dashboard.subscription.dialogs.confirmUpgradeDialog'));
 
     if (!confirmed) {
       return;
@@ -164,7 +181,7 @@ export default function SubscriptionPage() {
     try {
       setUpgrading(planId);
 
-      // 呼叫 Polar Checkout/Update API
+      // Call Polar Checkout/Update API
       const response = await fetch('/api/polar/create-checkout', {
         method: 'POST',
         headers: {
@@ -181,30 +198,30 @@ export default function SubscriptionPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '處理訂閱請求失敗');
+        throw new Error(data.error || t('dashboard.subscription.errors.processingFailed'));
       }
 
-      // 檢查響應類型
+      // Check response type
       if (data.success && data.message) {
-        // 訂閱更新成功（現有用戶）
+        // Subscription update success (existing user)
         alert(data.message);
-        // 重新載入頁面以更新訂閱資訊
+        // Reload page to update subscription info
         window.location.reload();
       } else if (data.checkoutUrl) {
-        // 需要重定向到 Checkout 頁面（新用戶）
+        // Need to redirect to Checkout page (new user)
         window.location.href = data.checkoutUrl;
       } else {
-        throw new Error('未知的響應格式');
+        throw new Error(t('dashboard.subscription.alerts.unknownResponseFormat'));
       }
 
     } catch (error) {
       console.error('Error processing subscription:', error);
-      alert(error instanceof Error ? error.message : '處理訂閱請求失敗，請稍後再試');
+      alert(error instanceof Error ? error.message : t('dashboard.subscription.errors.processingFailed'));
       setUpgrading(null);
     }
   };
 
-  // 處理取消訂閱
+  // Handle cancel subscription
   const handleCancelSubscription = async () => {
     if (!user?.id || !profile) return;
 
@@ -225,22 +242,22 @@ export default function SubscriptionPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '取消訂閱失敗');
+        throw new Error(data.error || t('dashboard.subscription.errors.cancelFailed'));
       }
 
-      alert('訂閱已成功安排取消，將在當前計費週期結束時生效。');
-      // 重新載入頁面以更新訂閱資訊
+      alert(t('dashboard.subscription.alerts.subscriptionCancelSuccess'));
+      // Reload page to update subscription info
       window.location.reload();
 
     } catch (error) {
       console.error('Error cancelling subscription:', error);
-      alert(error instanceof Error ? error.message : '取消訂閱失敗，請稍後再試');
+      alert(error instanceof Error ? error.message : t('dashboard.subscription.alerts.cancelError'));
     } finally {
       setCancelling(false);
     }
   };
 
-  // 處理繼續訂閱
+  // Handle resume subscription
   const handleResumeSubscription = async () => {
     if (!user?.id || !profile) return;
 
@@ -257,22 +274,22 @@ export default function SubscriptionPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '恢復訂閱失敗');
+        throw new Error(data.error || t('dashboard.subscription.errors.resumeFailed'));
       }
 
-      alert('訂閱已成功恢復，將會正常續費。');
-      // 重新載入頁面以更新訂閱資訊
+      alert(t('dashboard.subscription.alerts.subscriptionResumeSuccess'));
+      // Reload page to update subscription info
       window.location.reload();
 
     } catch (error) {
       console.error('Error resuming subscription:', error);
-      alert(error instanceof Error ? error.message : '恢復訂閱失敗，請稍後再試');
+      alert(error instanceof Error ? error.message : t('dashboard.subscription.alerts.resumeError'));
     } finally {
       setCancelling(false);
     }
   };
 
-  // 處理客戶入口
+  // Handle customer portal
   const handleCustomerPortal = async () => {
     if (!user?.id || !profile) return;
 
@@ -292,18 +309,18 @@ export default function SubscriptionPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '無法開啟客戶入口');
+        throw new Error(data.error || t('dashboard.subscription.alerts.portalError'));
       }
 
       if (data.portalUrl) {
         window.open(data.portalUrl, '_blank');
       } else {
-        throw new Error('未收到客戶入口URL');
+        throw new Error(t('dashboard.subscription.alerts.portalUrlError'));
       }
 
     } catch (error) {
       console.error('Error opening customer portal:', error);
-      alert(error instanceof Error ? error.message : '無法開啟客戶入口，請稍後再試');
+      alert(error instanceof Error ? error.message : t('dashboard.subscription.alerts.portalError'));
     } finally {
       setIsProcessing(false);
     }
@@ -313,9 +330,9 @@ export default function SubscriptionPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">訂閱管理</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('dashboard.subscription.title')}</h1>
         <p className="text-gray-600">
-          管理您的訂閱方案、付費方式和帳單資訊
+          {t('dashboard.subscription.subtitle')}
         </p>
       </div>
 
@@ -324,26 +341,49 @@ export default function SubscriptionPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center">
             <Crown className="w-5 h-5 mr-2 text-yellow-500" />
-            目前訂閱
+{t('dashboard.subscription.currentSubscription')}
           </h2>
           <div className="text-right">
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSubscriptionStatusClass(profile.subscription_status)}`}>
-              {getSubscriptionStatusText(profile.subscription_status)}
+              {(() => {
+                switch (profile.subscription_status) {
+                  case 'active_recurring':
+                    return t('dashboard.subscription.status.activeRecurring');
+                  case 'active_ending':
+                    return t('dashboard.subscription.status.activeEnding');
+                  case 'inactive':
+                    return t('dashboard.subscription.status.inactive');
+                  default:
+                    return t('dashboard.subscription.status.unknown');
+                }
+              })()}
             </span>
             <div className="text-xs text-gray-500 mt-1">
-              {getUserStatusDescription(profile)}
+              {(() => {
+                switch (profile.subscription_status) {
+                  case 'active_recurring':
+                    return t('dashboard.subscription.status.activeRecurring');
+                  case 'active_ending':
+                    return t('dashboard.subscription.status.activeEnding');
+                  case 'inactive':
+                    return t('dashboard.subscription.status.inactive');
+                  default:
+                    return t('dashboard.subscription.status.unknown');
+                }
+              })()}
             </div>
           </div>
         </div>
 
-        {/* 狀態提示 */}
+        {/* Status notifications */}
         {isWillExpire(profile) && (
           <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center">
               <AlertCircle className="w-4 h-4 text-yellow-600 mr-2" />
               <span className="text-sm text-yellow-800">
-                您的訂閱將在 {profile.current_period_end ? new Date(profile.current_period_end).toLocaleDateString('zh-TW') : '計費週期結束時'} 到期。
-                如需繼續使用專業版功能，請重新啟用自動續訂。
+                {t('dashboard.subscription.status.willExpireWarning', { 
+                  date: profile.current_period_end ? new Date(profile.current_period_end).toLocaleDateString() : t('dashboard.subscription.billingCycleEnd') 
+                })}
               </span>
             </div>
           </div>
@@ -354,7 +394,7 @@ export default function SubscriptionPage() {
             <div className="flex items-center">
               <Check className="w-4 h-4 text-green-600 mr-2" />
               <span className="text-sm text-green-800">
-                您的專業版訂閱將自動續訂，無需任何操作。
+                {t('dashboard.subscription.status.autoRenewActive')}
               </span>
             </div>
           </div>
@@ -365,27 +405,43 @@ export default function SubscriptionPage() {
             <div className="flex items-baseline mb-2">
               <span className="text-3xl font-bold text-gray-900">{currentSubscription.plan}</span>
               <span className="ml-2 text-lg text-gray-600">
-                {formatPrice(currentSubscription.price)}{currentSubscription.price > 0 ? '/月' : ''}
+                {currentSubscription.price === 0 ? t('pricing.plans.free.price') : `$${currentSubscription.price}`}{currentSubscription.price > 0 ? t('dashboard.subscription.ui.perMonth') : ''}
               </span>
             </div>
 
             <div className="space-y-3 text-sm">
               <div className="flex items-center text-gray-600">
                 <Calendar className="w-4 h-4 mr-2" />
-                {formatBillingInfo(profile)}
+                {(() => {
+                  if (!hasProAccess(profile)) {
+                    return t('dashboard.subscription.unlimited');
+                  }
+                  switch (profile.subscription_status) {
+                    case 'active_recurring':
+                      return profile.current_period_end 
+                        ? t('dashboard.subscription.nextBilling', { date: new Date(profile.current_period_end).toLocaleDateString() })
+                        : t('dashboard.subscription.autoRenew');
+                    case 'active_ending':
+                      return profile.current_period_end 
+                        ? t('dashboard.subscription.willExpire', { date: new Date(profile.current_period_end).toLocaleDateString() })
+                        : t('dashboard.subscription.willCancel');
+                    default:
+                      return t('dashboard.subscription.unlimited');
+                  }
+                })()}
               </div>
               <div className="flex items-center text-gray-600">
                 <CreditCard className="w-4 h-4 mr-2" />
-                付款方式：{currentSubscription.paymentMethod}
+                {t('dashboard.subscription.ui.paymentMethod')}{currentSubscription.paymentMethod}
               </div>
               <div className="flex items-center text-gray-600">
                 <Star className="w-4 h-4 mr-2" />
-                每月額度：{currentSubscription.monthlyLimit?.toLocaleString()} 次 API 呼叫
+                {t('dashboard.subscription.ui.monthlyQuota')}{currentSubscription.monthlyLimit?.toLocaleString()}{t('dashboard.subscription.ui.apiCallsUnit')}
               </div>
             </div>
 
             <div className="mt-4">
-              <h4 className="text-sm font-medium text-gray-900 mb-2">包含功能：</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">{t('dashboard.subscription.ui.includedFeatures')}</h4>
               <ul className="space-y-1">
                 {currentSubscription.features.map((feature, index) => (
                   <li key={index} className="text-sm text-gray-600 flex items-center">
@@ -411,10 +467,10 @@ export default function SubscriptionPage() {
                 {isProcessing ? (
                   <div className="flex items-center justify-center">
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    載入中...
+                    {t('dashboard.subscription.loading')}
                   </div>
                 ) : (
-                  '管理訂閱'
+                  t('dashboard.subscription.manageSubscription')
                 )}
               </button>
             )}
@@ -432,10 +488,10 @@ export default function SubscriptionPage() {
                 {isProcessing ? (
                   <div className="flex items-center justify-center">
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    載入中...
+                    {t('dashboard.subscription.loading')}
                   </div>
                 ) : (
-                  '查看發票'
+                  t('dashboard.subscription.viewInvoices')
                 )}
               </button>
             )}
@@ -447,7 +503,7 @@ export default function SubscriptionPage() {
                     className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium border-2 border-green-500"
                     disabled={cancelling}
                     onClick={() => {
-                      if (confirm('確定要恢復自動續訂嗎？您的訂閱將會正常續費。')) {
+                      if (confirm(t('dashboard.subscription.dialogs.confirmResume'))) {
                         handleResumeSubscription();
                       }
                     }}
@@ -455,12 +511,12 @@ export default function SubscriptionPage() {
                     {cancelling ? (
                       <div className="flex items-center justify-center">
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        處理中...
+                        {t('dashboard.subscription.processing')}
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
                         <Crown className="w-4 h-4 mr-2" />
-                        繼續訂閱
+                        {t('dashboard.subscription.continueSubscription')}
                       </div>
                     )}
                   </button>
@@ -469,7 +525,7 @@ export default function SubscriptionPage() {
                     className="w-full border border-red-300 text-red-700 py-2 px-4 rounded-lg hover:bg-red-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={cancelling}
                     onClick={() => {
-                      if (confirm('確定要取消訂閱嗎？此操作將在當前計費週期結束時生效。')) {
+                      if (confirm(t('dashboard.subscription.dialogs.confirmCancel'))) {
                         handleCancelSubscription();
                       }
                     }}
@@ -477,10 +533,10 @@ export default function SubscriptionPage() {
                     {cancelling ? (
                       <div className="flex items-center justify-center">
                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        處理中...
+                        {t('dashboard.subscription.processing')}
                       </div>
                     ) : (
-                      '取消訂閱'
+                      t('dashboard.subscription.cancelSubscription')
                     )}
                   </button>
                 )}
@@ -490,7 +546,7 @@ export default function SubscriptionPage() {
             {!isProUser && (
               <div className="text-center py-4">
                 <p className="text-sm text-gray-600">
-                  您目前是基礎用戶，無需付款管理
+                  {t('dashboard.subscription.ui.basicUserNeedNoPayment')}
                 </p>
               </div>
             )}
@@ -498,10 +554,10 @@ export default function SubscriptionPage() {
             {profile.subscription_status === 'inactive' && profile.subscription_plan === 'pro' && (
               <div className="text-center py-4">
                 <p className="text-sm text-red-600 font-medium">
-                  訂閱已取消
+                  {t('dashboard.subscription.ui.subscriptionCancelledStatus')}
                 </p>
                 <p className="text-xs text-gray-600 mt-1">
-                  您可以重新訂閱任何方案
+                  {t('dashboard.subscription.ui.canResubscribeAnytime')}
                 </p>
               </div>
             )}
@@ -515,7 +571,7 @@ export default function SubscriptionPage() {
           {/* Eye-catching badge */}
           <div className="absolute -top-1 -right-1">
             <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-bl-lg rounded-tr-lg text-xs font-medium animate-pulse">
-              ⚡ 推薦升級
+              {t('dashboard.subscription.ui.upgradeRecommendedBadge')}
             </div>
           </div>
 
@@ -524,17 +580,17 @@ export default function SubscriptionPage() {
             <div>
               <h2 className="text-xl font-bold text-gray-900 flex items-center mb-2">
                 <Crown className="w-6 h-6 mr-2 text-yellow-500" />
-                升級到專業版
+                {t('dashboard.subscription.ui.upgradeToProfessional')}
               </h2>
-              <p className="text-blue-600 font-medium">🚀 10倍功能提升，讓效率翻倍！</p>
+              <p className="text-blue-600 font-medium">{t('dashboard.subscription.ui.efficiencyBoost')}</p>
             </div>
             <div className="text-right">
               <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                 <div className="flex items-baseline">
                   <span className="text-3xl font-bold text-blue-600">$5</span>
-                  <span className="text-gray-600 ml-1">/月</span>
+                  <span className="text-gray-600 ml-1">{t('dashboard.subscription.ui.perMonth')}</span>
                 </div>
-                <p className="text-xs text-blue-500 font-medium">💰 限時優惠 50% OFF</p>
+                <p className="text-xs text-blue-500 font-medium">{t('dashboard.subscription.ui.limitedOffer')}</p>
               </div>
             </div>
           </div>
@@ -542,7 +598,7 @@ export default function SubscriptionPage() {
           {/* Enhanced value proposition */}
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 mb-6 border border-blue-100">
             <p className="text-gray-700 text-center font-medium">
-              ✨ 專業版用戶平均提升 <span className="text-blue-600 font-bold">300%</span> 工作效率
+              {t('dashboard.subscription.ui.avgEfficiencyIncrease', { percent: '300' })}
             </p>
           </div>
 
@@ -551,20 +607,20 @@ export default function SubscriptionPage() {
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
                 <div className="w-2 h-2 rounded-full bg-gray-400 mr-2"></div>
-                目前 - 基礎用戶
+                {t('dashboard.subscription.ui.currentBasicUser')}
               </h4>
               <ul className="space-y-2">
                 <li className="text-sm text-gray-600 flex items-center">
                   <div className="w-4 h-4 rounded-full bg-gray-300 mr-2 flex-shrink-0"></div>
-                  每月 1,000 次 API 呼叫
+                  {t('pricing.plans.free.features.0')}
                 </li>
                 <li className="text-sm text-gray-600 flex items-center">
                   <div className="w-4 h-4 rounded-full bg-gray-300 mr-2 flex-shrink-0"></div>
-                  基本功能存取
+                  {t('pricing.plans.free.features.1')}
                 </li>
                 <li className="text-sm text-gray-600 flex items-center">
                   <div className="w-4 h-4 rounded-full bg-gray-300 mr-2 flex-shrink-0"></div>
-                  社群支援
+                  {t('pricing.plans.free.features.2')}
                 </li>
               </ul>
             </div>
@@ -572,24 +628,24 @@ export default function SubscriptionPage() {
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border-2 border-blue-200">
               <h4 className="text-sm font-medium text-blue-800 mb-3 flex items-center">
                 <Crown className="w-4 h-4 mr-2 text-yellow-500" />
-                升級後 - 專業版 ⭐
+                {t('dashboard.subscription.ui.upgradeAfterPro')}
               </h4>
               <ul className="space-y-2">
                 <li className="text-sm text-gray-700 flex items-center">
                   <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                  <span><strong>10,000 次</strong> API 呼叫 <span className="text-green-600">(+900%)</span></span>
+                  <span><strong>{t('pricing.plans.pro.features.0')}</strong> <span className="text-green-600">(+900%)</span></span>
                 </li>
                 <li className="text-sm text-gray-700 flex items-center">
                   <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                  <strong>所有進階功能</strong>
+                  <strong>{t('pricing.plans.pro.features.1')}</strong>
                 </li>
                 <li className="text-sm text-gray-700 flex items-center">
                   <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                  <strong>24小時優先支援</strong>
+                  <strong>{t('pricing.plans.pro.features.2')}</strong>
                 </li>
                 <li className="text-sm text-gray-700 flex items-center">
                   <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                  <strong>詳細數據分析</strong>
+                  <strong>{t('pricing.plans.pro.features.3')}</strong>
                 </li>
               </ul>
             </div>
@@ -613,21 +669,21 @@ export default function SubscriptionPage() {
               {upgrading === 'pro' ? (
                 <div className="flex items-center justify-center">
                   <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  處理中...
+                  {t('dashboard.subscription.processing')}
                 </div>
               ) : (
                 <div className="flex items-center justify-center">
                   <Crown className="w-5 h-5 mr-2" />
-                  🚀 立即升級 - 只要 $5/月
+                  {t('dashboard.subscription.ui.upgradeInstantly')}
                 </div>
               )}
             </button>
             
             <button
               className="sm:w-auto px-4 py-3 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors duration-200 font-medium"
-              onClick={() => alert('功能比較詳情將在未來版本中提供')}
+              onClick={() => alert(t('dashboard.subscription.alerts.featureComparison'))}
             >
-              💡 了解更多功能
+              {t('dashboard.subscription.ui.learnMoreFeatures')}
             </button>
           </div>
 
@@ -638,19 +694,19 @@ export default function SubscriptionPage() {
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mb-1">
                   <Check className="w-4 h-4 text-green-600" />
                 </div>
-                <span className="text-xs text-gray-600">30天保證</span>
+                <span className="text-xs text-gray-600">{t('dashboard.subscription.ui.moneyBackGuarantee')}</span>
               </div>
               <div className="flex flex-col items-center">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mb-1">
                   <CreditCard className="w-4 h-4 text-blue-600" />
                 </div>
-                <span className="text-xs text-gray-600">隨時取消</span>
+                <span className="text-xs text-gray-600">{t('dashboard.subscription.ui.cancelAnytime')}</span>
               </div>
               <div className="flex flex-col items-center">
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mb-1">
                   <Star className="w-4 h-4 text-purple-600" />
                 </div>
-                <span className="text-xs text-gray-600">即時生效</span>
+                <span className="text-xs text-gray-600">{t('dashboard.subscription.ui.instantActivation')}</span>
               </div>
             </div>
           </div>
@@ -662,10 +718,9 @@ export default function SubscriptionPage() {
         <div className="flex items-start">
           <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5" />
           <div>
-            <h3 className="text-sm font-medium text-yellow-800">計費說明</h3>
+            <h3 className="text-sm font-medium text-yellow-800">{t('dashboard.subscription.ui.billingNotice')}</h3>
             <p className="text-sm text-yellow-700 mt-1">
-              方案變更將在下個計費週期生效。如果您升級方案，將立即按比例收費。
-              如果您降級方案，變更將在當前計費週期結束時生效。
+              {t('dashboard.subscription.ui.billingNoticeDesc')}
             </p>
           </div>
         </div>

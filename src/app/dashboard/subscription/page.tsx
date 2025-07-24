@@ -36,7 +36,6 @@ export default function SubscriptionPage() {
   const [upgrading, setUpgrading] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false); // Track plan upgrade status
   const [isProcessing, setIsProcessing] = useState(false); // Track processing state
-
   // Redirect unauthenticated users
   useEffect(() => {
     if (isLoaded && !user) {

@@ -275,14 +275,7 @@ export interface PolarCheckoutSession {
   expires_at: string;
 }
 
-// Polar Webhook 事件類型
-export interface PolarWebhookEvent {
-  type: string;
-  data: {
-    id: string;
-    [key: string]: unknown;
-  };
-}
+// Polar Webhook 事件類型（已移至下方統一定義）
 
 // =============================================================================
 // Polar 付費系統相關類型定義
@@ -290,7 +283,7 @@ export interface PolarWebhookEvent {
 
 // Polar Checkout 請求參數
 export interface PolarCheckoutRequest {
-  plan: SubscriptionPlan;
+  plan: 'pro';
   userId: string;
   successUrl?: string;
   cancelUrl?: string;
@@ -312,18 +305,7 @@ export interface PolarWebhookEvent {
   };
 }
 
-// Polar 訂閱資料
-export interface PolarSubscription {
-  id: string;
-  status: string;
-  customer_id: string;
-  product_id: string;
-  current_period_start: string;
-  current_period_end: string;
-  cancel_at_period_end: boolean;
-  canceled_at?: string;
-  ended_at?: string;
-}
+// Polar 訂閱資料（已移至上方統一定義）
 
 // Polar 客戶資料
 export interface PolarCustomer {

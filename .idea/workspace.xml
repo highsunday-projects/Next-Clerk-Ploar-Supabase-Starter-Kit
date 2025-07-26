@@ -6,7 +6,27 @@
   <component name="ChangeListManager">
     <list default="true" id="03e93c0d-3325-4b1e-b22c-75672eb5a3a6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/documents/部落格推廣文章-AI時代的SaaS開發革命.md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/部落格推廣文章-AI時代的SaaS開發革命.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/當前專案架構.md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/當前專案架構.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/checkout/[plan]/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/checkout/[plan]/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/customer-portal/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/customer-portal/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/debug/reset-user/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/debug/reset-user/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/debug/subscription/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/debug/subscription/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/polar/cancel-downgrade/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/polar/cancel-downgrade/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/polar/create-checkout/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/polar/create-checkout/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/api/webhooks/polar/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/api/webhooks/polar/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/dashboard/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/dashboard/profile/[[...rest]]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/profile/[[...rest]]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/test-subscription-display/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/test-subscription-display/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/polarService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/polarService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/supabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/supabase.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/userProfileService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/userProfileService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/webhookLogger.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/webhookLogger.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/locales/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/locales/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scripts/test-logger-direct.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/test-logger-direct.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scripts/test-webhook-endpoint.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/test-webhook-endpoint.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scripts/test-webhook-logger.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/test-webhook-logger.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types/supabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/supabase.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

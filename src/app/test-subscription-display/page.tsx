@@ -3,7 +3,6 @@
 
 // 僅允許開發環境存取
 if (process.env.NODE_ENV === 'production') {
-  // eslint-disable-next-line no-restricted-globals
   if (typeof window !== 'undefined') {
     window.location.href = '/';
   }

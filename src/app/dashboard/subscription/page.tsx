@@ -14,12 +14,10 @@ import {
 } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import {
-  SUBSCRIPTION_CONFIG,
   hasProAccess,
   getUserConfig,
   isAutoRenewing,
-  isWillExpire,
-  getUserStatusDescription
+  isWillExpire
 } from '@/types/supabase';
 import {
   getSubscriptionStatusClass,
@@ -61,7 +59,7 @@ export default function SubscriptionPage() {
 
     // Reset upgrade state
     setUpgrading(null);
-  }, []);
+  }, [t]);
 
   // Loading state
   if (!isLoaded || loading) {
@@ -153,17 +151,17 @@ export default function SubscriptionPage() {
   };
 
   // SF09: Simplified plan logic - only show upgrade options
-  const plans = isProUser ? [] : [{
-    id: 'pro',
-    name: SUBSCRIPTION_CONFIG.pro.displayName,
-    price: SUBSCRIPTION_CONFIG.pro.price,
-    period: 'month',
-    description: t('pricing.plans.pro.description'),
-    features: SUBSCRIPTION_CONFIG.pro.features,
-    current: false,
-    popular: true,
-    monthlyLimit: SUBSCRIPTION_CONFIG.pro.monthlyUsageLimit
-  }];
+  // const plans = isProUser ? [] : [{
+  //   id: 'pro',
+  //   name: SUBSCRIPTION_CONFIG.pro.displayName,
+  //   price: SUBSCRIPTION_CONFIG.pro.price,
+  //   period: 'month',
+  //   description: t('pricing.plans.pro.description'),
+  //   features: SUBSCRIPTION_CONFIG.pro.features,
+  //   current: false,
+  //   popular: true,
+  //   monthlyLimit: SUBSCRIPTION_CONFIG.pro.monthlyUsageLimit
+  // }];
 
   // SF09: Handle professional upgrade
   const handlePlanUpgrade = async (planId: string) => {

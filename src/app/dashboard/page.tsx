@@ -12,8 +12,8 @@ import {
   Loader2
 } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { hasProAccess, getUserConfig, getUserStatusDescription } from '@/types/supabase';
-import { getSubscriptionStatusText, getSubscriptionStatusClass } from '@/lib/subscriptionUtils';
+import { hasProAccess, getUserConfig } from '@/types/supabase';
+import { getSubscriptionStatusClass } from '@/lib/subscriptionUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
 // SF09: Remove unused imports
 

@@ -2,7 +2,7 @@
  * 直接測試 webhookLogger 的 ES 模組腳本
  */
 
-import { writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { appendFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
 // 簡化版 logger 測試

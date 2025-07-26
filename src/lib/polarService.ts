@@ -34,25 +34,23 @@ class PolarService {
       if (userProfile?.polar_customer_id) {
         // 嘗試獲取現有客戶
         try {
-          const response = await polarApi.customersGet({
+          const response = await polarApi.customers.get({
             id: userProfile.polar_customer_id
           });
-          return response.data as PolarCustomer;
+          return response as unknown as PolarCustomer;
         } catch (error) {
           console.warn('Failed to fetch existing Polar customer, creating new one:', error);
         }
       }
       
       // 建立新的 Polar 客戶
-      const response = await polarApi.customersCreate({
-        customerCreate: {
-          email,
-          name: name || undefined,
-          organization_id: POLAR_CONFIG.ORGANIZATION_ID
-        }
+      const response = await polarApi.customers.create({
+        email,
+        name: name || undefined,
+        organizationId: POLAR_CONFIG.ORGANIZATION_ID
       });
 
-      const customer = response.data as PolarCustomer;
+      const customer = response as unknown as PolarCustomer;
       
       // 更新用戶資料中的 Polar Customer ID
       if (userProfile) {
@@ -72,12 +70,16 @@ class PolarService {
    */
   async getProducts(): Promise<PolarProduct[]> {
     try {
-      const response = await polarApi.productsSearch({
+      const response = await polarApi.products.list({
         organizationId: POLAR_CONFIG.ORGANIZATION_ID,
         isArchived: false
       });
 
-      return (response.data.items || []) as PolarProduct[];
+      const products = [];
+      for await (const product of response) {
+        products.push(product);
+      }
+      return products as unknown as PolarProduct[];
     } catch (error) {
       handlePolarError(error);
     }
@@ -93,11 +95,11 @@ class PolarService {
         return null;
       }
       
-      const response = await polarApi.productsGet({
+      const response = await polarApi.products.get({
         id: productId
       });
 
-      return response.data as PolarProduct;
+      return response as unknown as PolarProduct;
     } catch (error) {
       console.error('Error fetching product by plan:', error);
       return null;
@@ -123,16 +125,13 @@ class PolarService {
       const customer = await this.getOrCreateCustomer(clerkUserId, email, name);
       
       // 建立 Checkout Session
-      const response = await polarApi.checkoutsCreate({
-        checkoutCreate: {
-          product_id: productId,
-          customer_id: customer.id,
-          success_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard/checkout-success`,
-          organization_id: POLAR_CONFIG.ORGANIZATION_ID
-        }
+      const response = await polarApi.checkouts.create({
+        products: [productId],
+        customerId: customer.id,
+        successUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard/checkout-success`
       });
 
-      return (response.data as { url: string }).url;
+      return (response as { url: string }).url;
     } catch (error) {
       handlePolarError(error);
     }
@@ -143,12 +142,16 @@ class PolarService {
    */
   async getCustomerSubscriptions(customerId: string): Promise<PolarSubscription[]> {
     try {
-      const response = await polarApi.subscriptionsSearch({
+      const response = await polarApi.subscriptions.list({
         customerId,
         organizationId: POLAR_CONFIG.ORGANIZATION_ID
       });
 
-      return (response.data.items || []) as PolarSubscription[];
+      const subscriptions = [];
+      for await (const subscription of response) {
+        subscriptions.push(subscription);
+      }
+      return subscriptions as unknown as PolarSubscription[];
     } catch (error) {
       console.error('Error fetching customer subscriptions:', error);
       return [];
@@ -160,11 +163,11 @@ class PolarService {
    */
   async getSubscription(subscriptionId: string): Promise<PolarSubscription | null> {
     try {
-      const response = await polarApi.subscriptionsGet({
+      const response = await polarApi.subscriptions.get({
         id: subscriptionId
       });
 
-      return response.data as PolarSubscription;
+      return response as unknown as PolarSubscription;
     } catch (error) {
       console.error('Error fetching subscription:', error);
       return null;
@@ -176,11 +179,14 @@ class PolarService {
    */
   async cancelSubscription(subscriptionId: string): Promise<PolarSubscription> {
     try {
-      const response = await polarApi.subscriptionsCancel({
-        id: subscriptionId
+      const response = await polarApi.subscriptions.update({
+        id: subscriptionId,
+        subscriptionUpdate: {
+          cancelAtPeriodEnd: true
+        }
       });
 
-      return response.data as PolarSubscription;
+      return response as unknown as PolarSubscription;
     } catch (error) {
       handlePolarError(error);
     }
@@ -248,9 +254,6 @@ class PolarService {
         subscriptionStatus,
         monthlyUsageLimit,
         polarSubscriptionId: subscription.id,
-        polarProductId: product.id,
-        lastPaymentDate: subscription.started_at || subscription.created_at,
-        nextBillingDate: subscription.current_period_end
       });
       
     } catch (error) {
@@ -269,8 +272,6 @@ class PolarService {
         subscriptionStatus: 'inactive',   // 未啟用狀態
         monthlyUsageLimit: 1000,
         polarSubscriptionId: undefined,
-        polarProductId: undefined,
-        nextBillingDate: undefined
       });
     } catch (error) {
       console.error('Error handling subscription downgrade:', error);

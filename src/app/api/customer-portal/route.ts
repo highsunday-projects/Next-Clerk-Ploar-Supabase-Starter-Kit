@@ -4,7 +4,7 @@
  * 生成 Customer Portal 連結讓用戶管理訂閱
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { polarService } from '@/lib/polarService';
 

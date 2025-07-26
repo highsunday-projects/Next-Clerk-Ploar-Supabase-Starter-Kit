@@ -31,7 +31,7 @@ export function getTranslation(
   
   for (const k of keys) {
     if (value && typeof value === 'object' && k in value) {
-      value = value[k];
+      value = (value as Record<string, unknown>)[k];
     } else {
       // 如果找不到翻譯，返回鍵值本身
       console.warn(`Translation key not found: ${key} for language: ${language}`);

@@ -2,9 +2,9 @@
  * 測試 webhook logger 功能的腳本
  */
 
-// 由於這是 Node.js 腳本，我們需要使用 CommonJS 語法
-const fs = require('fs');
-const path = require('path');
+// 使用 ES6 模組語法
+import fs from 'fs';
+import path from 'path';
 
 // 模擬 webhookLogger 的簡化版本來測試文件寫入
 class TestWebhookLogger {

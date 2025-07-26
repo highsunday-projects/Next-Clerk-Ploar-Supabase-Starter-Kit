@@ -21,6 +21,11 @@ setInterval(() => {
   console.log('Cleared processed events cache');
 }, 60 * 60 * 1000);
 
+// Type definitions for webhook handler functions to work with actual Polar types
+// We'll accept the actual Polar webhook types and extract what we need
+
+
+
 /**
  * 檢查是否為立即取消（非週期結束取消）
  * 立即取消的特徵：
@@ -28,7 +33,7 @@ setInterval(() => {
  * 2. cancelAtPeriodEnd = false
  * 3. endsAt 接近 canceledAt（而非 currentPeriodEnd）
  */
-function isImmediateCancellation(subscription: any): boolean {
+function isImmediateCancellation(subscription: { status: string; cancelAtPeriodEnd?: boolean; canceledAt?: Date | string | null; endsAt?: Date | string | null }): boolean {
   if (subscription.status !== 'canceled') return false;
   if (subscription.cancelAtPeriodEnd === true) return false;
 
@@ -55,28 +60,6 @@ function isImmediateCancellation(subscription: any): boolean {
 /**
  * 使用 Polar Next.js 適配器處理 Webhook 事件
  */
-// 先添加一個原始的 POST 處理器來調試
-export async function POST(request: Request) {
-  console.log('=== WEBHOOK DEBUG START ===');
-  console.log('Request method:', request.method);
-  console.log('Request URL:', request.url);
-  console.log('Headers:', Object.fromEntries(request.headers.entries()));
-  
-  const body = await request.text();
-  console.log('Raw body:', body);
-  console.log('=== WEBHOOK DEBUG END ===');
-  
-  // 重建 request 因為我們已經讀取了 body
-  const newRequest = new Request(request.url, {
-    method: request.method,
-    headers: request.headers,
-    body: body
-  });
-  
-  // 調用原始的 webhook 處理器
-  return webhookHandler(newRequest);
-}
-
 const webhookHandler = Webhooks({
   webhookSecret: process.env.POLAR_WEBHOOK_SECRET!,
   onSubscriptionCreated: async (payload) => {
@@ -115,6 +98,7 @@ const webhookHandler = Webhooks({
 /**
  * 處理訂閱建立事件 - SF09 簡化版
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleSubscriptionCreated(event: any): Promise<void> {
   const subscription = event.data;
   console.log('Raw subscription data:', JSON.stringify(subscription, null, 2));
@@ -157,6 +141,7 @@ async function handleSubscriptionCreated(event: any): Promise<void> {
  * 處理訂閱更新事件 - SF09 簡化版
  * 加入事件去重機制避免重複處理
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleSubscriptionUpdated(event: any): Promise<void> {
   const subscription = event.data;
   const clerkUserId = subscription.metadata?.clerk_user_id;
@@ -264,6 +249,7 @@ async function handleSubscriptionUpdated(event: any): Promise<void> {
  * 處理訂閱取消事件 - SF09 簡化版
  * 加入事件去重機制避免重複處理
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleSubscriptionCanceled(event: any): Promise<void> {
   const subscription = event.data;
   const clerkUserId = subscription.metadata?.clerk_user_id;
@@ -343,6 +329,7 @@ async function handleSubscriptionCanceled(event: any): Promise<void> {
 /**
  * 處理 Checkout 完成事件 - SF09 簡化版
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleCheckoutCompleted(event: any): Promise<void> {
   const checkout = event.data;
   const clerkUserId = checkout.metadata?.clerk_user_id;
@@ -381,6 +368,7 @@ async function handleCheckoutCompleted(event: any): Promise<void> {
 /**
  * 處理付款成功事件 - SF09 簡化版
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handlePaymentSucceeded(event: any): Promise<void> {
   const order = event.data;
   const clerkUserId = order.metadata?.clerk_user_id;
@@ -416,22 +404,6 @@ async function handlePaymentSucceeded(event: any): Promise<void> {
   }
 }
 
-/**
- * 處理付款失敗事件
- */
-async function handlePaymentFailed(event: any): Promise<void> {
-  const payment = event.data;
-  const clerkUserId = payment.metadata?.clerk_user_id;
-  
-  if (clerkUserId) {
-    // SF10 簡化版：付款失敗時設定為 inactive 狀態
-    await userProfileService.updateUserProfile(clerkUserId, {
-      subscriptionStatus: 'inactive'
-    });
-  }
-
-  console.log(`Payment failed: ${payment.id}`);
-}
 
 // SF09: 移除產品 ID 映射函數，因為所有 Polar 訂閱都是專業版
 
@@ -469,3 +441,6 @@ function mapPolarStatusToLocal(polarStatus: string, cancelAtPeriodEnd: boolean =
       return 'inactive';
   }
 }
+
+// Export the webhook handler
+export const POST = webhookHandler;

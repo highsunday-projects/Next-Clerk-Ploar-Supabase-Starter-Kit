@@ -5,7 +5,7 @@
  * 方便開發和除錯時查看 webhook 處理過程
  */
 
-import { writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+import { appendFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
 interface LogEntry {
@@ -14,8 +14,8 @@ interface LogEntry {
   requestId: string;
   event: string;
   message: string;
-  data?: any;
-  error?: any;
+  data?: unknown;
+  error?: Error | { message?: string; stack?: string; name?: string } | unknown;
 }
 
 class WebhookLogger {
@@ -77,7 +77,7 @@ class WebhookLogger {
     }
   }
 
-  info(requestId: string, event: string, message: string, data?: any): void {
+  info(requestId: string, event: string, message: string, data?: unknown): void {
     const logEntry: LogEntry = {
       timestamp: new Date().toISOString(),
       level: 'INFO',
@@ -97,7 +97,7 @@ class WebhookLogger {
     this.writeToFile(logEntry);
   }
 
-  error(requestId: string, event: string, message: string, error?: any, data?: any): void {
+  error(requestId: string, event: string, message: string, error?: Error | { message?: string; stack?: string; name?: string } | unknown, data?: unknown): void {
     const logEntry: LogEntry = {
       timestamp: new Date().toISOString(),
       level: 'ERROR',
@@ -121,7 +121,7 @@ class WebhookLogger {
     this.writeToFile(logEntry);
   }
 
-  warn(requestId: string, event: string, message: string, data?: any): void {
+  warn(requestId: string, event: string, message: string, data?: unknown): void {
     const logEntry: LogEntry = {
       timestamp: new Date().toISOString(),
       level: 'WARN',
@@ -141,7 +141,7 @@ class WebhookLogger {
     this.writeToFile(logEntry);
   }
 
-  debug(requestId: string, event: string, message: string, data?: any): void {
+  debug(requestId: string, event: string, message: string, data?: unknown): void {
     const logEntry: LogEntry = {
       timestamp: new Date().toISOString(),
       level: 'DEBUG',
@@ -188,7 +188,7 @@ class WebhookLogger {
   }
 
   // 記錄事件處理開始
-  logEventStart(requestId: string, eventType: string, eventData: any): void {
+  logEventStart(requestId: string, eventType: string, eventData: { id?: string; [key: string]: unknown }): void {
     this.info(requestId, `EVENT_${eventType.toUpperCase()}_START`, `Processing ${eventType} event`, {
       eventId: eventData.id,
       eventData: eventData
@@ -196,7 +196,7 @@ class WebhookLogger {
   }
 
   // 記錄事件處理成功
-  logEventSuccess(requestId: string, eventType: string, processingTime: number, result?: any): void {
+  logEventSuccess(requestId: string, eventType: string, processingTime: number, result?: unknown): void {
     this.info(requestId, `EVENT_${eventType.toUpperCase()}_SUCCESS`, `${eventType} event processed successfully`, {
       processingTimeMs: processingTime,
       result
@@ -204,18 +204,45 @@ class WebhookLogger {
   }
 
   // 記錄事件處理失敗
-  logEventError(requestId: string, eventType: string, processingTime: number, error: any): void {
+  logEventError(requestId: string, eventType: string, processingTime: number, error: Error | { message?: string; stack?: string; name?: string } | unknown): void {
+    const errorInfo = this.extractErrorInfo(error);
     this.error(requestId, `EVENT_${eventType.toUpperCase()}_ERROR`, `${eventType} event processing failed`, {
-      message: error?.message,
-      stack: error?.stack,
-      name: error?.name
+      message: errorInfo.message,
+      stack: errorInfo.stack,
+      name: errorInfo.name
     }, {
       processingTimeMs: processingTime
     });
   }
 
+  // 提取錯誤資訊的輔助方法
+  private extractErrorInfo(error: unknown): { message?: string; stack?: string; name?: string } {
+    if (error instanceof Error) {
+      return {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      };
+    }
+
+    if (error && typeof error === 'object' && 'message' in error) {
+      const errorObj = error as { message?: string; stack?: string; name?: string };
+      return {
+        message: errorObj.message,
+        stack: errorObj.stack,
+        name: errorObj.name
+      };
+    }
+
+    return {
+      message: String(error),
+      stack: undefined,
+      name: 'UnknownError'
+    };
+  }
+
   // 記錄資料庫操作
-  logDatabaseOperation(requestId: string, operation: string, userId: string, data: any, result?: any): void {
+  logDatabaseOperation(requestId: string, operation: string, userId: string, data: unknown, result?: unknown): void {
     this.info(requestId, 'DATABASE_OPERATION', `${operation} for user ${userId}`, {
       operation,
       userId,
@@ -225,11 +252,12 @@ class WebhookLogger {
   }
 
   // 記錄資料庫錯誤
-  logDatabaseError(requestId: string, operation: string, userId: string, error: any): void {
+  logDatabaseError(requestId: string, operation: string, userId: string, error: Error | { message?: string; stack?: string; name?: string } | unknown): void {
+    const errorInfo = this.extractErrorInfo(error);
     this.error(requestId, 'DATABASE_ERROR', `${operation} failed for user ${userId}`, {
-      message: error?.message,
-      stack: error?.stack,
-      name: error?.name
+      message: errorInfo.message,
+      stack: errorInfo.stack,
+      name: errorInfo.name
     }, {
       operation,
       userId

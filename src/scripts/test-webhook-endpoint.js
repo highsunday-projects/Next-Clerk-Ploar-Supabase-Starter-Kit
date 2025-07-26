@@ -3,7 +3,7 @@
  * 模擬 Polar webhook 請求來測試日誌功能
  */
 
-const http = require('http');
+import http from 'http';
 
 // 模擬的 Polar webhook payload
 const mockPayload = {

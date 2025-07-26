@@ -125,7 +125,7 @@ export async function POST(
     // 建立 Checkout Session
     const checkoutUrl = await polarService.createCheckoutSession(
       userId,
-      plan as 'pro' | 'enterprise',
+      plan as 'pro',
       email,
       name
     );

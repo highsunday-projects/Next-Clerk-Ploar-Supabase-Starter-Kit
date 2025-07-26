@@ -150,20 +150,24 @@ class UserProfileServiceImpl implements UserProfileService {
         .update(updateData)
         .eq('clerk_user_id', clerkUserId)
         .select(QUERY_OPTIONS.USER_PROFILE_FIELDS)
-        .single();
+        .single() as { data: UserProfile | null; error: unknown };
 
       if (error) {
         console.error('Supabase update error:', error);
         handleSupabaseError(error);
       }
 
+      if (!updatedProfile) {
+        throw new Error('Failed to update user profile: No data returned');
+      }
+
       console.log('User profile updated successfully:', {
         clerkUserId,
         updatedProfile: {
-          subscription_plan: updatedProfile?.subscription_plan,
-          subscription_status: updatedProfile?.subscription_status,
-          monthly_usage_limit: updatedProfile?.monthly_usage_limit,
-          polar_subscription_id: updatedProfile?.polar_subscription_id
+          subscription_plan: updatedProfile.subscription_plan,
+          subscription_status: updatedProfile.subscription_status,
+          monthly_usage_limit: updatedProfile.monthly_usage_limit,
+          polar_subscription_id: updatedProfile.polar_subscription_id
         }
       });
 

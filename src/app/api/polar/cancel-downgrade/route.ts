@@ -13,7 +13,7 @@ import { userProfileService } from '@/lib/userProfileService';
  * POST /api/polar/cancel-downgrade
  * 取消已安排的降級
  */
-export async function POST(request: Request) {
+export async function POST() {
   try {
     // 驗證用戶身份
     const { userId } = await auth();

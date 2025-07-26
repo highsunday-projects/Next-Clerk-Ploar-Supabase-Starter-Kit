@@ -75,7 +75,7 @@ export default function ProfilePage() {
               <div>
                 <p className="text-sm font-medium text-gray-900">{t('dashboard.profile.fields.registrationDate')}</p>
                 <p className="text-sm text-gray-600">
-                  {new Date(user.createdAt).toLocaleDateString()}
+                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
             </div>

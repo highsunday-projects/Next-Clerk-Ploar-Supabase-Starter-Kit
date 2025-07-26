@@ -63,7 +63,8 @@ export async function POST(request: Request) {
     // 檢查是否為現有付費訂閱用戶（需要使用訂閱更新而非新建 Checkout）
     const hasActiveSubscription = userProfile.polar_subscription_id &&
                                   userProfile.subscription_plan !== 'free' &&
-                                  userProfile.subscription_status === 'active';
+                                  (userProfile.subscription_status === 'active_recurring' || 
+                                   userProfile.subscription_status === 'active_ending');
 
     if (hasActiveSubscription) {
       // 現有訂閱用戶：使用訂閱更新 API

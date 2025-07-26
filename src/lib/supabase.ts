@@ -139,11 +139,11 @@ export const QUERY_OPTIONS = {
  * 預設的用戶訂閱設定（SF09 簡化邏輯）
  */
 export const DEFAULT_USER_PROFILE = {
-  subscription_plan: null as const,
-  subscription_status: 'inactive' as const,
+  subscription_plan: null,
+  subscription_status: 'inactive',
   monthly_usage_limit: 1000,
   trial_ends_at: null
-} as const;
+};
 
 /**
  * Supabase 實時訂閱配置

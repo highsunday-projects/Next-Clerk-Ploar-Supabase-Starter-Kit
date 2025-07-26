@@ -8,7 +8,7 @@ import { auth } from '@clerk/nextjs/server';
 import { polarApi, getPolarProductId } from '@/lib/polar';
 import { userProfileService } from '@/lib/userProfileService';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // 僅允許非 production 環境存取
     if (process.env.NODE_ENV === 'production') {
@@ -78,8 +78,7 @@ export async function GET(request: Request) {
           monthly_usage_limit: userProfile.monthly_usage_limit,
           polar_customer_id: userProfile.polar_customer_id,
           polar_subscription_id: userProfile.polar_subscription_id,
-          current_period_end: userProfile.current_period_end,
-          cancel_at_period_end: userProfile.cancel_at_period_end
+          current_period_end: userProfile.current_period_end
         } : null,
         polarSubscription
       }

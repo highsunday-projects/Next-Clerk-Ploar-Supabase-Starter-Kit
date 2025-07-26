@@ -1,4 +1,6 @@
 
+'use client';
+
 // 僅允許開發環境存取
 if (process.env.NODE_ENV === 'production') {
   // eslint-disable-next-line no-restricted-globals
@@ -6,8 +8,6 @@ if (process.env.NODE_ENV === 'production') {
     window.location.href = '/';
   }
 }
-
-'use client';
 
 import React from 'react';
 import { Calendar, Crown, Check, AlertCircle } from 'lucide-react';

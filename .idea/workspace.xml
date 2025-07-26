@@ -5,13 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="03e93c0d-3325-4b1e-b22c-75672eb5a3a6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/documents/語言切換模組.md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/語言切換模組.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/dashboard/profile/[[...rest]]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/profile/[[...rest]]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/dashboard/subscription/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/contexts/LanguageContext.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/contexts/LanguageContext.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/locales/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/locales/en.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/locales/zh-TW.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/locales/zh-TW.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documents/部落格推廣文章-AI時代的SaaS開發革命.md" beforeDir="false" afterPath="$PROJECT_DIR$/documents/部落格推廣文章-AI時代的SaaS開發革命.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

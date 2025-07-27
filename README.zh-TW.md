@@ -5,6 +5,10 @@ uuid: 60110caad6d5470699fd1a9d7ba285e6
 
 **語言**: [English](README.md) | [繁體中文](README.zh-TW.md)
 
+![Next-Clerk-Polar-Supabase Starter Kit](next-clerk-ploar-supabase-starter-kit.jpg)
+
+🌐 **線上演示**: [https://next-clerk-ploar-supabase-starter-k.vercel.app/](https://next-clerk-ploar-supabase-starter-k.vercel.app/)
+
 > 🚀 一個現代化的 SaaS 應用程式模板，整合了 Next.js、Clerk、Polar 和 Supabase，提供完整的用戶認證、付費訂閱和資料管理功能。
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.4.1-black)](https://nextjs.org/)

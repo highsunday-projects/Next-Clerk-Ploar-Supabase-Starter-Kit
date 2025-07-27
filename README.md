@@ -5,6 +5,10 @@ uuid: 9bec16718b8848d295633ecd0e52a112
 
 **Language**: [English](README.md) | [繁體中文](README.zh-TW.md)
 
+![Next-Clerk-Polar-Supabase Starter Kit](next-clerk-ploar-supabase-starter-kit.jpg)
+
+🌐 **Live Demo**: [https://next-clerk-ploar-supabase-starter-k.vercel.app/](https://next-clerk-ploar-supabase-starter-k.vercel.app/)
+
 > 🚀 A modern SaaS application template that integrates Next.js, Clerk, Polar, and Supabase, providing complete user authentication, payment subscriptions, and data management functionality.
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.4.1-black)](https://nextjs.org/)
